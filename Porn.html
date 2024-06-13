@@ -1,0 +1,359 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      .mySlides {
+        display: none;
+      }
+
+      img {
+        vertical-align: middle;
+      }
+
+      /* Slideshow container */
+      .slideshow-container {
+        max-width: 750px;
+        position: relative;
+        margin: auto;
+      }
+
+      /*This changes the background to those*/
+      /*moving ones CSS Part */
+      html {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      .bg {
+        animation: slide 15s ease-in-out infinite alternate;
+        background-image: linear-gradient(-60deg, #bfd0de 50%, #e3d8ba 50%);
+        bottom: 0;
+        left: -50%;
+        opacity: .5;
+        position: fixed;
+        right: -50%;
+        top: 0;
+        z-index: -1;
+      }
+
+      .bg2 {
+        animation-direction: alternate-reverse;
+        animation-duration: 20s;
+      }
+
+      .bg3 {
+        animation-duration: 25s;
+      }
+
+      @keyframes slide {
+        0% {
+          transform: translateX(-25%);
+        }
+
+        100% {
+          transform: translateX(25%);
+        }
+      }
+
+      .pik {
+        font-family: Papyrus;
+        color: maroon;
+        text-align: center;
+      }
+
+      .bosa {
+        font-family: Copperplate;
+        color: black;
+        border-radius: 10px;
+        border: 0.7;
+        border-color: #68a3b0;
+        text-align: center;
+        background: transparent;
+        < !--background-image: linear-gradient(60deg, #8ed1af, #68a3b0 30%);
+        -->border-radius: 10px;
+      }
+
+      .kukku {
+        font-family: Copperplate;
+        color: white;
+        border: 0.25;
+        text-align: center;
+        background-image: linear-gradient(60deg, #bfd0de 10%, #e3d8ba 90%);
+      }
+
+      /* Caption text */
+      .text {
+        font-family: Copperplate;
+        color: #f2f2f2;
+        font-size: 15px;
+        padding: 8px 12px;
+        position: absolute;
+        bottom: 8px;
+        width: 100%;
+        text-align: center;
+      }
+
+      /* Number text (1/3 etc) */
+      .numbertext {
+        color: #f2f2f2;
+        font-size: 12px;
+        padding: 8px 12px;
+        position: absolute;
+        top: 0;
+      }
+
+      /* The dots/bullets/indicators */
+      .dot {
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        transition: background-color 0.6s ease;
+      }
+
+      .active {
+        background-color: #717171;
+      }
+
+      /* Fading animation */
+      .fade {
+        animation-name: fade;
+        animation-duration: 0.2s;
+      }
+
+      @keyframes fade {
+        from {
+          opacity: .4
+        }
+
+        to {
+          opacity: 1
+        }
+      }
+
+      /* On smaller screens, decrease text size */
+      @media only screen and (max-width: 300px) {
+        .text {
+          font-size: 11px
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <audio autoplay>
+      <source src="https://hipstrumentals.com/wp-content/uploads/2020/07/Jack-Harlow-Ft.-Tory-Lanez-Lil-Wayne-DaBaby-Whats-Poppin-Instrumental-Prod.-By-LosTheProducer-JW-Lucas-jetsonmade-Pooh-Beatz.mp3">
+     
+      <source src="https://hipstrumentals.com/wp-content/uploads/2020/08/Internet-Money-Ft.-Gunna-Don-Toliver-Nav-Lemonade-Instrumental-Prod.-By-Nick-Mira-Alec-Wigdahl-E-Trou-Taz-Taylor-Pharaoh-Vice.mp3">
+      
+      
+      
+      <!--<source src="<audio src="file:///Users/Dulran/Downloads/Whatspopping.mp3">--> Your browser does not support the audio element.
+    </audio>
+    <!--
+    This changes the background to those movin
+    ones HTML part-->
+    <div class="bg"></div>
+    <div class="bg bg2"></div>
+    <div class="bg bg3"></div>
+    <p class="kukku">Change image every <input type="text" class="bosa" id="myText" value="3">
+      <button class="bosa " onclick="setIntervalId()">Change Speed</button> seconds.
+    </p>
+    <div class="slideshow-container">
+      <h2 class="pik" type="text">Automatic Slideshow Presented by Your One and Only <a href="https://www.instagram.com/dulran_amarathunga"> DULRAN </a>
+      </h2>
+      <div class="mySlides fade" style="display: none;">
+        <h2 class="pik" type="text">Follow Me on <a href="https://www.instagram.com/dulran_amarathunga"> Instagram </a>
+        </h2>
+        <img src="https://media.tenor.com/zM1LLF0voFIAAAAC/butt-touch.gif" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/bd/8c/cf/7a72b695c2392b5adaf3e78a58/24611/thumbs/14573551/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674600911&validto=1675119311&hash=%2BbXMK%2Fa2h26%2FIeuomtQ7uYlHbQ8%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/bd/8c/cf/7a72b695c2392b5adaf3e78a58/24611/thumbs/14573641/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674600911&validto=1675119311&hash=Sthh%2Fc8lpyrgp%2F62%2BvGfCcdWHMc%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/bd/8c/cf/7a72b695c2392b5adaf3e78a58/24611/preview-images/14572831/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1674600911&validto=1675119311&hash=BoDqlFSGFvJopWUF5lcuCS%2BXrvs%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a7/eb/93/ef92a8a65cf69d578336b6be20/34051/preview-images/15828641/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1674611222&validto=1675129622&hash=5K8RabcafdSDV%2BvWxcc03eyrFos%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a7/eb/93/ef92a8a65cf69d578336b6be20/34051/thumbs/15827991/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674611222&validto=1675129622&hash=GxCjerepyPQ%2FOUSxo91%2BPB49x%2Fs%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a7/eb/93/ef92a8a65cf69d578336b6be20/34051/thumbs/15828811/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674611222&validto=1675129622&hash=wfjuMMRCDNKGAwMUMBigU9vfeE0%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/b0/2e/c3/00f88363cac4572b8084bad604/34221/preview-images/15859891/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1674611150&validto=1675129550&hash=CvPgty61Nkoz4pqQ3OTOIxDmS8s%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/b0/2e/c3/00f88363cac4572b8084bad604/34221/thumbs/15859081/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674611150&validto=1675129550&hash=9E0lS%2B96a9JKS6VzyGw5%2FUQ0u5c%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/b0/2e/c3/00f88363cac4572b8084bad604/34221/thumbs/15859041/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674611150&validto=1675129550&hash=Wg34wuLplNaw43hOltMZ1QfU9Qk%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/fc/e1/ea/b4411d5df240d93ff334f15385/20013/thumbs/1325461/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674610776&validto=1675129176&hash=TVXodWKrNFHX9JU63pVgiO0l6ps%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/bd/8c/cf/7a72b695c2392b5adaf3e78a58/24611/thumbs/379751/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674610777&validto=1675129177&hash=RP%2B%2F5FktaO2GO0lCrtZDAbU3gVc%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/3a/3b/7a/ccf5943bdf3781f2afa5ccd1eb/37721/preview-images/16969651/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1674610863&validto=1675129263&hash=mkuHTpUvv3dWOiM04m0rOoDRVFw%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/3a/3b/7a/ccf5943bdf3781f2afa5ccd1eb/37721/thumbs/16969721/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674610863&validto=1675129263&hash=avpfTExsv01f9ZVaC%2F1rX8%2BIrIs%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/3a/3b/7a/ccf5943bdf3781f2afa5ccd1eb/37721/thumbs/16968561/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1674610863&validto=1675129263&hash=fJSRsUsPxDau%2FFa%2BXNhteYZkvxw%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/5a/db/9e/fda92501648f9dcc408a5e9b11/35912/preview-images/16188472/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1674611026&validto=1675129426&hash=p%2BP2i3ZQNEC2y0Ftmi8laIbDjGU%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/91/be/0e/18777ce6c751271fcc00d93d87/26091/thumbs/14580701/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675116232&validto=1675634632&hash=X6MacvCkTqePdqAde87KOczpYDc%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/de/71/38/69d1db126cff30a1fc0e990962/17552/thumbs/14588381/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675118479&validto=1675636879&hash=Pr3jtpDoxa4aey2v1WbcYQ6WHSU%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/72/73/e6/71a40fa9f0d3867d1098d5ac6e/24831/preview-images/7369471/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675118319&validto=1675636719&hash=CfCeb4aDQOc01CMJ3f%2Fv13k9ROU%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/7a/9a/a8/19c5733930f0df26f4c3e0e4ff/16374/preview-images/13385101/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675118319&validto=1675636719&hash=NMwweRZZFwcUhUfmh2bK4AeQiK8%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a9/2e/64/312f17a6e510bfbfeffcb125eb/15803/preview-images/14589071/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675118464&validto=1675636864&hash=JCOV%2FOw9nV1pB%2B02PVUbwLrT%2B0M%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/e5/08/5f/260c2bc7e50f153bd3d3a463d9/16403/preview-images/15347421/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675118404&validto=1675636804&hash=%2B%2Bbgi0cnfUm4XgRtNgGcwsuVTc0%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/7a/9a/a8/19c5733930f0df26f4c3e0e4ff/16374/preview-images/15347341/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675118357&validto=1675636757&hash=eLb2%2FQ9QhcwmbgzB2kH6epqUmaI%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/02/3b/39/a74b7b4acd060dedc0431c3dbc/16270/thumbs/1616991/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675118413&validto=1675636813&hash=hG6TdMoc6Ke%2F4V%2Bbqrdm1rVqIZs%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/02/3b/39/a74b7b4acd060dedc0431c3dbc/16270/preview-images/15347501/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675118413&validto=1675636813&hash=UopdSHHtJKQGp4HP4XTgw3ODiSw%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/0e/11/c5/d19204c3c8e967811d54adbede/28631/preview-images/14585471/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675120007&validto=1675638407&hash=AC%2Bfi5iWcn2vvEYYAWvyccFl0Ek%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/0e/11/c5/d19204c3c8e967811d54adbede/28631/thumbs/12802081/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675120007&validto=1675638407&hash=fyhLRTHEeT8H2NRckA1uxU8An7E%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/96/70/c7/ffe205da4e538326c9691fa4f2/28541/preview-images/14585461/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675120009&validto=1675638409&hash=%2For55tkC74RXLmcQHQ12DGpxVos%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/96/70/c7/ffe205da4e538326c9691fa4f2/28541/thumbs/14585481/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675120009&validto=1675638409&hash=hENiBNGBcrhnWM%2BhcGazGqqTcMQ%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/fc/e1/ea/b4411d5df240d93ff334f15385/20013/preview-images/12781261/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675316572&validto=1675834972&hash=yX93Jgd7iFOzCgTYjAO9dTBeTrQ%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a0/e6/0a/138fbb31f5fbea2fb761e30c69/20036/preview-images/13573771/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675316603&validto=1675835003&hash=jP4yhClf4LqEGJNj%2BHHURblpew8%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/65/c2/dd/61d53e765e7c7363dbfe10cdd9/22729/preview-images/7446301/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675317135&validto=1675835535&hash=cFSyclgg7%2Fsq1mPLV3M%2BcDmdduM%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/8d/6f/3f/d4877a7237b93c33e9fd3f6613/33391/thumbs/15687091/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675317232&validto=1675835632&hash=1wOma%2FErWBaKi4gQ%2B6pBDYcSXug%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/62/de/e8/03f4071bd95a11e66e9b8324a7/32841/preview-images/15561381/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675317232&validto=1675835632&hash=IfBSanL3IQKwnXpdMPXZjuz9WsE%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/62/de/e8/03f4071bd95a11e66e9b8324a7/32841/thumbs/15560101/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675317322&validto=1675835722&hash=9SN6m58UAr%2F0u0%2BPRgDI2GSBdQk%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/62/de/e8/03f4071bd95a11e66e9b8324a7/32841/thumbs/15560141/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675317322&validto=1675835722&hash=Hr3hOukH6x5Qoqp0T4d%2BBuJqye8%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/62/de/e8/03f4071bd95a11e66e9b8324a7/32841/thumbs/15561521/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675317322&validto=1675835722&hash=6OP2LCdNrYmNXZK%2F0FfauXpOefc%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/bd/8c/cf/7a72b695c2392b5adaf3e78a58/24611/preview-images/10411/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675811153&validto=1676329553&hash=9xvPH3hHNBhThPtiPNVv2a2VUMc%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/80/78/9d/636d68ec8ac889de80365bbd57/17949/preview-images/12819161/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675811195&validto=1676329595&hash=ifOLTFcXO1zPDEO3PJYA%2FJYE9VA%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a3/78/2e/f3356e45ba3e6fa056fd2a8ce4/15098/preview-images/13426641/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675811877&validto=1676330277&hash=eueRSMsbhWXZiNTo93maicQ1DvY%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/a3/78/2e/f3356e45ba3e6fa056fd2a8ce4/15098/preview-images/13426641/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675811877&validto=1676330277&hash=eueRSMsbhWXZiNTo93maicQ1DvY%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/d9/28/71/c9c3bdac4f3a6fb4458ca07c9a/15505/thumbs/1723801/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675811559&validto=1676329959&hash=JVuHewoAfH5DU5WK16Ctr9xvds8%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/d9/28/71/c9c3bdac4f3a6fb4458ca07c9a/15505/preview-images/13414671/responsive-images/content-hero___medialibrary_original_1920_1200.jpg?validfrom=1675811559&validto=1676329959&hash=4yQEvOjYi9c2Ao%2FLd%2B8dh3G6qsg%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/07/3c/83/fb6a5532256c1f33f207330684/15584/preview-images/12894081/responsive-images/content-hero___medialibrary_original_1920_1200.jpg?validfrom=1675811538&validto=1676329938&hash=0H7iTam11rGHEgft5fduyQP5SSQ%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/07/3c/83/fb6a5532256c1f33f207330684/15584/thumbs/1702291/responsive-images/square___medialibrary_original_847_881.jpg?validfrom=1675811538&validto=1676329938&hash=eXGEv4q8j1a%2BoJEBr5ZXY7aqrTE%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/d5/6f/ac/4fc074379769b86e77e00422dc/13951/preview-images/15359911/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675811784&validto=1676330184&hash=VBJFdrn0ZwE9Itnr5%2B%2B%2Blko%2Bhy8%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/15/bc/00/5c266883ec57a2fae120a349b3/14946/preview-images/15414821/responsive-images/content-hero___medialibrary_original_1920_810.jpg?validfrom=1675811748&validto=1676330148&hash=%2Bju7SABc%2BXA%2F2377XMTnL27ofA0%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/fd/57/0c/27236250922768da413f3a90a4/35612/thumbs/16119602/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675812422&validto=1676330822&hash=bDpWIFI5ZXLs434W9Xi9z4j1evY%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/3a/3b/7a/ccf5943bdf3781f2afa5ccd1eb/37721/preview-images/16969701/responsive-images/tall-card___medialibrary_original_683_825.jpg?validfrom=1675812005&validto=1676330405&hash=99KhVhBzY5yXQjkH5%2BH4EJtgqqE%3D" style="width:100%">
+      </div>
+      <div class="mySlides fade">
+        <img src="https://photo-ht-plus.pbnetcdn.com/assets/content/custom/gallery/fd/57/0c/27236250922768da413f3a90a4/35612/thumbs/16119602/responsive-images/square___medialibrary_original_847_882.jpg?validfrom=1675812422&validto=1676330822&hash=bDpWIFI5ZXLs434W9Xi9z4j1evY%3D" style="width:100%">
+      </div>
+    </div>
+    <br>
+    <script>
+      var slideIndex = 0;
+      var intervalId;
+
+      function showSlides(x) {
+        var I;
+        var slides = document.getElementsByClassName("mySlides");
+        var dots = document.getElementsByClassName("dot");
+        for (i = 0; i < slides.length; i++) {
+          slides[i].style.display = "none";
+        }
+        slideIndex++;
+        if (slideIndex > slides.length) {
+          slideIndex = 1
+        }
+        for (i = 0; i < dots.length; i++) {
+          dots[i].className = dots[i].className.replace(" active", "");
+        }
+        slides[slideIndex - 1].style.display = "block";
+        dots[slideIndex - 1].className += " active";
+      }
+
+      function setIntervalId() {
+        var x = document.getElementById("myText").value;
+        clearInterval(intervalId);
+        intervalId = setInterval(showSlides, x * 1000);
+      }
+      window.onload = function() {
+        setIntervalId();
+      }
+    </script>
+  </body>
+</html>
