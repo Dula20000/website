@@ -4,37 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dulran</title>
-
-<style> 
+<style>
     body {
         background-color: #8ee978;
+        margin: 0;
+        overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
-        overflow: hidden;
-        margin: 0;
     }
 
     #container {
         position: relative;
+        width: 100%;
         text-align: center;
     }
-    #title {
-    font-size: 12rem;
-    font-weight: 500;
-    letter-spacing: -11px;
-    line-height: 1;
-    font-family: Helvetica;
-    color: #181818;
-    position: absolute;
-    white-space: nowrap;
-    opacity: 0;
-    top: 50%; /* Aligns it vertically */
-    transform: translateY(-50%); /* Ensures precise centering */
-    }
 
-    
+    #title {
+        font-size: 12rem;
+        font-style: normal;
+        font-weight: 500;
+        letter-spacing: -11px;
+        line-height: 1;
+        font-family: Helvetica;
+        color: #181818;
+        position: absolute;
+        white-space: nowrap;
+        opacity: 0;
+    }
 
     #menu {
         display: none;
@@ -43,12 +41,12 @@
     }
 
     #menu a {
-        display: inline-block;
+        display: block;
         font-family: Helvetica;
         font-size: 2rem;
         text-decoration: none;
         color: #181818;
-        margin: 0 20px;
+        margin: 10px;
     }
 
     @keyframes fadeMove {
@@ -57,10 +55,10 @@
             opacity: 0;
         }
         50% {
-            opacity: .5;
+            opacity: 1;
         }
         100% {
-            transform: translateX(-50vw);
+            transform: translateX(0);
             opacity: 1;
         }
     }
@@ -70,10 +68,9 @@
     <div id="container">
         <h1 id="title">Dulran K.</h1>
         <div id="menu">
-            <a href="https://drive.google.com/file/d/10DzyQV0j2CC5Tpe8fvExICSKsEiGxwHb/view?usp=sharing">CV</a>
             <a href="https://www.instagram.com/dulran.a/">Gallery</a>
             <a href="#">About</a>
-            
+            <a href="https://dulran.com/resumes.html">CV</a>
         </div>
     </div>
 
