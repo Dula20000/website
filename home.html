@@ -4,142 +4,88 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dulran</title>
- 
 <style>
-/* Styling for the menu */
-    #menu {
-        background-color: #8ee978; /* Dark background color */
+    body {
+        background-color: #8ee978;
+        margin: 0;
         overflow: hidden;
-       
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
     }
 
-    #menu h1 {
-        float: left; /* Title on the left */
-        margin: 0;
-        padding: 10px;
-        color: 181818;
-        font-family: Helvetica
+    #container {
+        position: relative;
+        width: 100%;
+        text-align: center;
+    }
+
+    #title {
+        font-size: 12rem;
+        font-style: normal;
+        font-weight: 500;
+        letter-spacing: -11px;
+        line-height: 1;
+        font-family: Helvetica;
+        color: #181818;
+        position: absolute;
+        white-space: nowrap;
+        opacity: 0;
+    }
+
+    #menu {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
     }
 
     #menu a {
-        float: right; /* Links on the right */
-        color: #181818;
-        text-align: center;
-        padding: 14px 16px;
+        display: block;
+        font-family: Helvetica;
+        font-size: 2rem;
         text-decoration: none;
-        font-family: Helvetica
+        color: #181818;
+        margin: 10px;
     }
 
-    #menu a:hover {
-        background-color: #8ee978; /* Hover color */
-        color: black;
-    }
-
-    /* Styling for the divisions */
-    #division1 {
-        background-color: #8ee978;
-        padding: 20px;
-    }
-    
-
-
-#pop-up-image {
-  position: absolute;
-  display: none;
-  width: 100px; /* Adjust the size as needed */
-  height: 100px; /* Adjust the size as needed */
-}
-
-    #division2 {
-        background-color: #181818;
-        color: white;
-        padding: 50px;
-    }
-    
-    #division2 img {
-    position: relative; /* Position image relatively */
-    }
-
-    /* Glowing animation */
-    @keyframes glowing {
+    @keyframes fadeMove {
         0% {
-            box-shadow: 0 0 10px 0px #4379b3; /* Start with a yellow glow */
+            transform: translateX(100vw);
+            opacity: 0;
         }
         50% {
-            box-shadow: 0 0 20px 20px #4379b3; /* Increase glow halfway through */
+            opacity: 1;
         }
         100% {
-            box-shadow: 0 0 10px 0px #4379b3; /* Return to initial glow */
+            transform: translateX(0);
+            opacity: 1;
         }
-    }
-
-    /* Apply glowing animation to the image on hover */
-    #division2 img {
-        animation: glowing 5s infinite alternate; /* Apply the glowing animation */
-    }
-
-    #division3 {
-        background-color: #18185f; /* You can replace "blue" with your desired color */
-        padding: 20px;
     }
 </style>
 </head>
 <body>
+    <div id="container">
+        <h1 id="title">Dulran K.</h1>
+        <div id="menu">
+            <a href="https://www.instagram.com/dulran.a/">Gallery</a>
+            <a href="#">About</a>
+            <a href="https://drive.google.com/file/d/10DzyQV0j2CC5Tpe8fvExICSKsEiGxwHb/view?usp=sharing">CV</a>
+        </div>
+    </div>
 
-<div id="menu">
-    <h1 style="font-style:normal">DUL K.</h1>
-    <a href="https://drive.google.com/file/d/10DzyQV0j2CC5Tpe8fvExICSKsEiGxwHb/view?usp=sharing">CV</a>
-    <a href="#">About</a>
-    <a href="https://www.instagram.com/dulran.a/">Gallery</a>
-</div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const title = document.getElementById("title");
+            const menu = document.getElementById("menu");
 
+            title.style.animation = "fadeMove 2s ease-out forwards";
 
-<div id="division1">
-    <img id="pop-up-image" src="Dulran Seal.png" alt="Random Pop-up">
-    <h2 class="wp-block-heading alignwide has-background-color has-text-color" style="padding-top:0rem;padding-right:0;padding-bottom:var(--wp--preset--spacing--20);padding-left:0;font-size:12rem;font-style:normal;font-weight:500;letter-spacing:-11px;line-height:1">Dulran K.</h2>
-</div>
-
-<div id="division2">
-    <figure class="wp-block-image size-large is-resized"><img src="https://junkmails20d.wordpress.com/wp-content/uploads/2024/06/dula10-2-edited.png" alt="" class="wp-image-34" style="width:490px;height:auto"/></figure>
-</div>
-
-<div id="division3">
-    <p style="color:white"> Dulran. All Rights Reserved. 2024 ©</p>
-</div>
-
-<script>
-     // script.js
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById('division1');
-  const image = document.getElementById('pop-up-image');
-
-  function getRandomPosition() {
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
-    const imageWidth = image.offsetWidth;
-    const imageHeight = image.offsetHeight;
-
-    const randomX = Math.floor(Math.random() * (containerWidth - imageWidth));
-    const randomY = Math.floor(Math.random() * (containerHeight - imageHeight));
-
-    return { x: randomX, y: randomY };
-  }
-
-  function showRandomImage() {
-    const { x, y } = getRandomPosition();
-    image.style.left = `${x}px`;
-    image.style.top = `${y}px`;
-    image.style.display = 'block';
-
-    setTimeout(() => {
-      image.style.display = 'none';
-    }, 500); // Display the image for 2 seconds
-  }
-
-  setInterval(showRandomImage, 1000); // Show the image every 3 seconds
-});
-</script>
-
+            setTimeout(() => {
+                title.style.display = "none";
+                menu.style.display = "block";
+            }, 2500); 
+        });
+    </script>
 </body>
 </html>
-
