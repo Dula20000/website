@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Options</title>
+  <style>
+    body {
+      background-color: #BF5700 ; /* Burnt Orange background */
+      color: #181818; /* Black text */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: "Courier New", Courier, monospace; /* Typewriter font */
+      overflow: hidden; /* Prevent the body overflow */
+    }
+
+    .container {
+      text-align: left;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      opacity: 0;
+      white-space: nowrap;
+      overflow: hidden; /* Ensures the text hides initially */
+      display: inline-block;
+      border-right: 3px solid #181818; /* Typing cursor */
+      animation: typingEffect 5s steps(50) 1s forwards, blinkCursor 0.75s step-end 2.8s forwards; /* Cursor disappears after typing */
+    }
+
+    /* Typing effect */
+    @keyframes typingEffect {
+      0% {
+        width: 0;
+        opacity: 1;
+      }
+      100% {
+        width: 100%;
+        opacity: 1;
+      }
+    }
+
+    /* Cursor blink effect */
+    @keyframes blinkCursor {
+      0%,
+      50% {
+        border-color: #181818;
+      }
+      100% {
+        border-color: transparent; /* Cursor disappears once typing is done */
+      }
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      flex-direction: column;
+      justify-content: center;
+      margin-top: 20px;
+      text-align: center;
+      opacity: 0;
+      animation: fadeInButtons 3s ease-out forwards 6s; /* Delay the button fade-in */
+    }
+
+    @keyframes fadeInButtons {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .button {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #181818;
+      cursor: pointer;
+      text-align: left;
+      position: relative;
+      padding-left: 30px;
+      transition: transform 0.3s ease, color 0.3s ease;
+      text-decoration: none; /* Remove default link styling */
+    }
+
+    .button::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 2rem;
+      color: #181818;
+      opacity: 0.6;
+    }
+
+    .button:hover {
+      transform: scale(1.1); /* Slightly grow the button */
+      color: #8ee978; /* Change text color to green on hover */
+    }
+
+    .button:hover::before {
+      color: #8ee978; /* Change the triangle color to green on hover */
+    }
+
+    .button:focus {
+      outline: none;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Choose Your Resume Option</h1>
+    <div class="buttons">
+      <a href="https://drive.google.com/file/d/11tBiFzUgGLHRbGiFwt8_6o96r9lZ2NMv/view?usp=sharing" class="button" id="conciseResume">Concise Resume</a>
+      <a href="https://drive.google.com/file/d/10DzyQV0j2CC5Tpe8fvExICSKsEiGxwHb/view" class="button" id="detailedResume">Detailed Resume</a>
+    </div>
+  </div>
+</body>
+</html>
