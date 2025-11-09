@@ -57,6 +57,21 @@ span {
   flex-direction: column;
   justify-content: center;
 }
+.two {
+  position: absolute;
+  width: 110%;
+  height: 100%;
+  background-color: #CC5500;
+  color: #0D0D0D;
+  
+  clip-path: polygon(0 50%, 100% 50%, 100% 50%, 0 50%);
+  transform-origin: center;
+  transition: all cubic-bezier(.1,.5,.5,1) 0.4s;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 
 .text:hover > span {
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
@@ -71,9 +86,9 @@ a {
   <body>
     <div class="container">
   <h1 class="text">DULRAN<span>KARIYAWASAM</span></h1>
-  <h1 class="text">AEROSPACE STUDENT<span>AT UT AUSTIN</span></h1>
+  <h1 class="text">AEROSPACE STUDENT<span class="two"><a href="www.utexas.edu">AT UT AUSTIN</a></span></h1>
   <h1 class="text">PASSIONATE IN<span>GNC & AVIONICS</span></h1>
-  <h1 class="text">CLICK TO SEE<span><a href="dulran.com/resumes.html" target="_blank">MY RESUME</a></span></h1>
+  <h1 class="text">CLICK TO SEE<span><a href="resumes.html" target="_blank">MY RESUME</a></span></h1>
   <h1 class="text">LET'S CONNECT<span><a href="https://www.linkedin.com/in/dulran/" target="_blank">LINKEDIN</a></span></h1>
 </div>
       <script>
