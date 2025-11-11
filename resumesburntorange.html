@@ -4,23 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Resume Options</title>
+
+  <!-- Add this: Google Font import -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+
   <style>
     body {
-      background-color: #BF5700 ; /* Burnt Orange background */
-      color: #181818; /* Black text */
+      background-color: #FF8312;
+      color: #181818;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
-      font-family: "Courier New", Courier, monospace; /* Typewriter font */
-      overflow: hidden; /* Prevent the body overflow */
+      font-family: "Cormorant Garamond", serif; /* Updated font */
+      overflow: hidden;
+      text-align: center;
     }
 
     .container {
-      text-align: left;
+      text-align: center;
       width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+    
+    .home-button {
+  position: absolute;
+  top: 0px;
+  left: 10px;
+  font-family: "Quantico", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #181818;
+  text-decoration: none;
+  padding: 6px 0px;
+  border: 0px solid #181818;
+  border-radius: 6px;
+  transition: 1s ease;
+  font-family: "Cormorant Garamond", serif; /* Updated font */
+}
+
+.home-button:hover {
+  color: #ffffff;
+  border-color: #1e660d;
+  transform: scale(1.08);
+}
 
     h1 {
       font-size: 3rem;
@@ -28,33 +58,20 @@
       letter-spacing: 2px;
       opacity: 0;
       white-space: nowrap;
-      overflow: hidden; /* Ensures the text hides initially */
+      overflow: hidden;
       display: inline-block;
-      border-right: 3px solid #181818; /* Typing cursor */
-      animation: typingEffect 5s steps(50) 1s forwards, blinkCursor 0.75s step-end 2.8s forwards; /* Cursor disappears after typing */
+      border-right: 3px solid #181818;
+      animation: typingEffect 5s steps(50) 1s forwards, blinkCursor 0.75s step-end 2.8s forwards;
     }
 
-    /* Typing effect */
     @keyframes typingEffect {
-      0% {
-        width: 0;
-        opacity: 1;
-      }
-      100% {
-        width: 100%;
-        opacity: 1;
-      }
+      0% { width: 0; opacity: 1; }
+      100% { width: 100%; opacity: 1; }
     }
 
-    /* Cursor blink effect */
     @keyframes blinkCursor {
-      0%,
-      50% {
-        border-color: #181818;
-      }
-      100% {
-        border-color: transparent; /* Cursor disappears once typing is done */
-      }
+      0%, 50% { border-color: #181818; }
+      100% { border-color: transparent; }
     }
 
     .buttons {
@@ -65,16 +82,12 @@
       margin-top: 20px;
       text-align: center;
       opacity: 0;
-      animation: fadeInButtons 3s ease-out forwards 6s; /* Delay the button fade-in */
+      animation: fadeInButtons 1s ease-out forwards 4.2s;
     }
 
     @keyframes fadeInButtons {
-      0% {
-        opacity: 0;
-      }
-      100% {
-        opacity: 1;
-      }
+      0% { opacity: 0; }
+      100% { opacity: 1; }
     }
 
     .button {
@@ -86,7 +99,7 @@
       position: relative;
       padding-left: 30px;
       transition: transform 0.3s ease, color 0.3s ease;
-      text-decoration: none; /* Remove default link styling */
+      text-decoration: none;
     }
 
     .button::before {
@@ -100,12 +113,12 @@
     }
 
     .button:hover {
-      transform: scale(1.1); /* Slightly grow the button */
-      color: #8ee978; /* Change text color to green on hover */
+      transform: scale(1.1);
+      color: #ffffff;
     }
 
     .button:hover::before {
-      color: #8ee978; /* Change the triangle color to green on hover */
+      color: #1e660d;
     }
 
     .button:focus {
@@ -115,11 +128,12 @@
   </style>
 </head>
 <body>
+  <a href="/" class="home-button">Home : Dulran</a>
   <div class="container">
     <h1>Choose Your Resume Option</h1>
     <div class="buttons">
-      <a href="https://drive.google.com/file/d/11tBiFzUgGLHRbGiFwt8_6o96r9lZ2NMv/view?usp=sharing" class="button" id="conciseResume">Concise Resume</a>
-      <a href="https://drive.google.com/file/d/10DzyQV0j2CC5Tpe8fvExICSKsEiGxwHb/view" class="button" id="detailedResume">Detailed Resume</a>
+      <a href="https://drive.google.com/file/d/1IZebEZDIS_ASmt6AmLXWFIyXuJGF9R6A/view?usp=sharing" class="button" id="conciseResume">Concise Resume</a>
+      <a href="https://drive.google.com/file/d/1IZebEZDIS_ASmt6AmLXWFIyXuJGF9R6A/view?usp=sharing" class="button" id="conciseResume">Detailed Resume</a>
     </div>
   </div>
 </body>
