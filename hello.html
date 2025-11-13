@@ -1,53 +1,92 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>"What's Up"</title>
 <style>
   body {
-        background-color: #a8565e;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+    background-color: #a8565e;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .start-audio-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: sans-serif;
+    font-size: 14px;
+    border: none;
+    box-shadow: 0 0 6px rgba(0,0,0,0.2);
+  }
+
+  .home-button {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #181818;
+    text-decoration: none;
+    padding: 6px 0;
+    transition: 1s ease;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .home-button:hover {
+    color: #1e660d;
+    transform: scale(1.08);
+  }
+
   .container {
-      width: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 200px;
-    }
- .home-button {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  font-family: "Quantico", sans-serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #181818;
-  text-decoration: none;
-  padding: 6px 0px;
-  border: 0px solid #181818;
-  border-radius: 6px;
-  transition: 1s ease;
-  font-family: "Cormorant Garamond", serif; /* Updated font */
-  text-align: center;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-}
-
-.home-button:hover {
-  color: #1e660d;
-  border-color: #1e660d;
-  transform: scale(1.08);
-}
-
+    padding-top: 200px;
+  }
 </style>
-</head> 
+</head>
+
 <body>
-  <a href="https://www.dulran.com/home67.html" class="home-button" class="home-button">Home : Dulran</a>
-  <img class="container" src="https://preview.redd.it/alice-in-wonderland-white-rabbit-pointing-at-clock-v0-a51y3ezms4xf1.jpg?width=640&crop=smart&auto=webp&s=a351c06c916d6ff4bb7f4344eb71752ec91afc72">
+
+  <button class="start-audio-btn" id="startAudio">Click here or I'll eat your cookies</button>
+
+  <div id="player"></div>
+
+  <a href="https://www.dulran.com/home67.html" class="home-button">Home : Dulran</a>
+
+  <img class="container"
+    src="https://preview.redd.it/alice-in-wonderland-white-rabbit-pointing-at-clock-v0-a51y3ezms4xf1.jpg?width=640&crop=smart&auto=webp&s=a351c06c916d6ff4bb7f4344eb71752ec91afc72">
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    let player;
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '0',
+        width: '0',
+        videoId: 'bZ1BbYqdizA',
+        playerVars: {
+          autoplay: 0,   // start only after click
+          controls: 0,
+          modestbranding: 1
+        }
+      });
+    }
+
+    document.getElementById('startAudio').addEventListener('click', () => {
+      player.playVideo();
+      document.getElementById('startAudio').style.display = 'none'; // hide button after click
+    });
+  </script>
+
 </body>
 </html>
