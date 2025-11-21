@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Protected Site</title>
+  <style>
+    body { font-family: Arial; padding: 40px; }
+    #content { display: none; }
+    .error { color: red; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<h2>Enter password</h2>
+<input type="password" id="pw" />
+<button onclick="unlock()">Submit</button>
+<div id="msg" class="error"></div>
+
+<div id="content">
+  <!-- Your protected site goes here -->
+  <h1>Welcome</h1>
+  <p>This was hidden behind the password.</p>
+</div>
+
+<script>
+// ====== CONFIG ======
+const storedHash = "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f";
+// This example hash corresponds to password:  "password123"
+
+// === helper: buffer → hex ===
+function toHex(buffer) {
+  return [...new Uint8Array(buffer)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// === SHA-256 hashing ===
+async function sha256(str) {
+  const enc = new TextEncoder();
+  const buf = enc.encode(str);
+  const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+  return toHex(hashBuf);
+}
+
+// === unlock ===
+async function unlock() {
+  const pw = document.getElementById("pw").value;
+  const msg = document.getElementById("msg");
+
+  const hash = await sha256(pw);
+  if (hash === storedHash) {
+    document.getElementById("content").style.display = "block";
+    msg.textContent = "";
+  } else {
+    msg.textContent = "Incorrect password.";
+  }
+}
+</script>
+
+</body>
+</html>
