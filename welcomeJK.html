@@ -1,0 +1,141 @@
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Caveat&family=Cedarville+Cursive&family=Indie+Flower&family=Nothing+You+Could+Do&family=Oooh+Baby&family=Reenie+Beanie&family=Shadows+Into+Light&display=swap');
+
+body {
+  margin: 0;
+  background-color: #FFFDF3;
+}
+
+div {
+  padding: 0rem 5rem;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  max-width: 900px;
+  min-height: 100vh;
+}
+
+p {
+  font-size: 4rem;
+  color: red;
+  line-height: 3.4rem;
+}
+
+@media only screen and (max-width: 800px) {
+  p {
+    font-size: 3rem;
+    line-height: 2.55rem;
+  }
+}
+
+.caveat {
+  font-family: "Caveat", cursive;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.shadows-into-light {
+  font-family: "Shadows Into Light", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.indie-flower {
+  font-family: "Indie Flower", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.nothing-you-could-do {
+  font-family: "Nothing You Could Do", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.oooh-baby {
+  font-family: "Oooh Baby", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+.reenie-beanie {
+  font-family: "Reenie Beanie", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.cedarville-cursive {
+  font-family: "Cedarville Cursive", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+</style>
+</head>
+<body>
+<div>
+<p></p>
+</div>
+<script>
+const seed = 12;
+const text = 'What Up 🥷, I basically own your name now. But this is for good, because we will use this as you r portfolio for college admission people to look at. We will put some \"Tom Pacha\" stuff here.Your site hasn\'t still been made and still using my domain to show stuff. But soon it shall come alive.';
+
+function seededRandom(seed) {
+  let x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
+function wrapLetters(str, element, seed = 1) {
+  const fonts = [
+    'caveat',
+    'cedarville-cursive',
+    'indie-flower',
+    'nothing-you-could-do',
+    'oooh-baby',
+    'reenie-beanie',
+    'shadows-into-light'
+  ];
+
+  const blacklist = {
+    l: ['cedarville-cursive', 'oooh-baby', 'nothing-you-could-do']
+  };
+
+  const lastUsed = {};
+  element.innerHTML = '';
+
+  let currentSeed = seed;
+
+  for (const char of str) {
+    const lowerChar = char.toLowerCase();
+    let availableFonts = fonts;
+
+    if (blacklist[lowerChar]) {
+      availableFonts = fonts.filter(f => !blacklist[lowerChar].includes(f));
+    }
+
+    if (lastUsed[lowerChar]) {
+      availableFonts = availableFonts.filter(f => f !== lastUsed[lowerChar]);
+    }
+
+    const fontIndex = Math.floor(seededRandom(currentSeed) * availableFonts.length);
+    const font = availableFonts[fontIndex] || fonts[0];
+    lastUsed[lowerChar] = font;
+
+    const span = document.createElement('span');
+    span.className = font;
+    span.textContent = char;
+    element.appendChild(span);
+
+    currentSeed++;
+  }
+}
+const p = document.querySelector('p');
+wrapLetters(text, p, seed);
+</script>
+</body>
+</html>
+
