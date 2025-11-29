@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html>
 <head>
 <title>My Dashboard</title>
@@ -41,9 +41,116 @@
 </head>
 <body>
 
-<!-- Calendar -->
+//calendar
+
 <div id="calendar">
   <iframe src="https://calendar.zoho.com/zc/ui/embed/#calendar=zz080112308bfe503a972ed422467afc1b309a10468918d168ccab86ad1b91fd5a05d388fa679061903ed25e344fd14cec6ef6dc2f&title=business&type=1&language=en&timezone=America%2FChicago&showTitle=1&showTimezone=1&view=day&showDetail=0&theme=1&eventColorType=light" title="business"width="350" height="500" frameBorder="0" scrolling="no"></iframe>
+</div>
+
+
+//notes
+
+
+<div id="notes">
+  <h2>Notes / Ideas/Long term goals</h2>
+  <p>
+    - Do GYROSCOPES 3D SCOOTER<br>
+    - Do El. Sieve <br>
+    - SMART Schol.<br>
+    - STUDY ABROAD Related -- chin. vis.<br>
+    - 3D printed CCTV 2 tilt esp 32 camera arduino/rasp<br>
+  </p>
+</div>
+
+
+//Live stock prices
+
+
+<div id="stocks">
+  <h2>Stocks</h2>
+  <div id="stockData">Loading...</div>
+</div>
+
+<script>
+const API_KEY = "0b983ca7cc8e49eb908e0233c202ee4f";
+const tickers = ["NVDA", "AMD", "TMC", "AAPL"];
+
+async function loadStocks() {
+  let html = "";
+
+  for (let t of tickers) {
+    try {
+      const res = await fetch(
+        `https://api.twelvedata.com/price?symbol=${t}&apikey=${API_KEY}`
+      );
+      const data = await res.json();
+
+      html += `${t}: $${Number(data.price).toFixed(2)}<br>`;
+    } catch (err) {
+      html += `${t}: error<br>`;
+    }
+  }
+
+  document.getElementById("stockData").innerHTML = html;
+}
+
+loadStocks();
+setInterval(loadStocks, 15000);
+</script>
+
+</body>
+</html> -->
+<!--<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=America%2FChicago&mode=WEEK&showPrint=0&showTabs=0&showCalendars=0&showTz=0&title=Poudgalika&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border-width:0" width="800" height="600" frameborder="0" scrolling="no"></iframe></iframe>
+-->
+<!--<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=America%2FChicago&showPrint=0&mode=WEEK&title=Poudgalika&showDate=0&showCalendars=0&showTabs=0&showTz=0&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border-width:0" width="800" height="600" frameborder="0" scrolling="no"></iframe>-->
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Dashboard</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 3.5fr 1fr;
+    grid-template-rows: 1fr1fr;
+    gap: 10px;
+    background: #111;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+
+  #calendar {
+    grid-row: 1 / span 2; /* tall main area */
+    background: #222;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  #notes {
+    padding: 1px;
+    background: #1a1a1a;
+    overflow-y: auto;
+  }
+
+  #stocks {
+    padding: 1px;
+    background: #1a1a1a;
+    font-size: 15px;
+  }
+
+  
+</style>
+</head>
+<body>
+
+<!-- Calendar -->
+<div id="calendar">
+  <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=America%2FChicago&showPrint=0&mode=WEEK&title=Poudgalika&showDate=0&showCalendars=0&showTabs=0&showTz=0&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border-width:0" title="business"width="350" height="500" frameBorder="0" scrolling="no"></iframe>
 </div>
 
 <!-- Notes -->
@@ -88,7 +195,7 @@ async function loadStocks() {
 }
 
 loadStocks();
-setInterval(loadStocks, 15000);
+setInterval(loadStocks, 60000);
 </script>
 
 </body>
