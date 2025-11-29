@@ -172,20 +172,28 @@ setInterval(loadStocks, 15000);
 </div>
 
 <script>
-const API_KEY = "0b983ca7cc8e49eb908e0233c202ee4f";
+const API_KEY = "d4lmia9r01qr851pb6l0d4lmia9r01qr851pb6lg";
+
+// Add/remove tickers here:
 const tickers = ["NVDA", "AMD", "TMC", "AAPL"];
+
+// Calculates refresh interval so: interval = number_of_stocks
+const REFRESH_SECONDS = tickers.length; 
+const REFRESH_MS = REFRESH_SECONDS * 1000;
 
 async function loadStocks() {
   let html = "";
 
   for (let t of tickers) {
     try {
-      const res = await fetch(
-        `https://api.twelvedata.com/price?symbol=${t}&apikey=${API_KEY}`
+      const r = await fetch(
+        `https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`
       );
-      const data = await res.json();
+      const data = await r.json();
 
-      html += `${t}: $${Number(data.price).toFixed(2)}<br>`;
+      const price = Number(data.c); // "c" = current price
+
+      html += `${t}: $${price.toFixed(2)}<br>`;
     } catch (err) {
       html += `${t}: error<br>`;
     }
@@ -194,8 +202,11 @@ async function loadStocks() {
   document.getElementById("stockData").innerHTML = html;
 }
 
+// First load immediately
 loadStocks();
-setInterval(loadStocks, 60000);
+
+// Auto-refresh every len(tickers) seconds
+setInterval(loadStocks, REFRESH_MS);
 </script>
 
 </body>
