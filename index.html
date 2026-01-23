@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DULRAN</title>
+
+<!-- Your font -->
+<style>
+@font-face {
+  font-family: "MonoTrustDisplay";
+  src: url("./MonoTrustDisplay.woff2") format("woff2");
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  background: black;
+  overflow: hidden;
+  font-family: "MonoTrustDisplay", sans-serif;
+}
+
+/* INTRO VIDEO */
+#introVideo {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.noscroll {
+  overflow: hidden;
+}
+
+/* CONTENT SECTION */
+#content {
+  height: 100vh;
+  position: relative;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 20s ease;
+}
+
+/* CANVAS BACKGROUND */
+#canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+/* TEXT GROUP */
+.hero {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+.hero h1,
+.hero h2,
+.hero h3 {
+  margin: 0;
+  color: transparent;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 8vw;
+  background: linear-gradient(120deg, rgba(255,255,255,0.8), rgba(180,180,255,0.25), rgba(255,255,255,0.8));
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: shine 4s infinite ease-in-out;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.25));
+  user-select: none;
+}
+
+@keyframes shine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.hero a:hover h1,
+.hero a:hover h2,
+.hero a:hover h3 {
+  filter: drop-shadow(0 0 35px rgba(255,255,255,0.8));
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+</style>
+</head>
+
+<body class="noscroll">
+
+<!-- INTRO VIDEO -->
+<video id="introVideo" autoplay muted playsinline>
+  <source src="Graphic_animation_style_202511082202.mp4" type="video/mp4" />
+</video>
+
+<!-- MAIN CONTENT SECTION -->
+<div id="content">
+  <canvas id="canvas"></canvas>
+
+<div class="hero">
+  <a href="https://dulran.com/resumesburntorange.html"><h1>RESUME</h1></a>
+  <a href="https://dulran.com/404.html"><h2>ABOUT/PROJECTS</h2></a>
+  <a href="noresponseneverputasimilarfiletothisname.html"><h3>GALLERY</h3></a>
+</div>
+  
+</div>
+
+<script type="module">
+// Tubes Cursor effect
+import TubesCursor from "https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js"
+
+const app = TubesCursor(document.getElementById('canvas'), {
+  tubes: {
+    colors: ["#f967fb", "#53bc28", "#6958d5"],
+    lights: {
+      intensity: 200,
+      colors: ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"]
+    }
+  }
+})
+
+document.body.addEventListener('click', () => {
+  const colors = randomColors(3)
+  const lightsColors = randomColors(4)
+  app.tubes.setColors(colors)
+  app.tubes.setLightsColors(lightsColors)
+})
+
+function randomColors(count) {
+  return new Array(count)
+    .fill(0)
+    .map(() => "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'))
+}
+
+
+// Auto-scroll reveal logic
+const video = document.getElementById("introVideo");
+const content = document.getElementById("content");
+
+function reveal() {
+  content.style.opacity = "1";
+  content.style.pointerEvents = "auto";
+  document.body.classList.remove("noscroll");
+  window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
+}
+
+video.addEventListener("ended", reveal);
+
+// Safety fallback (6 sec)
+setTimeout(reveal, 30000);
+</script>
+
+</body>
+</html>
