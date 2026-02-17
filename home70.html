@@ -150,7 +150,6 @@ function randomColors(count) {
 
 
 // Auto-scroll reveal logic
-const video = document.getElementById("introVideo");
 const content = document.getElementById("content");
 
 function reveal() {
@@ -160,7 +159,6 @@ function reveal() {
   window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
 }
 
-video.addEventListener("ended", reveal);
 
 // Safety fallback (6 sec)
 setTimeout(reveal, 30000);
@@ -179,8 +177,17 @@ if (!localStorage.getItem("animationPlayed")) {
   });
 
   animation.addEventListener("complete", () => {
-    localStorage.setItem("animationPlayed", "true");
-  });//hiding the animation after one loop
+  localStorage.setItem("animationPlayed", "true");
+
+  const animDiv = document.getElementById("animation");
+
+  animDiv.style.transition = "opacity 0.8s ease";
+  animDiv.style.opacity = "0";
+
+  setTimeout(() => {
+    animDiv.remove();
+  }, 800);
+ });//hiding the animation and removing the layer after one loop
 
 } else {
   document.getElementById("animation").style.display = "none";
