@@ -1,6 +1,7 @@
 
 
 <!DOCTYPE html>
+<!--Tout est en français car vous ne voulez pas que ce site soit accessible à tous si quelqu'un le découvre. Vous l'avez créé pour que, si jamais vous perdez la raison, vous vous souveniez de ces informations.-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -150,38 +151,48 @@
   </div>
 </body>
 <script>
-const username = document.getElementById('username').value;
-if username 
 
-// ====== CONFIG ======
+
 const storedHash = "b57cff2013f53509506aabd63524b10e205f6300cf023db6840ec6fa2a8ba5bf";
 // Ce hachage correspond au nom de la personne dont on est amoureux.you know who
 
-// === helper: buffer → hex ===
+const form = document.querySelector("form");
+const msg = document.getElementById("msg");
+
+// ===== buffer → hex =====
 function toHex(buffer) {
   return [...new Uint8Array(buffer)]
     .map(b => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-// === SHA-256 hashing ===
+// ===== SHA256 =====
 async function sha256(str) {
   const enc = new TextEncoder();
-  const buf = enc.encode(str);
+  const buf = enc.encode(str.toLowerCase().trim());
   const hashBuf = await crypto.subtle.digest("SHA-256", buf);
   return toHex(hashBuf);
 }
 
-// === unlock ===
-async function unlock() {
+// ===== form submit handler =====
+form.addEventListener("submit", async (e) => {
+  e.preventDefault(); // stops page reload
+
+  const username = document.getElementById("username").value;
+
+  if (!username) {
+    msg.textContent = "Veuillez entrer un nom.";
+    return;
+  }
 
   const hash = await sha256(username);
+
   if (hash === storedHash) {
-    window.location.href = www.dulran.com;
-    msg.textContent = "";
+    window.location.href =
+      "https://media.tenor.com/hV4k1XmIWyQAAAAe/why-is-he-correct.png";
   } else {
-    msg.textContent = "Incorrect password.";
+    msg.textContent = "Incorrect.";
   }
-}
+});
 </script>
 </html>
