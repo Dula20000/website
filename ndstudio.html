@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#animation {
+  cursor: pointer; /* optional: shows it's clickable */
+}
+</style>
+</head>
+
+<body style="background-color: black;">
+
+<div id="animation"></div>
+
+<script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
+
+<script>
+const animationContainer = document.getElementById("animation");
+
+lottie.loadAnimation({
+  container: animationContainer,
+  renderer: "svg",
+  loop: true,
+  autoplay: true,
+  path: "https://dulran.com/jsons/16-10.json"
+});
+
+// Redirect when clicked
+animationContainer.addEventListener("click", () => {
+  window.location.href = "https://dulran.com";
+});
+</script>
+
+</body>
+</html>
