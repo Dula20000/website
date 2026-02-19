@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading...</title>
+  <link rel="stylesheet" href="https://dulran.com/styles/loadingscreenstyling.css">
+</head>
+<body>
+
+  <div id="animation"></div>
+
+  <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
+  <script src="https://dulran.com/scripts/loadingscreens/one.js"></script>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("from") || "/";
+
+    // After animation finishes, redirect back
+    // Adjust the timeout to match your animation length
+    setTimeout(() => {
+      window.location.replace(returnTo);
+    }, 3000); // 3 seconds
+  </script>
+
+</body>
+</html>
