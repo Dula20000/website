@@ -17,11 +17,15 @@
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get("from") || "/";
 
-    // After animation finishes, redirect back
-    // Adjust the timeout to match your animation length
-    setTimeout(() => {
-      window.location.replace(returnTo);
-    }, 3000); // 3 seconds
+    // Wait for the animation div to be removed, then redirect
+    const observer = new MutationObserver(() => {
+      if (!document.getElementById("animation")) {
+        observer.disconnect();
+        window.location.replace(returnTo);
+      }
+    });
+
+    observer.observe(document.body, { childList: true });
   </script>
 
 </body>
