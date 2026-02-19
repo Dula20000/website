@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ASE 370C: Feedback Control Systems Spring 2026 Homework 1</title>
+
+
+<!-- External libraries included ONCE -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  body {
+    margin: 20px auto;
+    max-width: 1000px;
+    font-family: Arial, sans-serif;
+    background: white;
+    color: black;
+  }
+  hr {
+    margin: 50px 0;
+    border: none;
+    border-top: 2px solid #444;
+  }
+
+  .hw-container {
+    margin: 0 auto;
+    max-width: 1100px;
+    text-align: left;
+  }
+</style>
+<script>try { Plotly.defaults = { template: "plotly_white" }; } catch (e) {}</script>
+</head>
+<body>
+<h1 style="text-align:center; margin: 24px 0;">ASE 370C: Feedback Control Systems Spring 2026 Homework 1</h1>
+<div class="hw-container">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>First-Order Scalar System Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f5f7fb;
+        color: #1f2937;
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px 64px;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      p.description {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 24px;
+        color: #4b5563;
+      }
+
+      .demo-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+        padding: 28px 32px 36px;
+      }
+
+      .exercise {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(45, 212, 191, 0.14));
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 16px;
+        padding: 22px 26px;
+        margin-bottom: 28px;
+      }
+
+      .exercise h2 {
+        margin: 0 0 12px;
+        font-size: 1.2rem;
+        color: #065f46;
+      }
+
+      .exercise p {
+        margin: 0 0 12px;
+        color: #065f46;
+      }
+
+      .exercise ul {
+        margin: 0 0 16px 18px;
+        padding: 0;
+        color: #065f46;
+        line-height: 1.5;
+      }
+
+      .exercise li {
+        margin-bottom: 6px;
+      }
+
+      .equations {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.08));
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+        font-size: 0.95rem;
+        color: #1f2937;
+      }
+
+      .plot-container {
+        width: 100%;
+        height: 380px;
+        margin-bottom: 32px;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .slider-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        background: linear-gradient(135deg, #f9fafb 0%, #eef2ff 100%);
+        border-radius: 12px;
+        padding: 16px 18px;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+      }
+
+      .slider-group label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #1e1b4b;
+      }
+
+      .slider-group span.value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        padding-left: 12px;
+        color: #4c1d95;
+      }
+
+      .slider-track {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .slider-group input[type="range"] {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+        outline: none;
+      }
+
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="number"] {
+        width: 120px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        font-size: 0.95rem;
+        font-family: "Inter", sans-serif;
+        font-variant-numeric: tabular-nums;
+        color: #1f2937;
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      .slider-group input[type="number"]:focus {
+        outline: 3px solid rgba(79, 70, 229, 0.25);
+        border-color: rgba(79, 70, 229, 0.6);
+      }
+
+      .system-metrics {
+        margin-top: 32px;
+        padding: 18px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .metric span.label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+
+      .metric span.value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .footnote {
+        margin-top: 28px;
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      @media (max-width: 600px) {
+        .demo-card {
+          padding: 24px 20px 28px;
+        }
+
+        .plot-container {
+          height: 320px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+      <p class="page">
+  <span style="color: #999;">© [2026] [Ufuk Topcu, Adam Thorpe, Mustafa Karabag, Vivian Chen, Filippos Fotiadis, Su Ann Low]. All rights reserved. All course material is intended exclusively for use by students enrolled in this course. Redistribution, posting on public websites, sharing on file-hosting services, or inclusion in other instructional materials is strictly prohibited without prior written permission of the authors. Unauthorized distribution may violate copyright law.    
+</span>
+
+
+<br> <br>
+
+                Submit your work to Gradescope as a single PDF. Solutions must be typed, NOT handwritten.
+<br><br>
+
+                Your answers must show your reasoning and work. Include all calculations, figures, drawings, code, etc. that support your answers in the PDF. 
+</p> 
+
+
+
+
+
+
+
+
+    <div class="page">
+      <!-- Introduction to System Identification -->
+      <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08)); border-left: 4px solid #6366f1; padding: 24px 28px; margin-bottom: 40px; border-radius: 8px;">
+        <h2 style="margin-top: 0; color: #4338ca; font-size: 1.4rem;">Introduction: System Identification for First-Order Systems</h2>
+        
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+          In this homework, we will identify unknown system parameters from observed input-output data. For first-order linear systems of the form \(\dot{x} = Ax + Bu\) with output \(y = Cx + Du\), several key properties allow us to extract parameter values from measurements.
+        </p>
+
+        <h3 style="color: #4338ca; font-size: 1.1rem; margin-top: 24px; margin-bottom: 12px;">1. Steady-State Gain (DC Gain)</h3>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          When a stable system (\(A < 0\)) is subjected to a constant (step) input \(u(t) = u_m\), the state eventually reaches a steady-state value. The <strong>steady-state gain</strong> relates the output's final value to the input magnitude:
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[\frac{y_{ss}}{u_m} = D - \frac{CB}{A}.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+          For the standard first-order system without direct feedthrough (\(D = 0\)), this simplifies to:
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[\frac{y_{ss}}{u_m} = -\frac{CB}{A}.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937;">
+          By measuring the steady-state output for a known step input, we can determine the ratio \(CB/A\).
+        </p>
+
+        <h3 style="color: #4338ca; font-size: 1.1rem; margin-top: 24px; margin-bottom: 12px;">2. Frequency Response (Steady-State Sinusoidal Response)</h3>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          When the input is sinusoidal \(u(t) = U\cos(\omega t)\), the steady-state output is also sinusoidal at the same frequency but with different amplitude and phase. The <strong>frequency response function</strong> is
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[G(j\omega) = D + \frac{CB}{j\omega - A}.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          The magnitude \(|G(j\omega)|\) is called the <strong>steady-state gain</strong> at frequency \(\omega\), and it determines the amplitude ratio between output and input:
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[\text{Output amplitude} = |G(j\omega)| \times U.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          The phase \(\angle G(j\omega)\) represents the time lag (or lead) between output and input. The so-called <strong>time lag</strong> \(T^{\text{lag}}\) is
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[T^{\text{lag}} = \frac{-\angle G(j\omega)}{\omega}.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937;">
+          By measuring amplitude ratios and phase shifts at different frequencies, we can extract system parameters.
+        </p>
+
+        <h3 style="color: #4338ca; font-size: 1.1rem; margin-top: 24px; margin-bottom: 12px;">3. Time Constant and Transient Response</h3>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          For stable systems (\(A < 0\)), the <strong>time constant</strong> \(T\) characterizes how quickly the system responds to changes:
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[T = \frac{1}{|A|} = -\frac{1}{A}.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          The transient response (starting from initial condition \(x_0\)) evolves as:
+        </p>
+        <div style="background: white; padding: 16px; border-radius: 6px; margin: 16px 0; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+          \[x(t) = e^{At}x_0 = e^{-t/T}x_0.\]
+        </div>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 12px;">
+          <strong>Physical interpretation:</strong> After one time constant (\(t = T\)), the state (and hence the transient response) has decayed to approximately \(e^{-1} \approx 36.8\%\) of its initial value. For example:
+        </p>
+        <ul style="line-height: 1.7; color: #1f2937; margin-left: 20px; margin-bottom: 12px;">
+          <li>After \(t = T\): response is at \(36.8\%\) of initial value</li>
+          <li>After \(t = 2T\): response is at \(13.5\%\) of initial value</li>
+          <li>After \(t = 3T\): response is at \(5.0\%\) of initial value</li>
+          <li>After \(t = 5T\): response is at \(0.67\%\) of initial value (essentially settled)</li>
+        </ul>
+        <p style="line-height: 1.7; color: #1f2937;">
+          By observing the rate of decay in a step response, we can identify the time constant \(T\) and thus determine \(A = -1/T\).
+        </p>
+
+        <h3 style="color: #4338ca; font-size: 1.1rem; margin-top: 24px; margin-bottom: 12px;">System Identification Strategy</h3>
+        <p style="line-height: 1.7; color: #1f2937; margin-bottom: 8px;">
+          Combining these tools, we can identify multiple system parameters. For example:
+        </p>
+        <ol style="line-height: 1.7; color: #1f2937; margin-left: 20px;">
+          <li><strong>Identify \(A\)</strong> from the time constant of the transient response</li>
+          <li><strong>Identify \(CB/A\)</strong> from the steady-state gain with constant inputs</li>
+          <li><strong>Identify \(A\) </strong> using frequency response measurements at different frequencies</li>
+          <li><strong>Verify consistency</strong> by checking that all measurements are consistent with the identified parameters</li>
+        </ol>
+      </div>
+
+
+
+
+      <p class="description">
+      </p>
+
+    <div class="page">
+      <h1>Question 1: Identifying the system parameters from the forced response of a first-order system (40 pts)</h1>
+
+
+
+      <p class="description">
+        The feedback interconnection shown below represents a first-order system subject to disturbances, in which the control input is a proportional scaling of the reference-tracking error, and the initial condition of the system satisfies \(x(0) = x_{0}\).
+                     <br>
+      </p>
+      </p>
+      <img src="feedbackhw1.svg" alt="icon">
+
+
+
+      <div class="exercise">
+        <h2>Part 1 (10 pts)</h2>
+        <p>
+<u>By hand</u>, derive the steady-state gain from the step reference input \(r(t) = \bar{r}\) to the output \(y(t)\) in terms of 
+        <ul>
+          <li>the state matrix (scalar) \(A\),</li>
+          <li>the input matrix (scalar) \(B_{1}\) for the input \(u(t)\),</li>
+          <li>the proportional gain (scalar) \(k_{p}\) for the input \(u(t)\),</li>
+          <li>the input matrix (scalar) \(B_{2}\) for the input \(d(t)\),</li>
+          <li>the output matrix (scalar) \(C\), and</li>
+          <li>the input magnitude \(\bar{r}\) for the input \(r(t)\).</li>
+        </ul>
+      </div>
+            <div class="exercise">
+        <h2>Part 2 (10 pts)</h2>
+        <p>
+<u>By hand</u>, derive the steady-state gain from the step disturbance input \(d(t) = \bar{d}\) to the output \(y(t)\) in terms of 
+        <ul>
+          <li>the state matrix (scalar) \(A\),</li>
+          <li>the input matrix (scalar) \(B_{1}\) for the input \(u(t)\),</li>
+          <li>the proportional gain (scalar) \(k_{p}\) for the input \(u(t)\),</li>
+          <li>the input matrix (scalar) \(B_{2}\) for the input \(d(t)\),</li>
+          <li>the output matrix (scalar) \(C\), and</li>
+          <li>the input magnitude \(\bar{d}\) for the input \(d(t)\).</li>
+        </ul>
+      </div>
+      <div class="exercise">
+        <h2>Part 3 (20 pts)</h2>
+        <p>
+The system parameters are \(A=-1.2\), \(B_{1}=1\), \(B_{2}=0.35\), and \(C=1\), and the proportional gain is \(k_{p}=1.8\). 
+<br>
+<br>
+
+In this problem, you will identify some of these parameters by observing the system response for different values of the initial state and the inputs. Do not use the given parameter values directly in your solution; instead, derive the results from the observed responses and show your reasoning. You may use the given values only to check your final answers.
+<br>
+<br>
+ The plot below shows the complete response \(y(t)\) of the system under the sinusoidal reference input \(r(t) = \bar{r} \cos(\omega t)\) and the step disturbance input \(d= \bar{d}\). 
+ <br><br>
+
+ By manually adjusting the values of \(x_{0}\), \(\bar{r}\), \(\omega\), and \(\bar{d}\), and observing the changes in the output \(y(t)\),
+identify 
+        <ul>
+          <li>the state matrix (scalar) \(A\),</li>
+          <li>the input matrix (scalar) \(B_{1}\) for the input \(u(t)\),</li>
+          <li>the proportional gain (scalar) \(k_{p}\) for the input \(u(t)\),</li>
+          <li>the input matrix (scalar) \(B_{2}\) for the input \(d(t)\), and</li>
+          <li>the output matrix (scalar) \(C\).</li>
+        </ul>
+        <p>
+                     <br>  
+          If any of the parameters is not uniquely identifiable, state the tightest condition for the parameter you can derive. 
+        </p>
+      </div>
+
+      <p class="description">
+        You can hover on the plot to get time and magnitude measurements.
+      </p>
+
+      <div class="demo-card">
+        <div id="root_Q1"></div>
+      </div>
+    </div>
+
+    
+    
+    
+    
+    
+
+    <script type="text/babel">(function(){
+
+      const DEFAULT_CONSTANTS = {
+        A: -1.2,
+        B1: 1.0,
+        B2: 0.35,
+        C: 1.0,
+        kp: 1.8,
+        t0: 0,
+        tf: 8,
+        dt: 0.01,
+      };
+
+      const Slider = ({ label, value, min, max, step, onChange }) => {
+        const [inputValue, setInputValue] = React.useState(value.toFixed(2));
+
+        React.useEffect(() => {
+          const formatted = value.toFixed(2);
+          if (formatted !== inputValue) {
+            setInputValue(formatted);
+          }
+        }, [value]);
+
+        const clamp = (val) => Math.min(max, Math.max(min, val));
+
+        const handleNumberChange = (event) => {
+          const next = event.target.value;
+          setInputValue(next);
+          const parsed = parseFloat(next);
+          if (!Number.isNaN(parsed)) {
+            onChange(clamp(parsed));
+          }
+        };
+
+        const handleNumberBlur = () => {
+          const parsed = parseFloat(inputValue);
+          if (Number.isNaN(parsed)) {
+            setInputValue(value.toFixed(2));
+            return;
+          }
+          const clamped = clamp(parsed);
+          setInputValue(clamped.toFixed(2));
+          onChange(clamped);
+        };
+
+        const handleSliderChange = (event) => {
+          const numeric = parseFloat(event.target.value);
+          onChange(numeric);
+          setInputValue(numeric.toFixed(2));
+        };
+
+        return (
+          <div className="slider-group">
+            <label>
+              {label}
+              <span className="value">{value.toFixed(2)}</span>
+            </label>
+            <div className="slider-track">
+              <input
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={value}
+                onChange={handleSliderChange}
+              />
+              <input
+                type="number"
+                value={inputValue}
+                min={min}
+                max={max}
+                step={step}
+                onChange={handleNumberChange}
+                onBlur={handleNumberBlur}
+              />
+            </div>
+          </div>
+        );
+      };
+
+      // Modified computeResponse: r(t) = magnitude * cos(omega * t)
+      function computeResponse({ A, B1, B2, C, kp, t0, tf, dt }, { magnitude, omega, d, x0 }) {
+        const steps = Math.floor((tf - t0) / dt) + 1;
+        const times = new Array(steps);
+        const ySeries = new Array(steps);
+        const xSeries = new Array(steps);
+        let x = x0;
+        xSeries[0] = x0;
+        ySeries[0] = C * x;
+        times[0] = 0
+        for (let i = 0; i < steps - 1; i++) {
+          const t = t0 + i * dt;
+          const r = magnitude * Math.cos(omega * t);
+          const y = C * x
+          const e = r-y
+          const forcing = B1 * kp * e + B2 * d;
+          const dx = A * x + forcing;
+          x += dx * dt;
+          times[i] = t;
+          xSeries[i+1] = x;
+          ySeries[i+1] = C * x;
+        }
+
+        return { time: times, x: xSeries, y: ySeries };
+      }
+
+      const usePlotly = ({ time, y, constants }) => {
+        const plotRef = React.useRef(null);
+
+        React.useEffect(() => {
+          if (!plotRef.current) {
+            return;
+          }
+
+          const trace = {
+            x: time,
+            y,
+            type: "scatter",
+            mode: "lines",
+            line: {
+              width: 3,
+              color: "#3730a3",
+              shape: "spline",
+            },
+            hovertemplate:
+              "<b>t:</b> %{x:.2f} s<br><b>y(t):</b> %{y:.3f}<extra></extra>",
+          };
+
+          const layout = {
+            margin: { l: 60, r: 18, t: 28, b: 50 },
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(248,250,252,0.92)",
+            font: { family: "Inter, sans-serif", color: "#111827" },
+            xaxis: {
+              title: "Time (s)",
+              gridcolor: "rgba(99,102,241,0.15)",
+              zeroline: false,
+            },
+            yaxis: {
+              title: "Output y(t)",
+              gridcolor: "rgba(99,102,241,0.15)",
+              zeroline: false,
+            },
+          };
+
+          const config = {
+            displayModeBar: false,
+            responsive: true,
+          };
+
+          Plotly.react(plotRef.current, [trace], layout, config);
+        }, [time, y, constants]);
+
+        return plotRef;
+      };
+
+      const FirstOrderScalarSystem = () => {
+        const [magnitude, setMagnitude] = React.useState(1.0);
+        const [omega, setOmega] = React.useState(2.0);
+        const [d, setD] = React.useState(0.5);
+        const [x0, setX0] = React.useState(-0.2);
+
+        const simulation = React.useMemo(
+          () => computeResponse(DEFAULT_CONSTANTS, { magnitude, omega, d, x0 }),
+          [magnitude, omega, d, x0]
+        );
+
+        const plotRef = usePlotly({
+          time: simulation.time,
+          y: simulation.y,
+          constants: DEFAULT_CONSTANTS,
+        });
+
+        return (
+          <>
+            <div ref={plotRef} className="plot-container"></div>
+
+            <div className="controls-grid">
+              <Slider
+                label="Reference input magnitude r̅"
+                value={magnitude}
+                min={0}
+                max={2}
+                step={0.01}
+                onChange={setMagnitude}
+              />
+              <Slider
+                label="Reference input frequency ω"
+                value={omega}
+                min={0}
+                max={10}
+                step={0.1}
+                onChange={setOmega}
+              />
+              <Slider
+                label="Disturbance input magnitude d̅"
+                value={d}
+                min={-1.5}
+                max={1.5}
+                step={0.01}
+                onChange={setD}
+              />
+              <Slider
+                label="Initial state x₀"
+                value={x0}
+                min={-2}
+                max={2}
+                step={0.01}
+                onChange={setX0}
+              />
+            </div>
+          </>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById("root_Q1"));
+      root.render(<FirstOrderScalarSystem />);
+    
+})();</script>
+  </div>
+</body>
+</html>
+
+<hr>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>First-Order Scalar System Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f5f7fb;
+        color: #1f2937;
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px 64px;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      p.description {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 24px;
+        color: #4b5563;
+      }
+
+      .demo-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+        padding: 28px 32px 36px;
+      }
+
+      .exercise {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(45, 212, 191, 0.14));
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 16px;
+        padding: 22px 26px;
+        margin-bottom: 28px;
+      }
+
+      .exercise h2 {
+        margin: 0 0 12px;
+        font-size: 1.2rem;
+        color: #065f46;
+      }
+
+      .exercise p {
+        margin: 0 0 12px;
+        color: #065f46;
+      }
+
+      .exercise ul {
+        margin: 0 0 16px 18px;
+        padding: 0;
+        color: #065f46;
+        line-height: 1.5;
+      }
+
+      .exercise li {
+        margin-bottom: 6px;
+      }
+
+      .equations {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.08));
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+        font-size: 0.95rem;
+        color: #1f2937;
+      }
+
+      .plot-container {
+        width: 100%;
+        height: 380px;
+        margin-bottom: 32px;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .slider-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        background: linear-gradient(135deg, #f9fafb 0%, #eef2ff 100%);
+        border-radius: 12px;
+        padding: 16px 18px;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+      }
+
+      .slider-group label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #1e1b4b;
+      }
+
+      .slider-group span.value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        padding-left: 12px;
+        color: #4c1d95;
+      }
+
+      .slider-track {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .slider-group input[type="range"] {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+        outline: none;
+      }
+
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="number"] {
+        width: 120px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        font-size: 0.95rem;
+        font-family: "Inter", sans-serif;
+        font-variant-numeric: tabular-nums;
+        color: #1f2937;
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      .slider-group input[type="number"]:focus {
+        outline: 3px solid rgba(79, 70, 229, 0.25);
+        border-color: rgba(79, 70, 229, 0.6);
+      }
+
+      .system-metrics {
+        margin-top: 32px;
+        padding: 18px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .metric span.label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+
+      .metric span.value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .footnote {
+        margin-top: 28px;
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      @media (max-width: 600px) {
+        .demo-card {
+          padding: 24px 20px 28px;
+        }
+
+        .plot-container {
+          height: 320px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Question 2: Identifying the system parameters from the steady-state response of a first-order system (30 pts)</h1>
+
+      <p class="description">
+        The feedback interconnection shown below (same as in Question 1) represents a first-order system subject to disturbances, in which the control input is a proportional scaling of the reference-tracking error, and the initial condition of the system satisfies \(x(0) = x_{0}\).
+      </p>
+
+            <img src="feedbackhw1.svg" alt="icon">
+
+      <div class="exercise">
+        <h2>Part 1 (10 pts)</h2>
+        <p>
+<u>By hand</u>, derive the steady-state gain from the sinusoidal reference input \(r(t) = \bar{r}\cos(\omega t)\) to the output \(y(t)\) in terms of 
+        <ul>
+          <li>the state matrix (scalar) \(A\)</li>
+          <li>the input matrix (scalar) \(B_{1}\) for the input \(u(t)\)</li>
+          <li>the proportional gain (scalar) \(k_{p}\) for the input \(u(t)\)</li>
+          <li>the input matrix (scalar) \(B_{2}\) for the input \(d(t)\)</li>
+          <li>the output matrix (scalar) \(C\)</li>
+          <li>the input frequency \(\omega\) for the input \(r(t)\), and</li>
+          <li>the input magnitude \(\bar{r}\) for the input \(r(t)\).</li>
+        </ul>
+        <p>
+      </div>
+      <div class="exercise">
+        <h2>Part 2 (20 pts)</h2>
+        <p>
+The system parameters are \(A= -0.3\), \(B_{1}=1\), \(B_{2}=0.35\), \(C= 0.2\), and the proportional gain is \(k_{p}=1.5\). 
+<br><br>
+In this problem, you will identify some of these parameters by observing the system response for different values of the control input. Do not use the given parameter values directly in your solution; instead, derive the results from the observed responses and show your reasoning. You may use the given values only to check your final answers.
+<br><br>
+
+ Assume \(d(t) = 0\) and \(x(0) = 0\). 
+                       <br>  <br>
+ The plot below shows the steady-state response \(y(t)\) of the system under input \(r(t)\). 
+                      <br>  <br>
+           By manually adjusting the values for \(\bar{r}\) and \(\omega\) and observing the changes in the output \(y(t)\), 
+identify 
+        <ul>
+          <li>the state matrix (scalar) \(A\)</li>
+          <li>the input matrix (scalar) \(B_{1}\) for the input \(u(t)\)</li>
+          <li>the proportional gain (scalar) \(k_{p}\) for the input \(u(t)\), and</li>
+          <li>the output matrix (scalar) \(C\).</li>
+        </ul>
+        <p>
+                     <br>  <br>
+          If any of the parameters is not uniquely identifiable, state the tightest condition for the parameter you can derive . 
+                           </p>
+      </div>
+
+      <p class="description">
+        You can hover on the plot to get time and magnitude measurements.
+      </p>
+
+      <div class="demo-card">
+        <div id="root_Q2"></div>
+      </div>
+    </div>
+
+    
+    
+    
+    
+    
+
+    <script type="text/babel">(function(){
+
+      const DEFAULT_CONSTANTS = {
+        A: -0.3,
+        B1: 1.0,
+        B2: 0.35,
+        C: 0.2,
+        kp: 1.5,
+        t0: 0,
+        tf: 15,
+        dt: 0.01,
+      };
+
+      const Slider = ({ label, value, min, max, step, onChange }) => {
+        const [inputValue, setInputValue] = React.useState(value.toFixed(2));
+
+        React.useEffect(() => {
+          const formatted = value.toFixed(2);
+          if (formatted !== inputValue) {
+            setInputValue(formatted);
+          }
+        }, [value]);
+
+        const clamp = (val) => Math.min(max, Math.max(min, val));
+
+        const handleNumberChange = (event) => {
+          const next = event.target.value;
+          setInputValue(next);
+          const parsed = parseFloat(next);
+          if (!Number.isNaN(parsed)) {
+            onChange(clamp(parsed));
+          }
+        };
+
+        const handleNumberBlur = () => {
+          const parsed = parseFloat(inputValue);
+          if (Number.isNaN(parsed)) {
+            setInputValue(value.toFixed(2));
+            return;
+          }
+          const clamped = clamp(parsed);
+          setInputValue(clamped.toFixed(2));
+          onChange(clamped);
+        };
+
+        const handleSliderChange = (event) => {
+          const numeric = parseFloat(event.target.value);
+          onChange(numeric);
+          setInputValue(numeric.toFixed(2));
+        };
+
+        return (
+          <div className="slider-group">
+            <label>
+              {label}
+              <span className="value">{value.toFixed(2)}</span>
+            </label>
+            <div className="slider-track">
+              <input
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={value}
+                onChange={handleSliderChange}
+              />
+              <input
+                type="number"
+                value={inputValue}
+                min={min}
+                max={max}
+                step={step}
+                onChange={handleNumberChange}
+                onBlur={handleNumberBlur}
+              />
+            </div>
+          </div>
+        );
+      };
+
+      // Modified computeResponse: r(t) = magnitude * cos(omega * t)
+      // Modified computeResponse: r(t) = magnitude * cos(omega * t)
+      function computeResponse({ A, B1, B2, C, kp, t0, tf, dt }, { magnitude, omega, d, x0 }) {
+        const steps = Math.floor((tf - t0) / dt) + 1;
+        const times = new Array(steps);
+        const ySeries = new Array(steps);
+        const xSeries = new Array(steps);
+        let x = x0;
+        xSeries[0] = x0;
+        ySeries[0] = C * x;
+        times[0] = 0
+        for (let i = 0; i < steps - 1; i++) {
+          const t = t0 + i * dt;
+          const r = magnitude * Math.cos(omega * t);
+          const y = C * x
+          const e = r-y
+          const forcing = B1 * kp * e + B2 * d;
+          const dx = A * x + forcing;
+          x += dx * dt;
+          times[i] = t;
+          xSeries[i+1] = x;
+          ySeries[i+1] = C * x;
+        }
+
+        return { time: times, x: xSeries, y: ySeries };
+      }
+
+
+
+      const usePlotly = ({ time, y, constants }) => {
+        const plotRef = React.useRef(null);
+
+        React.useEffect(() => {
+          if (!plotRef.current) {
+            return;
+          }
+
+          const trace = {
+            x: time,
+            y,
+            type: "scatter",
+            mode: "lines",
+            line: {
+              width: 3,
+              color: "#3730a3",
+              shape: "spline",
+            },
+            hovertemplate:
+              "<b>t:</b> %{x:.2f} s<br><b>y(t):</b> %{y:.3f}<extra></extra>",
+          };
+
+const layout = {
+  margin: { l: 60, r: 18, t: 28, b: 50 },
+  paper_bgcolor: "rgba(0,0,0,0)",
+  plot_bgcolor: "rgba(248,250,252,0.92)",
+  font: { family: "Inter, sans-serif", color: "#111827" },
+  xaxis: {
+    title: "Time (s)",
+    range: [10, 15],   // <-- Add this line
+    gridcolor: "rgba(99,102,241,0.15)",
+    zeroline: false,
+  },
+  yaxis: {
+    title: "Output y(t)",
+    gridcolor: "rgba(99,102,241,0.15)",
+    zeroline: false,
+  },
+};
+
+          const config = {
+            displayModeBar: false,
+            responsive: true,
+          };
+
+          Plotly.react(plotRef.current, [trace], layout, config);
+        }, [time, y, constants]);
+
+        return plotRef;
+      };
+
+      const FirstOrderScalarSystem = () => {
+  const [magnitude, setMagnitude] = React.useState(1.0);
+  const [omega, setOmega] = React.useState(2.0);
+  const d = 0; // fixed disturbance
+  const x0 = 0; // fixed initial state
+
+  const simulation = React.useMemo(
+    () => computeResponse(DEFAULT_CONSTANTS, { magnitude, omega, d, x0 }),
+    [magnitude, omega]
+  );
+
+  const plotRef = usePlotly({
+    time: simulation.time,
+    y: simulation.y,
+    constants: DEFAULT_CONSTANTS,
+  });
+
+  return (
+    <>
+      <div ref={plotRef} className="plot-container"></div>
+
+      <div className="controls-grid">
+        <Slider
+          label="Reference input magnitude r̅"
+          value={magnitude}
+          min={0}
+          max={2}
+          step={0.01}
+          onChange={setMagnitude}
+        />
+        <Slider
+          label="Reference input frequency ω"
+          value={omega}
+          min={0}
+          max={10}
+          step={0.1}
+          onChange={setOmega}
+        />
+      </div>
+    </>
+  );
+};
+
+      const root = ReactDOM.createRoot(document.getElementById("root_Q2"));
+      root.render(<FirstOrderScalarSystem />);
+    
+})();</script>
+  </body>
+</html>
+
+<hr>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>First-Order Scalar System Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f5f7fb;
+        color: #1f2937;
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px 64px;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      p.description {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 24px;
+        color: #4b5563;
+      }
+
+      .demo-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+        padding: 28px 32px 36px;
+      }
+
+      .exercise {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(45, 212, 191, 0.14));
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 16px;
+        padding: 22px 26px;
+        margin-bottom: 28px;
+      }
+
+      .exercise h2 {
+        margin: 0 0 12px;
+        font-size: 1.2rem;
+        color: #065f46;
+      }
+
+      .exercise p {
+        margin: 0 0 12px;
+        color: #065f46;
+      }
+
+      .exercise ul {
+        margin: 0 0 16px 18px;
+        padding: 0;
+        color: #065f46;
+        line-height: 1.5;
+      }
+
+      .exercise li {
+        margin-bottom: 6px;
+      }
+
+      .equations {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.08));
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+        font-size: 0.95rem;
+        color: #1f2937;
+      }
+
+      .plot-container {
+        width: 100%;
+        height: 380px;
+        margin-bottom: 32px;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .slider-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        background: linear-gradient(135deg, #f9fafb 0%, #eef2ff 100%);
+        border-radius: 12px;
+        padding: 16px 18px;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+      }
+
+      .slider-group label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #1e1b4b;
+      }
+
+      .slider-group span.value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        padding-left: 12px;
+        color: #4c1d95;
+      }
+
+      .slider-track {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .slider-group input[type="range"] {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+        outline: none;
+      }
+
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="number"] {
+        width: 120px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        font-size: 0.95rem;
+        font-family: "Inter", sans-serif;
+        font-variant-numeric: tabular-nums;
+        color: #1f2937;
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      .slider-group input[type="number"]:focus {
+        outline: 3px solid rgba(79, 70, 229, 0.25);
+        border-color: rgba(79, 70, 229, 0.6);
+      }
+
+      .system-metrics {
+        margin-top: 32px;
+        padding: 18px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .metric span.label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+
+      .metric span.value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .footnote {
+        margin-top: 28px;
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      @media (max-width: 600px) {
+        .demo-card {
+          padding: 24px 20px 28px;
+        }
+
+        .plot-container {
+          height: 320px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Question 3: Stability by tuning the proportional gain (20 pts)</h1>
+
+
+      <p class="description">
+        The feedback interconnection shown below (same as in Question 1) represents a first-order system subject to disturbances, in which the control input is a proportional scaling of the reference-tracking error, and the initial condition of the system satisfies \(x(0) = x_{0}\).
+      </p>
+            <img src="feedbackhw1.svg" alt="icon">
+
+
+      <div class="exercise">
+        <h2>Part 1 (10 pts)</h2>
+        <p> 
+<u>By hand</u>, derive a condition on \(k_{p}\) that ensures that the closed-loop system is stable, in terms of
+        <ul>
+          <li>the state matrix (scalar) \(A\),</li>
+          <li>the input matrix (scalar) \(B_{1}\) for the input \(u(t)\),</li>
+          <li>the input matrix (scalar) \(B_{2}\) for the input \(d(t)\), and</li>
+          <li>the output matrix (scalar) \(C\).</li>
+        </ul>
+        <p>
+        </p>
+      </div>
+      <div class="exercise">
+        <h2>Part 2 (10 pts)</h2>
+        <p>
+       The system parameters are given as:
+        <ul>
+          <li>The state matrix (scalar) \(A\) is  1.</li>
+          <li>The input matrix (scalar) \(B_{1}\) for the input \(u(t)\) is  5.</li>
+          <li>The input matrix (scalar) \(B_{2}\) for the input \(d(t)\) is 0.2.</li>
+          <li>The output matrix (scalar) \(C\) is 1.</li>
+        </ul>
+        <p>
+         The plot below shows the complete response \(y(t)\) of the system under inputs \(r(t)\) and \(d(t)\).
+                                                 <br>  <br>
+         (i) By manually adjusting the parameter \(k_{p}\), find the value of \(k_{p}\) that makes the system marginally stable. 
+                                        <br>  <br>
+(ii) Next, find the set of \(k_{p}\) values that makes the system stable.
+                               <br>  <br>
+          (iii) Does your set for \(k_{p}\) match the stability condition derived in Part 1?
+        </p>
+      </div>
+      <p class="description">
+        You can hover on the plot to get time and magnitude measurements.
+      </p>
+      <div class="demo-card">
+        <div id="root_Q3"></div>
+      </div>
+    </div>
+
+    
+    
+    
+    
+    
+
+    <script type="text/babel">(function(){
+
+      const DEFAULT_CONSTANTS = {
+        A: 1,
+        B1: 5,
+        B2: 0.2,
+        C: 1.0,
+        kp: 1.8,
+        t0: 0,
+        tf: 8,
+        dt: 0.01,
+      };
+
+      const Slider = ({ label, value, min, max, step, onChange }) => {
+        const [inputValue, setInputValue] = React.useState(value.toFixed(2));
+
+        React.useEffect(() => {
+          const formatted = value.toFixed(2);
+          if (formatted !== inputValue) {
+            setInputValue(formatted);
+          }
+        }, [value]);
+
+        const clamp = (val) => Math.min(max, Math.max(min, val));
+
+        const handleNumberChange = (event) => {
+          const next = event.target.value;
+          setInputValue(next);
+          const parsed = parseFloat(next);
+          if (!Number.isNaN(parsed)) {
+            onChange(clamp(parsed));
+          }
+        };
+
+        const handleNumberBlur = () => {
+          const parsed = parseFloat(inputValue);
+          if (Number.isNaN(parsed)) {
+            setInputValue(value.toFixed(2));
+            return;
+          }
+          const clamped = clamp(parsed);
+          setInputValue(clamped.toFixed(2));
+          onChange(clamped);
+        };
+
+        const handleSliderChange = (event) => {
+          const numeric = parseFloat(event.target.value);
+          onChange(numeric);
+          setInputValue(numeric.toFixed(2));
+        };
+
+        return (
+          <div className="slider-group">
+            <label>
+              {label}
+              <span className="value">{value.toFixed(2)}</span>
+            </label>
+            <div className="slider-track">
+              <input
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={value}
+                onChange={handleSliderChange}
+              />
+              <input
+                type="number"
+                value={inputValue}
+                min={min}
+                max={max}
+                step={step}
+                onChange={handleNumberChange}
+                onBlur={handleNumberBlur}
+              />
+            </div>
+          </div>
+        );
+      };
+
+      // Modified computeResponse: r(t) = magnitude * cos(omega * t)
+      function computeResponse({ A, B1, B2, C, kp, t0, tf, dt }, { magnitude, omega, d, x0 }) {
+        const steps = Math.floor((tf - t0) / dt) + 1;
+        const times = new Array(steps);
+        const ySeries = new Array(steps);
+        const xSeries = new Array(steps);
+        let x = x0;
+        xSeries[0] = x0;
+        ySeries[0] = C * x;
+        times[0] = 0
+        for (let i = 0; i < steps - 1; i++) {
+          const t = t0 + i * dt;
+          const r = magnitude * Math.cos(omega * t);
+          const y = C * x
+          const e = r-y
+          const forcing = B1 * kp * e + B2 * d;
+          const dx = A * x + forcing;
+          x += dx * dt;
+          times[i] = t;
+          xSeries[i+1] = x;
+          ySeries[i+1] = C * x;
+        }
+
+        return { time: times, x: xSeries, y: ySeries };
+      }
+
+      const usePlotly = ({ time, y, constants }) => {
+        const plotRef = React.useRef(null);
+
+        React.useEffect(() => {
+          if (!plotRef.current) {
+            return;
+          }
+
+          const trace = {
+            x: time,
+            y,
+            type: "scatter",
+            mode: "lines",
+            line: {
+              width: 3,
+              color: "#3730a3",
+              shape: "spline",
+            },
+            hovertemplate:
+              "<b>t:</b> %{x:.2f} s<br><b>y(t):</b> %{y:.3f}<extra></extra>",
+          };
+
+          const layout = {
+            margin: { l: 60, r: 18, t: 28, b: 50 },
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(248,250,252,0.92)",
+            font: { family: "Inter, sans-serif", color: "#111827" },
+            xaxis: {
+              title: "Time (s)",
+              gridcolor: "rgba(99,102,241,0.15)",
+              zeroline: false,
+            },
+            yaxis: {
+              title: "Output y(t)",
+              gridcolor: "rgba(99,102,241,0.15)",
+              zeroline: false,
+            },
+          };
+
+          const config = {
+            displayModeBar: false,
+            responsive: true,
+          };
+
+          Plotly.react(plotRef.current, [trace], layout, config);
+        }, [time, y, constants]);
+
+        return plotRef;
+      };
+
+const FirstOrderScalarSystem = () => {
+  const [magnitude, setMagnitude] = React.useState(1.0);
+  const [omega, setOmega] = React.useState(2.0);
+  const [d, setD] = React.useState(0.5);
+  const [x0, setX0] = React.useState(-0.2);
+  const [kp, setKp] = React.useState(DEFAULT_CONSTANTS.kp);
+
+  const constants = { ...DEFAULT_CONSTANTS, kp };
+
+  const simulation = React.useMemo(
+    () => computeResponse(constants, { magnitude, omega, d, x0 }),
+    [constants, magnitude, omega, d, x0]
+  );
+
+  const plotRef = usePlotly({
+    time: simulation.time,
+    y: simulation.y,
+    constants,
+  });
+
+  return (
+    <>
+      <div ref={plotRef} className="plot-container"></div>
+
+      <div className="controls-grid">
+        <Slider
+          label="Reference input magnitude r̅"
+          value={magnitude}
+          min={0}
+          max={2}
+          step={0.01}
+          onChange={setMagnitude}
+        />
+        <Slider
+          label="Reference input frequency ω"
+          value={omega}
+          min={0}
+          max={10}
+          step={0.1}
+          onChange={setOmega}
+        />
+        <Slider
+          label="Disturbance input magnitude d̅"
+          value={d}
+          min={-1.5}
+          max={1.5}
+          step={0.01}
+          onChange={setD}
+        />
+        <Slider
+          label="Initial state x₀"
+          value={x0}
+          min={-2}
+          max={2}
+          step={0.01}
+          onChange={setX0}
+        />
+        <Slider
+          label="Proportional gain kₚ"
+          value={kp}
+          min={0}
+          max={5}
+          step={0.01}
+          onChange={setKp}
+        />
+      </div>
+    </>
+  );
+};
+
+
+      const root = ReactDOM.createRoot(document.getElementById("root_Q3"));
+      root.render(<FirstOrderScalarSystem />);
+    
+})();</script>
+  </body>
+</html>
+
+<hr>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forced First-Order System Explorer</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f5f7fb;
+        color: #1f2937;
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px 64px;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      p.description {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 24px;
+        color: #4b5563;
+      }
+
+      .demo-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+        padding: 28px 32px 36px;
+      }
+
+      .exercise {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(45, 212, 191, 0.14));
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 16px;
+        padding: 22px 26px;
+        margin-bottom: 28px;
+      }
+
+      .exercise h2 {
+        margin: 0 0 12px;
+        font-size: 1.2rem;
+        color: #312e81;
+      }
+
+      .exercise p,
+      .exercise li {
+        color: #1e1b4b;
+      }
+
+      .exercise ul {
+        margin: 0 0 16px 18px;
+        padding: 0;
+        line-height: 1.5;
+      }
+
+      .equations {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.08));
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+        font-size: 0.95rem;
+        color: #1f2937;
+      }
+
+      .plot-container {
+        width: 100%;
+        height: 360px;
+        margin-bottom: 32px;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .slider-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        background: linear-gradient(135deg, #f9fafb 0%, #eef2ff 100%);
+        border-radius: 12px;
+        padding: 16px 18px;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+      }
+
+      .slider-group label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #1e1b4b;
+      }
+
+      .slider-group span.value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        padding-left: 12px;
+        color: #4c1d95;
+      }
+
+      .slider-track {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .slider-group input[type="range"] {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+        outline: none;
+      }
+
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #4f46e5;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+      }
+
+      .slider-group input[type="number"] {
+        width: 120px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        font-size: 0.95rem;
+        font-family: "Inter", sans-serif;
+        font-variant-numeric: tabular-nums;
+        color: #1f2937;
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      .slider-group input[type="number"]:focus {
+        outline: 3px solid rgba(79, 70, 229, 0.25);
+        border-color: rgba(79, 70, 229, 0.6);
+      }
+
+      .system-metrics {
+        margin-top: 32px;
+        padding: 18px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .metric span.label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+
+      .metric span.value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        font-variant-numeric: tabular-nums;
+      }
+
+      @media (max-width: 600px) {
+        .demo-card {
+          padding: 24px 20px 28px;
+        }
+
+        .plot-container {
+          height: 320px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Question 4: System identification using time lag (20 pts)</h1>
+
+
+                                            
+
+      <div class="exercise">
+        <p>
+          Consider a first-order system \(\dot{x} = Ax + Bu\) (where \(B >0\)) and the sinusoidal input \(u(t) = U \cos(\omega t)\).  
+<br><br>
+The system parameters are \(A= -1.2\) and \(B=1\). In this problem, you will identify some of these parameters by observing the steady-state response for different values of the control input. Do not use the given parameter values directly in your solution; instead, derive the results from the observed responses and show your reasoning. You may use the given values only to check your final answers.
+           <br>  <br>
+
+The plot below shows the steady-state response \(x(t)\) of the system under input \(u(t)\).
+           <br>  <br>
+
+          By manually adjusting the value of \(\omega\), and observing the changes in the input \(u(t)\) and the output \(y(t)\), identify \(A\) and \(B\).
+                     <br>  <br>
+
+          If a value is not uniquely identifiable, state the tightest condition for the parameter you can derive.
+           <br>  <br>
+
+
+                      <br>  <br>
+
+          Remark: The amplitude values (\(y\)-axes) are not on the same scale for both plots, and the values are not given for the \(y\)-axes.
+          <br>  <br>
+          Fact: The period of a signal in seconds is \(\frac{2 \pi}{\omega}\) where \(\omega\) is the frequency in radians.
+                    <br>  <br>
+ 
+        </p>
+      </div>
+
+
+      <p class="description">
+        You can hover on the plot to get time measurements.
+      </p>
+
+
+      <div class="demo-card">
+        <div id="root_Q4"></div>
+      </div>
+    </div>
+
+    
+    
+    
+    
+    
+
+    <script type="text/babel">(function(){
+
+      const DEFAULTS = {
+        A: -1.2,
+        B: 1.0,
+        steadyStart: 12,
+        window: 6,
+        dt: 0.005,
+      };
+
+const Slider = ({ label, value, min, max, step, onChange, suffix, showValue = true, showNumberBox = true }) => {
+  const [inputValue, setInputValue] = React.useState(value.toFixed(2));
+
+  React.useEffect(() => {
+    const formatted = value.toFixed(2);
+    if (formatted !== inputValue) setInputValue(formatted);
+  }, [value]);
+
+  const clamp = (val) => Math.min(max, Math.max(min, val));
+
+  const handleNumberChange = (event) => {
+    const next = event.target.value;
+    setInputValue(next);
+    const parsed = parseFloat(next);
+    if (!Number.isNaN(parsed)) onChange(clamp(parsed));
+  };
+
+  const handleNumberBlur = () => {
+    const parsed = parseFloat(inputValue);
+    if (Number.isNaN(parsed)) {
+      setInputValue(value.toFixed(2));
+      return;
+    }
+    const clamped = clamp(parsed);
+    setInputValue(clamped.toFixed(2));
+    onChange(clamped);
+  };
+
+  const handleSliderChange = (event) => {
+    const numeric = parseFloat(event.target.value);
+    onChange(numeric);
+    setInputValue(numeric.toFixed(2));
+  };
+
+  return (
+    <div className="slider-group">
+      <label>
+        {label}
+        {showValue && (
+          <span className="value">
+            {value.toFixed(2)} {suffix || ""}
+          </span>
+        )}
+      </label>
+      <div className="slider-track">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={handleSliderChange}
+        />
+        {showNumberBox && (
+          <input
+            type="number"
+            value={inputValue}
+            min={min}
+            max={max}
+            step={step}
+            onChange={handleNumberChange}
+            onBlur={handleNumberBlur}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+
+      function computeSteadyState({ A, B, steadyStart, window, dt }, { amplitude, omega }) {
+        const steps = Math.floor(window / dt) + 1;
+        const times = new Array(steps);
+        const xSeries = new Array(steps);
+        const uSeries = new Array(steps);
+
+        const denominator = A * A + omega * omega;
+        const alpha = denominator > 0 ? (-A * B * amplitude) / denominator : 0;
+        const beta = denominator > 0 ? (B * amplitude * omega) / denominator : 0;
+        const ampX = Math.sqrt(alpha * alpha + beta * beta);
+        const phaseLag = Math.atan2(beta, alpha);
+
+        for (let i = 0; i < steps; i += 1) {
+          const t = steadyStart + i * dt;
+          const input = amplitude * Math.cos(omega * t);
+          let xValue;
+
+          if (Math.abs(omega) < 1e-6) {
+            // Quasi-DC forcing
+            if (Math.abs(A) < 1e-6) {
+              xValue = null;
+            } else {
+              xValue = -B * amplitude / A;
+            }
+          } else if (denominator === 0) {
+            // Degenerate case (A = 0, omega = 0) -> drift, show null
+            xValue = null;
+          } else {
+            xValue = alpha * Math.cos(omega * t) + beta * Math.sin(omega * t);
+          }
+
+          times[i] = t;
+          uSeries[i] = input;
+          xSeries[i] = xValue;
+        }
+
+        return {
+          time: times,
+          x: xSeries,
+          u: uSeries,
+          metrics: {
+            amplitudeX: ampX,
+            phaseLag,
+          },
+        };
+      }
+
+const usePlotly = ({ time, x, u }) => {
+  const plotRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!plotRef.current) return;
+
+    const fig = {
+      data: [
+        {
+          x: time,
+          y: x,
+          name: "State x(t)",
+          type: "scatter",
+          mode: "lines",
+          line: { width: 3, color: "#1d4ed8" },
+          hoverinfo: "x",
+          xaxis: "x1",
+          yaxis: "y1",
+        },
+        {
+          x: time,
+          y: u,
+          name: "Input u(t)",
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2, color: "#f97316", dash: "dot" },
+          hoverinfo: "x",
+          xaxis: "x2",
+          yaxis: "y2",
+        },
+      ],
+      layout: {
+        grid: { rows: 2, columns: 1, pattern: "independent" },
+        margin: { l: 60, r: 18, t: 28, b: 50 },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(248,250,252,0.92)",
+        font: { family: "Inter, sans-serif", color: "#111827" },
+        xaxis: {
+          title: "Time (s)",
+          gridcolor: "rgba(99,102,241,0.15)",
+          zeroline: false,
+        },
+        yaxis: {
+          title: "x(t)",
+          gridcolor: "rgba(99,102,241,0.15)",
+          zeroline: false,
+          showticklabels: false, // hide y tick labels
+        },
+        xaxis2: {
+          title: "Time (s)",
+          gridcolor: "rgba(99,102,241,0.15)",
+          zeroline: false,
+        },
+        yaxis2: {
+          title: "u(t)",
+          gridcolor: "rgba(99,102,241,0.15)",
+          zeroline: false,
+          showticklabels: false, // hide y tick labels
+        },
+        showlegend: false,
+        hovermode: "x unified",
+        hoverlabel: { bgcolor: "rgba(255,255,255,0.9)", font: { size: 12 } },
+      },
+      config: {
+        displayModeBar: false,
+        responsive: true,
+      },
+    };
+
+    Plotly.react(plotRef.current, fig.data, fig.layout, fig.config);
+  }, [time, x, u]);
+
+  return plotRef;
+};
+
+
+
+ const ForcedFirstOrderSystem = () => {
+  const amplitude = 1.0; // fixed value
+  const [omega, setOmega] = React.useState(2.0);
+
+  const simulation = React.useMemo(
+    () =>
+      computeSteadyState(DEFAULTS, {
+        amplitude,
+        omega,
+      }),
+    [omega]
+  );
+
+  const plotRef = usePlotly({
+    time: simulation.time,
+    x: simulation.x,
+    u: simulation.u,
+  });
+
+  const { amplitudeX, phaseLag } = simulation.metrics;
+
+  return (
+    <>
+      <div ref={plotRef} className="plot-container"></div>
+      <div className="controls-grid">
+<Slider
+  label="Input frequency ω"
+  value={omega}
+  min={2}
+  max={5.0}
+  step={0.01}
+  onChange={setOmega}
+  suffix="rad/s"
+  showValue={false}
+  showNumberBox={false}
+/>
+      </div>
+    </>
+  );
+};
+
+      const root = ReactDOM.createRoot(document.getElementById("root_Q4"));
+      root.render(<ForcedFirstOrderSystem />);
+    
+})();</script>
+  </body>
+</html>
+
+</body>
+</html>
