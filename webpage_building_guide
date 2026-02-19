@@ -12,4 +12,6 @@ Also put this in relevant areas to implement a loading screen for any page.
 <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
 <script src="https://dulran.com/scripts/loadingscreens/one.js"></script>
 
+This is the best method as an alternative for a loading screen. This redirect to a loaded screen HTML file and that file shows the loading then it redirects back to the original file.
 
+<script src="https://dulran.com/scripts/redirecttoloadingscreen.js"></script>   -- put this in the header of each HTML file.
