@@ -111,5 +111,106 @@ textElements.forEach(text => {
 });
 
       </script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dulran</title>
+<style>
+    body {
+        background-color: #8ee978;
+        margin: 0;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    #container {
+        position: relative;
+        width: 100%;
+        text-align: center;
+    }
+
+    #title {
+        font-size: 12rem;
+        font-style: normal;
+        font-weight: 500;
+        letter-spacing: -11px;
+        line-height: 1;
+        font-family: Helvetica;
+        color: #181818;
+        position: absolute;
+        white-space: nowrap;
+        opacity: 0;
+    }
+
+    #menu {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    #menu a {
+        display: block;
+        font-family: Helvetica;
+        font-size: 2rem;
+        text-decoration: none;
+        color: #181818;
+        margin: 10px;
+    }
+
+    @keyframes fadeMove {
+        0% {
+            transform: translateX(100vw);
+            opacity: 0;
+        }
+        50% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+</style>
+</head>
+<body>
+    <div id="container">
+        <h1 id="title">Dulran K.</h1>
+        <div id="menu">
+            <a href="noresponseneverputasimilarfiletothisname.html">Gallery</a>
+            <a href="#">About</a>
+            <a href="#">CV</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const title = document.getElementById("title");
+            const menu = document.getElementById("menu");
+
+            title.style.animation = "fadeMove 2s ease-out forwards";
+
+            setTimeout(() => {
+                title.style.display = "none";
+                menu.style.display = "block";
+            }, 2500); 
+        });
+    </script>
+
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+
+
+    
+</body>
+</html>
+
+    
   </body>
 </html>
