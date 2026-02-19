@@ -8,3 +8,7 @@
   pointer-events: none; /* lets user interact with page below */
   z-index: 9999;
 }
+body {
+    background-color: #000000;
+}
+
