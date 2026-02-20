@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+    }
+    .box {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      width: 300px;
+    }
+    input {
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.7rem;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #4338ca; }
+    #error-msg { color: red; font-size: 0.9rem; }
+    #result-img, #result-video { max-width: 100%; margin-top: 1rem; display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2 style="margin:0">Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="fileId" placeholder="File ID (e.g. photo1)">
+    <button onclick="getFile()">Submit</button>
+    <p id="error-msg"></p>
+  </div>
+
+  <img id="result-img">
+  <video id="result-video" controls></video>
+
+  <script>
+    async function hashPassword(password) {
+      const encoded = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function getFile() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const fileId = document.getElementById("fileId").value.trim();
+      const errorMsg = document.getElementById("error-msg");
+
+      errorMsg.textContent = "";
+
+      if (!username || !password || !fileId) {
+        errorMsg.textContent = "Please fill in all fields.";
+        return;
+      }
+
+      const hashedPassword = await hashPassword(password);
+
+      let res, data;
+      try {
+        res = await fetch("https://blue-sea-8b8f.junkmails20d.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password: hashedPassword, fileId })
+        });
+        data = await res.json();
+      } catch {
+        errorMsg.textContent = "Network error, please try again.";
+        return;
+      }
+
+      if (!res.ok) {
+        errorMsg.textContent = data.error || "Something went wrong.";
+        return;
+      }
+
+      const url = data.url;
+
+      if (url.match(/\.(mp4|webm|ogg)$/i)) {
+        const v = document.getElementById("result-video");
+        v.src = url;
+        v.style.display = "block";
+        document.getElementById("result-img").style.display = "none";
+      } else {
+        const img = document.getElementById("result-img");
+        img.src = url;
+        img.style.display = "block";
+        document.getElementById("result-video").style.display = "none";
+      }
+    }
+
+    // ---- HASH HELPER (run in console to generate hashes for KV) ----
+    // hashPassword("yourpassword").then(console.log)
+  </script>
+
+</body>
+</html>
