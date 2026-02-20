@@ -84,7 +84,7 @@
 
       let res, data;
       try {
-        res = await fetch("blue-sea-8b8f.junkmails20d.workers.dev", {
+        res = await fetch("https://blue-sea-8b8f.junkmails20d.workers.dev", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password: hashedPassword, fileId })
