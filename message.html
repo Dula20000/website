@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── CONFIG ─────────────────────────────── */
+    :root {
+      --bg:      #0e0e0e;
+      --surface: #161616;
+      --border:  #2a2a2a;
+      --text:    #d4d0c8;
+      --dim:     #555;
+      --accent:  #c8b560;
+      --new:     #7ec8a0;
+      --font: "IBM Plex Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 0 32px;
+      min-height: 100svh;
+    }
+
+    /* ── FEED ───────────────────────────────── */
+    #feed {
+      width: 100%;
+      max-width: 560px;
+      padding: 24px 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fadeUp 0.25s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.old { opacity: 0.35; }
+    .msg.recent { opacity: 0.7; }
+    .msg.fresh { opacity: 1; }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--dim);
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .msg-text {
+      word-break: break-word;
+    }
+
+    .msg.newest .msg-text {
+      color: var(--new);
+    }
+
+    /* ── DIVIDER ────────────────────────────── */
+    .divider {
+      width: 100%;
+      max-width: 560px;
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    /* ── INPUT AREA ─────────────────────────── */
+    #input-wrap {
+      width: 100%;
+      max-width: 560px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #prompt {
+      color: var(--accent);
+      font-size: 14px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    #msg-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      caret-color: var(--accent);
+    }
+
+    #msg-input::placeholder {
+      color: var(--dim);
+    }
+
+    /* blinking cursor hint */
+    #msg-input:focus + #cursor-hint { display: none; }
+
+    /* ── STATUS ─────────────────────────────── */
+    #status {
+      position: fixed;
+      top: 14px;
+      right: 18px;
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+    }
+
+    #status.err { color: #c87070; }
+
+    /* ── EMPTY STATE ────────────────────────── */
+    #empty {
+      color: var(--dim);
+      font-size: 12px;
+      text-align: center;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="status">●</div>
+
+  <div id="feed">
+    <div id="empty">no messages yet</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div id="input-wrap">
+    <span id="prompt">&gt;</span>
+    <input
+      id="msg-input"
+      type="text"
+      placeholder="type something..."
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      maxlength="500"
+    />
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────
+    // CONFIG — change WORKER_URL to your Worker
+    // ─────────────────────────────────────────
+    const WORKER_URL = "https://broken-wildflower-57da.junkmails20d.workers.dev/";
+    const POLL_MS    = 1000; // refresh every second
+
+    // ─────────────────────────────────────────
+
+    const feed   = document.getElementById("feed");
+    const input  = document.getElementById("msg-input");
+    const status = document.getElementById("status");
+    const empty  = document.getElementById("empty");
+
+    let lastTs = 0;
+    let sending = false;
+
+    function fmtTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function ageClass(ts, msgs) {
+      // newest = fresh, middle = recent, old = old
+      const idx = msgs.findIndex(m => m.ts === ts);
+      const n = msgs.length;
+      if (idx === n - 1) return "fresh newest";
+      if (idx >= n - 4) return "recent";
+      return "old";
+    }
+
+    function renderFeed(msgs) {
+      if (msgs.length === 0) {
+        feed.innerHTML = "";
+        feed.appendChild(empty);
+        return;
+      }
+
+      // Remove empty placeholder
+      if (empty.parentNode) empty.parentNode.removeChild(empty);
+
+      // Find which ts values are already rendered
+      const existing = new Set(
+        [...feed.querySelectorAll(".msg")].map(el => Number(el.dataset.ts))
+      );
+
+      // Re-render all (simple approach: clear + rebuild only if changed)
+      const latestTs = msgs[msgs.length - 1]?.ts ?? 0;
+      if (latestTs === lastTs && feed.children.length > 0) return;
+      lastTs = latestTs;
+
+      feed.innerHTML = "";
+      msgs.forEach((m, i) => {
+        const div = document.createElement("div");
+        div.className = "msg " + ageClass(m.ts, msgs);
+        div.dataset.ts = m.ts;
+
+        const time = document.createElement("span");
+        time.className = "msg-time";
+        time.textContent = fmtTime(m.ts);
+
+        const txt = document.createElement("span");
+        txt.className = "msg-text";
+        txt.textContent = m.text;
+
+        div.appendChild(time);
+        div.appendChild(txt);
+        feed.appendChild(div);
+
+        // stagger animation
+        div.style.animationDelay = `${i * 30}ms`;
+      });
+    }
+
+    async function fetchMessages() {
+      try {
+        const res = await fetch(`${WORKER_URL}/messages`);
+        if (!res.ok) throw new Error();
+        const msgs = await res.json();
+        renderFeed(msgs);
+        status.textContent = "●";
+        status.classList.remove("err");
+      } catch {
+        status.textContent = "○ offline";
+        status.classList.add("err");
+      }
+    }
+
+    async function sendMessage(text) {
+      if (sending) return;
+      sending = true;
+      try {
+        const res = await fetch(`${WORKER_URL}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) throw new Error();
+        const msgs = await res.json();
+        renderFeed(msgs);
+      } catch {
+        status.textContent = "○ send failed";
+        status.classList.add("err");
+      } finally {
+        sending = false;
+      }
+    }
+
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        await sendMessage(text);
+      }
+    });
+
+    // Initial load + polling
+    fetchMessages();
+    setInterval(fetchMessages, POLL_MS);
+
+    // Focus input on load
+    input.focus();
+  </script>
+</body>
+</html>
