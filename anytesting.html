@@ -553,8 +553,8 @@ async function initClerk() {
   try {
     clerkInstance = window.Clerk;
     await clerkInstance.load({
-      afterSignInUrl: '/anytesting.html',
-      afterSignUpUrl: '/anytesting.html',
+      afterSignInUrl: '/',
+      afterSignUpUrl: '/',
     });
 
     if (clerkInstance.user) {
@@ -607,7 +607,7 @@ function showAuthScreen() {
   document.getElementById('auth-screen').style.display    = 'flex';
   
   clerkInstance.mountSignIn(document.getElementById('clerk-mount'), {
-  redirectUrl: '/anytesting.html',
+  redirectUrl: '/',
   appearance: {
     variables: {
       colorPrimary:    '#2a2420',
