@@ -6,7 +6,13 @@
 <title>LiftLog</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_b3V0Z29pbmctZWxlcGhhbnQtNjQuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+  onload="initClerk()"
+></script>
 <style>
   :root {
     --bg:        #f7f4f0;
@@ -493,7 +499,7 @@
 //  CONFIG — replace with your values
 // ══════════════════════════════════════════════
 const API          = 'https://liftlog-api.junkmails20d.workers.dev';
-const CLERK_PUB_KEY = 'pk_test_b3V0Z29pbmctZWxlcGhhbnQtNjQuY2xlcmsuYWNjb3VudHMuZGV2JA';
+//const CLERK_PUB_KEY = 'pk_test_b3V0Z29pbmctZWxlcGhhbnQtNjQuY2xlcmsuYWNjb3VudHMuZGV2JA';
 
 // ══════════════════════════════════════════════
 //  EXERCISE LIBRARY
@@ -546,13 +552,8 @@ async function initClerk() {
       showAuthScreen();
     }
 
-    // Listen for auth state changes
     clerkInstance.addListener(({ user }) => {
-      if (user) {
-        showApp();
-      } else {
-        showAuthScreen();
-      }
+      if (user) { showApp(); } else { showAuthScreen(); }
     });
 
   } catch (e) {
@@ -996,7 +997,6 @@ function showToast(msg, type = '') {
 // ══════════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════════
-window.addEventListener('load', initClerk);
 </script>
 </body>
 </html>
