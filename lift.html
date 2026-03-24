@@ -542,7 +542,10 @@ let authToken = null;
 async function initClerk() {
   try {
     clerkInstance = window.Clerk;
-    await clerkInstance.load();
+    await clerkInstance.load({
+      afterSignInUrl: '/lift.html',
+      afterSignUpUrl: '/lift.html',
+    });
 
     if (clerkInstance.user) {
       await showApp();
@@ -594,17 +597,17 @@ function showAuthScreen() {
   document.getElementById('auth-screen').style.display    = 'flex';
 
   clerkInstance.mountSignIn(document.getElementById('clerk-mount'), {
-    appearance: {
-      variables: {
-        colorPrimary:    '#2a2420',
-        colorBackground: '#ffffff',
-        colorText:       '#2a2420',
-        borderRadius:    '10px',
-        fontFamily:      'DM Sans, sans-serif',
-      }
+  redirectUrl: '/lift.html',
+  appearance: {
+    variables: {
+      colorPrimary:    '#2a2420',
+      colorBackground: '#ffffff',
+      colorText:       '#2a2420',
+      borderRadius:    '10px',
+      fontFamily:      'DM Sans, sans-serif',
     }
-  });
-}
+  }
+});
 
 async function signOut() {
   await clerkInstance.signOut();
