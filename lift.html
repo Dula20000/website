@@ -335,7 +335,7 @@
 <div id="app" style="display:none;">
 
   <header>
-    <div class="logo">Lift<span>Log</span></div>
+    <div class="logo">Dul<span>Lift</span></div>
     <div class="header-right">
       <div class="unit-toggle">
         <button id="btn-lbs" class="active" onclick="setUnit('lbs')">lbs</button>
@@ -626,6 +626,10 @@ function setUnit(u) {
   unit = u;
   document.getElementById('btn-lbs').classList.toggle('active', u === 'lbs');
   document.getElementById('btn-kg').classList.toggle('active', u === 'kg');
+  // Update all weight labels in the entry form instantly
+  document.querySelectorAll('.set-input-wrap label').forEach(label => {
+    if (label.textContent.startsWith('Weight')) label.textContent = `Weight (${u})`;
+  });
   if (sessions.length) renderAll(sessions);
 }
 
