@@ -1,0 +1,457 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Finder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #1c1c1e;
+    --surface:     rgba(44, 44, 46, 0.72);
+    --surface-hov: rgba(58, 58, 62, 0.85);
+    --border:      rgba(255,255,255,0.08);
+    --border-hov:  rgba(255,255,255,0.18);
+    --accent:      #0a84ff;
+    --accent2:     #30d158;
+    --text-pri:    rgba(255,255,255,0.92);
+    --text-sec:    rgba(255,255,255,0.45);
+    --text-dim:    rgba(255,255,255,0.28);
+    --radius:      14px;
+    --tile-size:   172px;
+    --bar-h:       44px;
+    --font:        'DM Sans', -apple-system, sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text-pri);
+    font-family: var(--font);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* ── noise grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: .6;
+  }
+
+  /* ── top window bar ── */
+  #window-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--bar-h);
+    background: rgba(28,28,30,0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 18px;
+    gap: 8px;
+    z-index: 100;
+    user-select: none;
+  }
+  .traffic-light { width: 12px; height: 12px; border-radius: 50%; }
+  .tl-red   { background: #ff5f57; }
+  .tl-amber { background: #febc2e; }
+  .tl-green { background: #28c840; }
+  #bar-title {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text-pri);
+  }
+  #bar-count {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── grid view ── */
+  #grid-view {
+    position: fixed; inset: 0;
+    padding-top: calc(var(--bar-h) + 28px);
+    padding-bottom: 24px;
+    overflow-y: auto;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #grid-view.hidden {
+    opacity: 0; transform: scale(0.97);
+    pointer-events: none;
+  }
+
+  #grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 0 28px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ── tile ── */
+  .tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.18s;
+    position: relative;
+  }
+  .tile::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .tile:hover {
+    border-color: var(--border-hov);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+    transform: translateY(-2px) scale(1.015);
+    background: var(--surface-hov);
+  }
+  .tile:active { transform: translateY(0) scale(1.005); }
+
+  .tile-img {
+    width: 100%; height: 92px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--border);
+  }
+  .tile-img-placeholder {
+    width: 100%; height: 92px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border-bottom: 1px solid var(--border);
+  }
+  .tile-body {
+    flex: 1;
+    padding: 8px 10px 6px;
+    display: flex; flex-direction: column; gap: 3px;
+    overflow: hidden;
+  }
+  .tile-title {
+    font-size: 12px; font-weight: 500;
+    color: var(--text-pri);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: 0.01em;
+  }
+  .tile-desc {
+    font-size: 10.5px; font-weight: 300;
+    color: var(--text-sec);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tile-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px; font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 99px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── iframe view ── */
+  #iframe-view {
+    position: fixed;
+    top: var(--bar-h); left: 0; right: 0;
+    bottom: 0;
+    display: flex; flex-direction: column;
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+    z-index: 50;
+  }
+  #iframe-view.visible {
+    opacity: 1; transform: translateY(0);
+    pointer-events: all;
+  }
+
+  #iframe-bar {
+    height: 38px;
+    background: rgba(28,28,30,0.90);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 14px; gap: 10px;
+    flex-shrink: 0;
+  }
+  #back-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: none; border: none; cursor: pointer;
+    color: var(--accent);
+    font-family: var(--font); font-size: 13px; font-weight: 400;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  #back-btn:hover { background: rgba(10,132,255,0.12); }
+  #back-btn svg { flex-shrink: 0; }
+  #iframe-title {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-pri);
+    letter-spacing: 0.02em;
+  }
+  #iframe-spacer { width: 80px; }
+
+  #project-frame {
+    flex: 1;
+    border: none;
+    background: #111;
+    display: block;
+  }
+
+  /* ── scrollbar ── */
+  #grid-view::-webkit-scrollbar { width: 6px; }
+  #grid-view::-webkit-scrollbar-track { background: transparent; }
+  #grid-view::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Window chrome -->
+
+
+
+<div id="window-bar">
+  <span class="traffic-light tl-red"></span>
+  <span class="traffic-light tl-amber"></span>
+  <span class="traffic-light tl-green"></span>
+  <span id="bar-title">Projects</span>
+  <span id="bar-count"></span>
+</div>
+
+<!-- Grid -->
+
+
+
+<div id="grid-view">
+  <div id="grid"></div>
+</div>
+
+<!-- iframe overlay -->
+
+
+
+<div id="iframe-view">
+  <div id="iframe-bar">
+    <button id="back-btn" onclick="closeProject()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Projects
+    </button>
+    <span id="iframe-title"></span>
+    <span id="iframe-spacer"></span>
+  </div>
+  <iframe id="project-frame" src="about:blank"></iframe>
+</div>
+
+<script>
+// ── project data ──
+const projects = [
+  {
+    title: "Orbital Mechanics Sim",
+    desc: "N-body gravity simulator with real-time trajectory plotting.",
+    emoji: "🛸",
+    badge: "New",
+    color: "#0a2a4a",
+    src: null
+  },
+  {
+    title: "Nozzle CFD Tool",
+    desc: "Convergent-divergent nozzle flow analysis using quasi-1D Euler.",
+    emoji: "🔥",
+    color: "#2a1a0a",
+    src: null
+  },
+  {
+    title: "White Dwarf Model",
+    desc: "Stellar structure via degenerate EOS and Euler integration.",
+    emoji: "⭐",
+    color: "#1a1a2a",
+    src: null
+  },
+  {
+    title: "Flight Controller",
+    desc: "PID + Kalman filter HIL-tested attitude control system.",
+    emoji: "✈️",
+    badge: "WIP",
+    color: "#0a2a1a",
+    src: null
+  },
+  {
+    title: "Sensor Fusion",
+    desc: "IMU + barometer fusion in Simulink with Monte Carlo noise.",
+    emoji: "📡",
+    color: "#1a0a2a",
+    src: null
+  },
+  {
+    title: "Rocket Club Dashboard",
+    desc: "Real-time telemetry viewer built on Cloudflare Workers.",
+    emoji: "🚀",
+    badge: "Live",
+    color: "#0a1a2a",
+    src: null
+  },
+  {
+    title: "e-Commerce Storefront",
+    desc: "Single-product Stripe Checkout on Cloudflare Pages + KV.",
+    emoji: "🛒",
+    color: "#2a1a1a",
+    src: null
+  },
+  {
+    title: "Classroom Chat App",
+    desc: "Covert real-time chat via Workers + Ably WebSockets.",
+    emoji: "💬",
+    color: "#1a2a1a",
+    src: null
+  },
+  {
+    title: "Hypertrophy Tracker",
+    desc: "Weekly training log with progressive overload analytics.",
+    emoji: "💪",
+    color: "#2a2a0a",
+    src: null
+  },
+  {
+    title: "Compressible Flow Calc",
+    desc: "Isentropic relations, normal shocks, area-Mach solver.",
+    emoji: "🌊",
+    color: "#0a2a2a",
+    src: null
+  },
+  {
+    title: "Gilman Essay Suite",
+    desc: "Structured scholarship essay drafting and revision tool.",
+    emoji: "📝",
+    color: "#1a1a1a",
+    src: null
+  },
+  {
+    title: "LaTeX Equation Kit",
+    desc: "Quick-render library for physics equation environments.",
+    emoji: "∂",
+    color: "#0d0d1a",
+    src: null
+  }
+];
+
+// ── generate inline project pages ──
+function makeProjectPage(p) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body{margin:0;font-family:-apple-system,sans-serif;background:#0d0d0f;color:#e5e5e7;
+       display:flex;flex-direction:column;align-items:center;justify-content:center;
+       min-height:100vh;gap:16px;text-align:center;padding:32px;}
+  .icon{font-size:64px;line-height:1;}
+  h1{font-size:26px;font-weight:500;letter-spacing:-.02em;margin:0;}
+  p{font-size:14px;color:rgba(255,255,255,.45);max-width:340px;line-height:1.6;margin:0;}
+  .tag{background:rgba(10,132,255,.18);color:#0a84ff;border:1px solid rgba(10,132,255,.3);
+       font-size:11px;padding:4px 12px;border-radius:99px;letter-spacing:.06em;text-transform:uppercase;}
+</style></head><body>
+<div class="icon">${p.emoji}</div>
+<h1>${p.title}</h1>
+<p>${p.desc}</p>
+<span class="tag">Project Page</span>
+</body></html>`;
+}
+
+// ── render grid ──
+const grid = document.getElementById('grid');
+const barCount = document.getElementById('bar-count');
+barCount.textContent = `${projects.length} items`;
+
+// build blob URLs for each project
+const blobUrls = projects.map(p => {
+  const html = makeProjectPage(p);
+  const blob = new Blob([html], { type: 'text/html' });
+  return URL.createObjectURL(blob);
+});
+
+projects.forEach((p, i) => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.setAttribute('role', 'button');
+  tile.setAttribute('tabindex', '0');
+  tile.setAttribute('aria-label', p.title);
+
+  const media = `
+    <div class="tile-img-placeholder" style="background:linear-gradient(135deg,${p.color},#0d0d0f);">
+      <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">${p.emoji}</span>
+    </div>`;
+
+  tile.innerHTML = `
+    ${media}
+    ${p.badge ? `<span class="tile-badge">${p.badge}</span>` : ''}
+    <div class="tile-body">
+      <div class="tile-title">${p.title}</div>
+      <div class="tile-desc">${p.desc}</div>
+    </div>`;
+
+  tile.addEventListener('click', () => openProject(p, blobUrls[i]));
+  tile.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openProject(p, blobUrls[i]); });
+  grid.appendChild(tile);
+});
+
+// ── open / close ──
+function openProject(p, url) {
+  document.getElementById('project-frame').src = url;
+  document.getElementById('iframe-title').textContent = p.title;
+  document.getElementById('grid-view').classList.add('hidden');
+  document.getElementById('iframe-view').classList.add('visible');
+  document.getElementById('bar-title').textContent = p.title;
+  document.getElementById('bar-count').textContent = '';
+}
+
+function closeProject() {
+  document.getElementById('iframe-view').classList.remove('visible');
+  document.getElementById('grid-view').classList.remove('hidden');
+  document.getElementById('bar-title').textContent = 'Projects';
+  document.getElementById('bar-count').textContent = `${projects.length} items`;
+  setTimeout(() => {
+    document.getElementById('project-frame').src = 'about:blank';
+  }, 280);
+}
+
+// keyboard escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('iframe-view').classList.contains('visible')) {
+    closeProject();
+  }
+});
+</script>
+</body>
+</html>
+
+
+
+
