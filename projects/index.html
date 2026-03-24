@@ -1,271 +1,537 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="macos">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projects — Finder</title>
+<title>Projects</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg:          #1c1c1e;
-    --surface:     rgba(44, 44, 46, 0.72);
-    --surface-hov: rgba(58, 58, 62, 0.85);
-    --border:      rgba(255,255,255,0.08);
-    --border-hov:  rgba(255,255,255,0.18);
-    --accent:      #0a84ff;
-    --accent2:     #30d158;
-    --text-pri:    rgba(255,255,255,0.92);
-    --text-sec:    rgba(255,255,255,0.45);
-    --text-dim:    rgba(255,255,255,0.28);
-    --radius:      14px;
-    --tile-size:   172px;
-    --bar-h:       44px;
-    --font:        'DM Sans', -apple-system, sans-serif;
-  }
+/* ═══════════════════════════════════════════
+   THEME TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --bar-h: 44px;
+  --tile-size: 170px;
+  --transition-theme: 0.32s ease;
+}
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text-pri);
-    font-family: var(--font);
-    font-weight: 300;
-    -webkit-font-smoothing: antialiased;
-    overflow: hidden;
-  }
+/* ── macOS tokens ── */
+[data-theme="macos"] {
+  --bg:          #1c1c1e;
+  --surface:     rgba(44,44,46,0.72);
+  --surface-hov: rgba(58,58,62,0.88);
+  --border:      rgba(255,255,255,0.08);
+  --border-hov:  rgba(255,255,255,0.20);
+  --bar-bg:      rgba(28,28,30,0.88);
+  --iframe-bar-bg: rgba(28,28,30,0.94);
+  --accent:      #0a84ff;
+  --accent-bg:   rgba(10,132,255,0.13);
+  --text-pri:    rgba(255,255,255,0.92);
+  --text-sec:    rgba(255,255,255,0.45);
+  --text-dim:    rgba(255,255,255,0.28);
+  --radius:      14px;
+  --font-ui:     'DM Sans', -apple-system, sans-serif;
+  --font-mono:   'DM Sans', -apple-system, sans-serif;
+  --tile-shadow-hov: 0 8px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+  --scrollbar-thumb: rgba(255,255,255,0.12);
+  --badge-bg:    var(--accent);
+  --badge-color: #fff;
+  --badge-radius: 99px;
+}
 
-  /* ── noise grain overlay ── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: .6;
-  }
+/* ── terminal tokens ── */
+[data-theme="terminal"] {
+  --bg:          #050507;
+  --surface:     rgba(12,12,18,0.92);
+  --surface-hov: rgba(18,18,28,0.96);
+  --border:      rgba(0,255,136,0.12);
+  --border-hov:  rgba(0,255,136,0.40);
+  --bar-bg:      rgba(5,5,7,0.96);
+  --iframe-bar-bg: rgba(5,5,7,0.98);
+  --accent:      #00ff88;
+  --accent-bg:   rgba(0,255,136,0.10);
+  --text-pri:    #e0ffe8;
+  --text-sec:    rgba(180,255,210,0.45);
+  --text-dim:    rgba(100,200,140,0.28);
+  --radius:      4px;
+  --font-ui:     'JetBrains Mono', monospace;
+  --font-mono:   'JetBrains Mono', monospace;
+  --tile-shadow-hov: 0 0 0 1px rgba(0,255,136,0.08), 0 4px 24px rgba(0,255,136,0.08), inset 0 1px 0 rgba(0,255,136,0.05);
+  --scrollbar-thumb: rgba(0,255,136,0.14);
+  --badge-bg:    transparent;
+  --badge-color: var(--accent);
+  --badge-radius: 2px;
+}
 
-  /* ── top window bar ── */
-  #window-bar {
-    position: fixed; top: 0; left: 0; right: 0;
-    height: var(--bar-h);
-    background: rgba(28,28,30,0.82);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding: 0 18px;
-    gap: 8px;
-    z-index: 100;
-    user-select: none;
-  }
-  .traffic-light { width: 12px; height: 12px; border-radius: 50%; }
-  .tl-red   { background: #ff5f57; }
-  .tl-amber { background: #febc2e; }
-  .tl-green { background: #28c840; }
-  #bar-title {
-    flex: 1; text-align: center;
-    font-size: 13px; font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--text-pri);
-  }
-  #bar-count {
-    font-size: 11px; color: var(--text-dim);
-    letter-spacing: 0.04em;
-  }
+/* ═══════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════ */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text-pri);
+  font-family: var(--font-ui);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  transition: background var(--transition-theme), color var(--transition-theme);
+}
 
-  /* ── grid view ── */
-  #grid-view {
-    position: fixed; inset: 0;
-    padding-top: calc(var(--bar-h) + 28px);
-    padding-bottom: 24px;
-    overflow-y: auto;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-  }
-  #grid-view.hidden {
-    opacity: 0; transform: scale(0.97);
-    pointer-events: none;
-  }
+/* grain for macos */
+[data-theme="macos"] body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: .6;
+}
 
-  #grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 0 28px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+/* scanlines + vignette for terminal */
+[data-theme="terminal"] body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+  pointer-events: none; z-index: 9998;
+}
+[data-theme="terminal"] body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.65) 100%);
+  pointer-events: none; z-index: 9997;
+}
 
-  /* ── tile ── */
-  .tile {
-    width: var(--tile-size);
-    height: var(--tile-size);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.18s;
-    position: relative;
-  }
-  .tile::after {
-    content: '';
-    position: absolute; inset: 0;
-    border-radius: var(--radius);
-    background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 60%);
-    pointer-events: none;
-  }
-  .tile:hover {
-    border-color: var(--border-hov);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
-    transform: translateY(-2px) scale(1.015);
-    background: var(--surface-hov);
-  }
-  .tile:active { transform: translateY(0) scale(1.005); }
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+#window-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--bar-h);
+  background: var(--bar-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 14px;
+  gap: 8px;
+  z-index: 200;
+  user-select: none;
+  transition: background var(--transition-theme), border-color var(--transition-theme);
+}
 
-  .tile-img {
-    width: 100%; height: 92px;
-    object-fit: cover;
-    display: block;
-    border-bottom: 1px solid var(--border);
-  }
-  .tile-img-placeholder {
-    width: 100%; height: 92px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 30px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-    border-bottom: 1px solid var(--border);
-  }
-  .tile-body {
-    flex: 1;
-    padding: 8px 10px 6px;
-    display: flex; flex-direction: column; gap: 3px;
-    overflow: hidden;
-  }
-  .tile-title {
-    font-size: 12px; font-weight: 500;
-    color: var(--text-pri);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: 0.01em;
-  }
-  .tile-desc {
-    font-size: 10.5px; font-weight: 300;
-    color: var(--text-sec);
-    line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .tile-badge {
-    position: absolute; top: 8px; right: 8px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 9px; font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 99px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
+/* traffic lights — only visible in macos */
+.traffic-lights {
+  display: flex; gap: 6px; align-items: center;
+  transition: opacity 0.25s;
+}
+[data-theme="terminal"] .traffic-lights { opacity: 0; pointer-events: none; width: 0; overflow: hidden; }
+[data-theme="macos"]    .traffic-lights { opacity: 1; width: auto; }
+.traffic-light { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.tl-red   { background: #ff5f57; }
+.tl-amber { background: #febc2e; }
+.tl-green { background: #28c840; }
 
-  /* ── iframe view ── */
-  #iframe-view {
-    position: fixed;
-    top: var(--bar-h); left: 0; right: 0;
-    bottom: 0;
-    display: flex; flex-direction: column;
-    opacity: 0;
-    transform: translateY(12px);
-    pointer-events: none;
-    transition: opacity 0.28s ease, transform 0.28s ease;
-    z-index: 50;
-  }
-  #iframe-view.visible {
-    opacity: 1; transform: translateY(0);
-    pointer-events: all;
-  }
+/* terminal prompt — only visible in terminal */
+#bar-prompt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--accent);
+  letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 6px;
+  transition: opacity 0.25s, color var(--transition-theme);
+  white-space: nowrap;
+}
+[data-theme="macos"]    #bar-prompt { opacity: 0; pointer-events: none; width: 0; overflow: hidden; }
+[data-theme="terminal"] #bar-prompt { opacity: 1; width: auto; }
+#bar-prompt::before { content: '❯'; opacity: 0.6; }
+.bar-blink {
+  display: inline-block; width: 7px; height: 12px;
+  background: var(--accent); animation: blink 1.1s step-end infinite;
+  vertical-align: middle; margin-left: 1px;
+}
+@keyframes blink { 0%,100%{opacity:.8} 50%{opacity:0} }
 
-  #iframe-bar {
-    height: 38px;
-    background: rgba(28,28,30,0.90);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding: 0 14px; gap: 10px;
-    flex-shrink: 0;
-  }
-  #back-btn {
-    display: flex; align-items: center; gap: 5px;
-    background: none; border: none; cursor: pointer;
-    color: var(--accent);
-    font-family: var(--font); font-size: 13px; font-weight: 400;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background 0.15s;
-  }
-  #back-btn:hover { background: rgba(10,132,255,0.12); }
-  #back-btn svg { flex-shrink: 0; }
-  #iframe-title {
-    flex: 1; text-align: center;
-    font-size: 13px; font-weight: 500;
-    color: var(--text-pri);
-    letter-spacing: 0.02em;
-  }
-  #iframe-spacer { width: 80px; }
+#bar-title {
+  flex: 1; text-align: center;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-pri);
+  transition: font-family var(--transition-theme), color var(--transition-theme), letter-spacing var(--transition-theme);
+}
+[data-theme="terminal"] #bar-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-sec);
+}
 
-  #project-frame {
-    flex: 1;
-    border: none;
-    background: #111;
-    display: block;
-  }
+#bar-count {
+  font-size: 11px; color: var(--text-dim);
+  letter-spacing: 0.04em; white-space: nowrap;
+  transition: color var(--transition-theme);
+}
+[data-theme="terminal"] #bar-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
 
-  /* ── scrollbar ── */
-  #grid-view::-webkit-scrollbar { width: 6px; }
-  #grid-view::-webkit-scrollbar-track { background: transparent; }
-  #grid-view::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+/* ── theme toggle ── */
+#theme-toggle {
+  display: flex; align-items: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 3px;
+  gap: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--transition-theme), background var(--transition-theme);
+}
+[data-theme="terminal"] #theme-toggle {
+  border-radius: 3px;
+  background: rgba(0,255,136,0.04);
+}
+.toggle-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  transition: background 0.18s, color 0.18s, border-radius 0.25s;
+  white-space: nowrap;
+  cursor: pointer;
+  border: none; outline: none; background: none;
+  font-family: inherit;
+}
+[data-theme="terminal"] .toggle-pill {
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+.toggle-pill.active {
+  background: var(--surface-hov);
+  color: var(--text-pri);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+[data-theme="terminal"] .toggle-pill.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  box-shadow: none;
+}
+.toggle-pill svg { flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════
+   GRID VIEW
+═══════════════════════════════════════════ */
+#grid-view {
+  position: fixed; inset: 0;
+  padding-top: calc(var(--bar-h) + 24px);
+  padding-bottom: 24px;
+  overflow-y: auto;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+#grid-view.hidden {
+  opacity: 0; transform: scale(0.97);
+  pointer-events: none;
+}
+
+#grid-header {
+  padding: 0 24px 14px;
+  max-width: 1380px; margin: 0 auto;
+  opacity: 0; transition: opacity 0.2s;
+}
+[data-theme="terminal"] #grid-header { opacity: 1; }
+[data-theme="macos"]    #grid-header { opacity: 0; pointer-events: none; height: 0; padding: 0 24px; }
+.grid-header-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+#grid {
+  display: flex; flex-wrap: wrap;
+  gap: 11px;
+  padding: 0 24px;
+  max-width: 1380px; margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════════
+   TILES (shared)
+═══════════════════════════════════════════ */
+.tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s,
+    transform 0.16s,
+    background 0.18s,
+    border-radius var(--transition-theme);
+  position: relative;
+}
+
+/* macOS gloss layer */
+[data-theme="macos"] .tile {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="macos"] .tile::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* terminal scan line on hover */
+[data-theme="terminal"] .tile::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0; transition: opacity 0.18s;
+}
+[data-theme="terminal"] .tile:hover::before { opacity: 0.55; }
+
+.tile:hover {
+  border-color: var(--border-hov);
+  box-shadow: var(--tile-shadow-hov);
+  transform: translateY(-2px) scale(1.012);
+  background: var(--surface-hov);
+}
+[data-theme="terminal"] .tile:hover { transform: translateY(-1px); }
+.tile:active { transform: translateY(0) scale(1.003); }
+
+/* tile thumbnail area */
+.tile-thumb {
+  width: 100%; height: 90px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition-theme);
+  flex-shrink: 0;
+}
+
+/* tile index (terminal only) */
+.tile-index {
+  position: absolute; top: 7px; left: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim); letter-spacing: 0.06em;
+  opacity: 0; transition: opacity 0.2s;
+}
+[data-theme="terminal"] .tile-index { opacity: 1; }
+
+/* badge */
+.tile-badge {
+  position: absolute; top: 7px; right: 8px;
+  background: var(--badge-bg);
+  color: var(--badge-color);
+  border: 1px solid transparent;
+  font-size: 8.5px; font-weight: 500;
+  padding: 2px 6px;
+  border-radius: var(--badge-radius);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: border-radius var(--transition-theme), background var(--transition-theme),
+              border-color var(--transition-theme), color var(--transition-theme),
+              font-family var(--transition-theme);
+}
+[data-theme="macos"] .tile-badge { font-family: 'DM Sans', sans-serif; }
+[data-theme="terminal"] .tile-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+}
+.tile-badge.badge-new  { }
+.tile-badge.badge-wip  { }
+.tile-badge.badge-live { }
+[data-theme="macos"] .tile-badge.badge-new  { background: #0a84ff; color: #fff; border-color: transparent; }
+[data-theme="macos"] .tile-badge.badge-wip  { background: #ff9f0a; color: #fff; border-color: transparent; }
+[data-theme="macos"] .tile-badge.badge-live { background: #30d158; color: #fff; border-color: transparent; }
+[data-theme="terminal"] .tile-badge.badge-new  { color: #00b4ff; border-color: rgba(0,180,255,0.3);  background: rgba(0,180,255,0.08); }
+[data-theme="terminal"] .tile-badge.badge-wip  { color: #ffb400; border-color: rgba(255,180,0,0.3);  background: rgba(255,180,0,0.08); }
+[data-theme="terminal"] .tile-badge.badge-live { color: #00ff88; border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.08); }
+
+/* underline bar (terminal only) */
+.tile-underline {
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0; transition: opacity 0.18s;
+  margin-bottom: 5px; flex-shrink: 0;
+}
+[data-theme="terminal"] .tile:hover .tile-underline { opacity: 0.3; }
+[data-theme="macos"] .tile-underline { display: none; }
+
+/* tile body */
+.tile-body {
+  flex: 1; padding: 8px 10px 7px;
+  display: flex; flex-direction: column; gap: 3px;
+  overflow: hidden;
+}
+.tile-title {
+  font-size: 11.5px; font-weight: 500;
+  color: var(--text-pri);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+  transition: font-family var(--transition-theme), color var(--transition-theme), letter-spacing var(--transition-theme);
+}
+[data-theme="terminal"] .tile-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.02em;
+}
+.tile-desc {
+  font-size: 10px; font-weight: 300;
+  color: var(--text-sec);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color var(--transition-theme);
+}
+[data-theme="terminal"] .tile-desc { font-size: 9.5px; }
+
+/* ═══════════════════════════════════════════
+   IFRAME VIEW
+═══════════════════════════════════════════ */
+#iframe-view {
+  position: fixed;
+  top: var(--bar-h); left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.26s ease, transform 0.26s ease;
+  z-index: 150;
+}
+#iframe-view.visible {
+  opacity: 1; transform: translateY(0);
+  pointer-events: all;
+}
+
+#iframe-bar {
+  height: 38px;
+  background: var(--iframe-bar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 12px; gap: 10px;
+  flex-shrink: 0;
+  transition: background var(--transition-theme), border-color var(--transition-theme);
+}
+#back-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; cursor: pointer;
+  color: var(--accent);
+  font-family: var(--font-ui); font-size: 12.5px; font-weight: 400;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: none;
+  letter-spacing: 0.02em;
+  transition: background 0.14s, border-radius var(--transition-theme),
+              border-color var(--transition-theme), font-family var(--transition-theme);
+}
+[data-theme="terminal"] #back-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.06em;
+  border: 1px solid rgba(0,255,136,0.22);
+  border-radius: 2px;
+}
+#back-btn:hover { background: var(--accent-bg); }
+[data-theme="terminal"] #back-btn:hover { border-color: var(--border-hov); }
+#iframe-title {
+  flex: 1; text-align: center;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-pri);
+  letter-spacing: 0.02em;
+  transition: font-family var(--transition-theme), font-size var(--transition-theme),
+              color var(--transition-theme), letter-spacing var(--transition-theme);
+}
+[data-theme="terminal"] #iframe-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-sec);
+}
+#iframe-spacer { width: 80px; }
+
+#project-frame {
+  flex: 1; border: none;
+  background: #050507;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════ */
+#grid-view::-webkit-scrollbar { width: 5px; }
+#grid-view::-webkit-scrollbar-track { background: transparent; }
+#grid-view::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb); border-radius: 3px;
+}
 </style>
 </head>
 <body>
 
-<!-- Window chrome -->
-
-
-
+<!-- ── top bar ── -->
 <div id="window-bar">
-  <span class="traffic-light tl-red"></span>
-  <span class="traffic-light tl-amber"></span>
-  <span class="traffic-light tl-green"></span>
+  <!-- macos traffic lights -->
+  <div class="traffic-lights">
+    <span class="traffic-light tl-red"></span>
+    <span class="traffic-light tl-amber"></span>
+    <span class="traffic-light tl-green"></span>
+  </div>
+  <!-- terminal prompt -->
+  <span id="bar-prompt">~/projects<span class="bar-blink"></span></span>
+
   <span id="bar-title">Projects</span>
   <span id="bar-count"></span>
+
+  <!-- theme toggle -->
+  <div id="theme-toggle" role="group" aria-label="Switch theme">
+    <button class="toggle-pill active" id="pill-macos" onclick="setTheme('macos')">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+        <rect x="1" y="1" width="9" height="9" rx="2.5" stroke="currentColor" stroke-width="1.2"/>
+        <circle cx="3.2" cy="3.2" r=".9" fill="currentColor"/>
+        <circle cx="5.5" cy="3.2" r=".9" fill="currentColor"/>
+        <circle cx="7.8" cy="3.2" r=".9" fill="currentColor"/>
+      </svg>
+      macOS
+    </button>
+    <button class="toggle-pill" id="pill-terminal" onclick="setTheme('terminal')">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+        <polyline points="2,4 4.5,5.5 2,7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="5.5" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      Terminal
+    </button>
+  </div>
 </div>
 
-<!-- Grid -->
-
-
-
+<!-- ── grid ── -->
 <div id="grid-view">
+  <div id="grid-header">
+    <div class="grid-header-line" id="header-line"></div>
+  </div>
   <div id="grid"></div>
 </div>
 
-<!-- iframe overlay -->
-
-
-
+<!-- ── iframe view ── -->
 <div id="iframe-view">
   <div id="iframe-bar">
     <button id="back-btn" onclick="closeProject()">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M9 2.5L4.5 7L9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Projects
+      <span id="back-label">Projects</span>
     </button>
     <span id="iframe-title"></span>
     <span id="iframe-spacer"></span>
@@ -274,109 +540,57 @@
 </div>
 
 <script>
-// ── project data ──
+/* ═══════════════════════════════════════════
+   PROJECT DATA
+═══════════════════════════════════════════ */
 const projects = [
-  {
-    title: "Orbital Mechanics Sim",
-    desc: "N-body gravity simulator with real-time trajectory plotting.",
-    emoji: "🛸",
-    badge: "New",
-    color: "#0a2a4a",
-    src: null
-  },
-  {
-    title: "Nozzle CFD Tool",
-    desc: "Convergent-divergent nozzle flow analysis using quasi-1D Euler.",
-    emoji: "🔥",
-    color: "#2a1a0a",
-    src: null
-  },
-  {
-    title: "White Dwarf Model",
-    desc: "Stellar structure via degenerate EOS and Euler integration.",
-    emoji: "⭐",
-    color: "#1a1a2a",
-    src: null
-  },
-  {
-    title: "Flight Controller",
-    desc: "PID + Kalman filter HIL-tested attitude control system.",
-    emoji: "✈️",
-    badge: "WIP",
-    color: "#0a2a1a",
-    src: null
-  },
-  {
-    title: "Sensor Fusion",
-    desc: "IMU + barometer fusion in Simulink with Monte Carlo noise.",
-    emoji: "📡",
-    color: "#1a0a2a",
-    src: null
-  },
-  {
-    title: "Rocket Club Dashboard",
-    desc: "Real-time telemetry viewer built on Cloudflare Workers.",
-    emoji: "🚀",
-    badge: "Live",
-    color: "#0a1a2a",
-    src: null
-  },
-  {
-    title: "e-Commerce Storefront",
-    desc: "Single-product Stripe Checkout on Cloudflare Pages + KV.",
-    emoji: "🛒",
-    color: "#2a1a1a",
-    src: null
-  },
-  {
-    title: "Classroom Chat App",
-    desc: "Covert real-time chat via Workers + Ably WebSockets.",
-    emoji: "💬",
-    color: "#1a2a1a",
-    src: null
-  },
-  {
-    title: "Hypertrophy Tracker",
-    desc: "Weekly training log with progressive overload analytics.",
-    emoji: "💪",
-    color: "#2a2a0a",
-    src: null
-  },
-  {
-    title: "Compressible Flow Calc",
-    desc: "Isentropic relations, normal shocks, area-Mach solver.",
-    emoji: "🌊",
-    color: "#0a2a2a",
-    src: null
-  },
-  {
-    title: "Gilman Essay Suite",
-    desc: "Structured scholarship essay drafting and revision tool.",
-    emoji: "📝",
-    color: "#1a1a1a",
-    src: null
-  },
-  {
-    title: "LaTeX Equation Kit",
-    desc: "Quick-render library for physics equation environments.",
-    emoji: "∂",
-    color: "#0d0d1a",
-    src: null
-  }
+  { title: "Orbital Mechanics Sim",  slug: "orbital_mech_sim",   desc: "N-body gravity simulator with real-time trajectory plotting.",       emoji: "🛸", badge: "new",  color: "#0a2a4a" },
+  { title: "Nozzle CFD Tool",        slug: "nozzle_cfd_tool",    desc: "Convergent-divergent nozzle flow analysis using quasi-1D Euler.",     emoji: "🔥",               color: "#2a1a0a" },
+  { title: "White Dwarf Model",      slug: "white_dwarf_model",  desc: "Stellar structure via degenerate EOS and Euler integration.",         emoji: "⭐",               color: "#1a1a2a" },
+  { title: "Flight Controller",      slug: "flight_controller",  desc: "PID + Kalman filter HIL-tested attitude control system.",             emoji: "✈️", badge: "wip",  color: "#0a2a1a" },
+  { title: "Sensor Fusion IMU",      slug: "sensor_fusion_imu",  desc: "Gyro + baro fusion in Simulink with Monte Carlo noise model.",        emoji: "📡",               color: "#1a0a2a" },
+  { title: "Rocket Dashboard",       slug: "rocket_dashboard",   desc: "Real-time telemetry viewer built on Cloudflare Workers.",             emoji: "🚀", badge: "live", color: "#0a1a2a" },
+  { title: "e-Commerce Storefront",  slug: "ecommerce_store",    desc: "Single-product Stripe Checkout on Cloudflare Pages + KV.",           emoji: "🛒",               color: "#2a1a1a" },
+  { title: "Classroom Chat App",     slug: "classroom_chat",     desc: "Covert real-time chat via Cloudflare Workers + Ably WebSockets.",     emoji: "💬",               color: "#1a2a1a" },
+  { title: "Hypertrophy Tracker",    slug: "hypertrophy_log",    desc: "Weekly training log with progressive overload analytics.",            emoji: "💪",               color: "#2a2a0a" },
+  { title: "Compressible Flow Calc", slug: "compressible_flow",  desc: "Isentropic relations, normal shocks, and area-Mach relation solver.", emoji: "🌊",               color: "#0a2a2a" },
+  { title: "Gilman Essay Suite",     slug: "gilman_essays",      desc: "Structured scholarship essay drafting and revision assistant.",       emoji: "📝",               color: "#1a1a1a" },
+  { title: "LaTeX Equation Kit",     slug: "latex_eq_kit",       desc: "Quick-render library for physics equation LaTeX environments.",       emoji: "∂",                color: "#0d0d1a" },
 ];
 
-// ── generate inline project pages ──
-function makeProjectPage(p) {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+/* ── inline project page generator ── */
+function makeProjectPage(p, theme) {
+  const isTerm = theme === 'terminal';
+  return isTerm
+    ? `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
-  body{margin:0;font-family:-apple-system,sans-serif;background:#0d0d0f;color:#e5e5e7;
-       display:flex;flex-direction:column;align-items:center;justify-content:center;
-       min-height:100vh;gap:16px;text-align:center;padding:32px;}
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+  body{margin:0;font-family:'JetBrains Mono',monospace;background:#050507;color:#e0ffe8;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;gap:20px;text-align:center;padding:32px;}
+  .icon{font-size:54px;filter:saturate(.85);}
+  .label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,255,136,.35);}
+  h1{font-size:19px;font-weight:500;letter-spacing:.04em;margin:0;}
+  p{font-size:12px;color:rgba(180,255,210,.45);max-width:340px;line-height:1.7;margin:0;}
+  .tag{border:1px solid rgba(0,255,136,.25);color:rgba(0,255,136,.65);
+    font-size:9px;padding:4px 14px;border-radius:2px;letter-spacing:.14em;text-transform:uppercase;}
+</style></head><body>
+<div class="icon">${p.emoji}</div>
+<div class="label">// project</div>
+<h1>${p.slug}</h1>
+<p>${p.desc}</p>
+<span class="tag">readme.md</span>
+</body></html>`
+    : `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body{margin:0;font-family:-apple-system,'DM Sans',sans-serif;background:#0d0d0f;color:#e5e5e7;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;gap:16px;text-align:center;padding:32px;}
   .icon{font-size:64px;line-height:1;}
   h1{font-size:26px;font-weight:500;letter-spacing:-.02em;margin:0;}
   p{font-size:14px;color:rgba(255,255,255,.45);max-width:340px;line-height:1.6;margin:0;}
   .tag{background:rgba(10,132,255,.18);color:#0a84ff;border:1px solid rgba(10,132,255,.3);
-       font-size:11px;padding:4px 12px;border-radius:99px;letter-spacing:.06em;text-transform:uppercase;}
+    font-size:11px;padding:4px 14px;border-radius:99px;letter-spacing:.06em;text-transform:uppercase;}
 </style></head><body>
 <div class="icon">${p.emoji}</div>
 <h1>${p.title}</h1>
@@ -385,73 +599,151 @@ function makeProjectPage(p) {
 </body></html>`;
 }
 
-// ── render grid ──
-const grid = document.getElementById('grid');
+/* ── precompute blob URLs (per theme) ── */
+const blobCache = { macos: [], terminal: [] };
+function buildBlobs(theme) {
+  if (blobCache[theme].length) return;
+  blobCache[theme] = projects.map(p => {
+    const blob = new Blob([makeProjectPage(p, theme)], { type: 'text/html' });
+    return URL.createObjectURL(blob);
+  });
+}
+buildBlobs('macos');
+buildBlobs('terminal');
+
+/* ═══════════════════════════════════════════
+   RENDER GRID
+═══════════════════════════════════════════ */
+const gridEl   = document.getElementById('grid');
 const barCount = document.getElementById('bar-count');
-barCount.textContent = `${projects.length} items`;
+const headerLine = document.getElementById('header-line');
 
-// build blob URLs for each project
-const blobUrls = projects.map(p => {
-  const html = makeProjectPage(p);
-  const blob = new Blob([html], { type: 'text/html' });
-  return URL.createObjectURL(blob);
-});
+function renderGrid() {
+  gridEl.innerHTML = '';
+  const theme = document.documentElement.getAttribute('data-theme');
 
-projects.forEach((p, i) => {
-  const tile = document.createElement('div');
-  tile.className = 'tile';
-  tile.setAttribute('role', 'button');
-  tile.setAttribute('tabindex', '0');
-  tile.setAttribute('aria-label', p.title);
+  projects.forEach((p, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.setAttribute('role', 'button');
+    tile.setAttribute('tabindex', '0');
+    tile.setAttribute('aria-label', p.title);
 
-  const media = `
-    <div class="tile-img-placeholder" style="background:linear-gradient(135deg,${p.color},#0d0d0f);">
-      <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">${p.emoji}</span>
-    </div>`;
+    const badgeClass = p.badge ? `badge-${p.badge}` : '';
+    const idx = String(i).padStart(2, '0');
+    const thumbBg = theme === 'terminal'
+      ? `radial-gradient(circle at 60% 40%, ${p.color}, transparent 70%)`
+      : `linear-gradient(135deg, ${p.color}, #0d0d0f)`;
+    const displayTitle = theme === 'terminal' ? p.slug : p.title;
 
-  tile.innerHTML = `
-    ${media}
-    ${p.badge ? `<span class="tile-badge">${p.badge}</span>` : ''}
-    <div class="tile-body">
-      <div class="tile-title">${p.title}</div>
-      <div class="tile-desc">${p.desc}</div>
-    </div>`;
+    tile.innerHTML = `
+      <div class="tile-thumb" style="background:${thumbBg}">
+        <span class="tile-index">${idx}</span>
+        ${p.badge ? `<span class="tile-badge ${badgeClass}">${p.badge}</span>` : ''}
+        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">${p.emoji}</span>
+      </div>
+      <div class="tile-underline"></div>
+      <div class="tile-body">
+        <div class="tile-title">${displayTitle}</div>
+        <div class="tile-desc">${p.desc}</div>
+      </div>`;
 
-  tile.addEventListener('click', () => openProject(p, blobUrls[i]));
-  tile.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openProject(p, blobUrls[i]); });
-  grid.appendChild(tile);
-});
+    tile.addEventListener('click', () => openProject(p, i));
+    tile.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') openProject(p, i);
+    });
+    gridEl.appendChild(tile);
+  });
+}
 
-// ── open / close ──
-function openProject(p, url) {
-  document.getElementById('project-frame').src = url;
-  document.getElementById('iframe-title').textContent = p.title;
+/* ═══════════════════════════════════════════
+   THEME SWITCHING
+═══════════════════════════════════════════ */
+function setTheme(theme) {
+  const root = document.documentElement;
+  const prev = root.getAttribute('data-theme');
+  if (prev === theme) return;
+
+  buildBlobs(theme); // ensure blobs are ready
+  root.setAttribute('data-theme', theme);
+
+  // toggle pill active states
+  document.getElementById('pill-macos').classList.toggle('active', theme === 'macos');
+  document.getElementById('pill-terminal').classList.toggle('active', theme === 'terminal');
+
+  // update bar copy
+  updateBarCopy();
+
+  // re-render tiles
+  renderGrid();
+
+  // persist
+  try { localStorage.setItem('proj-theme', theme); } catch(e) {}
+}
+
+function updateBarCopy() {
+  const theme = document.documentElement.getAttribute('data-theme');
+  const isOpen = document.getElementById('iframe-view').classList.contains('visible');
+
+  if (theme === 'terminal') {
+    document.getElementById('bar-title').textContent = isOpen
+      ? `[ ${(currentProject?.slug || '').toUpperCase()} ]`
+      : '[ PROJECT EXPLORER ]';
+    document.getElementById('bar-count').textContent = isOpen ? '' : `[${projects.length}]`;
+    headerLine.textContent = `${projects.length} entries — sorted by date_modified desc`;
+    document.getElementById('back-label').textContent = 'cd ..';
+  } else {
+    document.getElementById('bar-title').textContent = isOpen ? (currentProject?.title || '') : 'Projects';
+    document.getElementById('bar-count').textContent = isOpen ? '' : `${projects.length} items`;
+    document.getElementById('back-label').textContent = 'Projects';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   OPEN / CLOSE PROJECT
+═══════════════════════════════════════════ */
+let currentProject = null;
+
+function openProject(p, i) {
+  const theme = document.documentElement.getAttribute('data-theme');
+  currentProject = p;
+  document.getElementById('project-frame').src = blobCache[theme][i];
+  document.getElementById('iframe-title').textContent =
+    theme === 'terminal' ? `~ /${p.slug}` : p.title;
   document.getElementById('grid-view').classList.add('hidden');
   document.getElementById('iframe-view').classList.add('visible');
-  document.getElementById('bar-title').textContent = p.title;
-  document.getElementById('bar-count').textContent = '';
+  updateBarCopy();
 }
 
 function closeProject() {
+  currentProject = null;
   document.getElementById('iframe-view').classList.remove('visible');
   document.getElementById('grid-view').classList.remove('hidden');
-  document.getElementById('bar-title').textContent = 'Projects';
-  document.getElementById('bar-count').textContent = `${projects.length} items`;
+  updateBarCopy();
   setTimeout(() => {
     document.getElementById('project-frame').src = 'about:blank';
-  }, 280);
+  }, 260);
 }
 
-// keyboard escape
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.getElementById('iframe-view').classList.contains('visible')) {
     closeProject();
   }
 });
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+(function init() {
+  let saved = 'macos';
+  try { saved = localStorage.getItem('proj-theme') || 'macos'; } catch(e) {}
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById(`pill-${saved}`).classList.add('active');
+  document.getElementById(`pill-${saved === 'macos' ? 'terminal' : 'macos'}`).classList.remove('active');
+  buildBlobs(saved);
+  updateBarCopy();
+  renderGrid();
+})();
 </script>
 </body>
 </html>
-
-
-
-
