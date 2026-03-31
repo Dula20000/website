@@ -1,4 +1,6 @@
-<html lang="en" data-theme="macos"><head>
+<!DOCTYPE html>
+<html lang="en" data-theme="macos">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Projects</title>
@@ -446,20 +448,7 @@ html, body {
 }
 #back-btn:hover { background: var(--accent-bg); }
 [data-theme="terminal"] #back-btn:hover { border-color: var(--border-hov); }
-#iframe-title {
-  flex: 1; text-align: center;
-  font-size: 13px; font-weight: 500;
-  color: var(--text-pri);
-  letter-spacing: 0.02em;
-  transition: font-family var(--transition-theme), font-size var(--transition-theme),
-              color var(--transition-theme), letter-spacing var(--transition-theme);
-}
-[data-theme="terminal"] #iframe-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text-sec);
-}
-#iframe-spacer { width: 80px; }
+
 
 #project-frame {
   flex: 1; border: none;
@@ -483,31 +472,31 @@ html, body {
 <div id="window-bar">
   <!-- macos traffic lights -->
   <div class="traffic-lights">
-    <a class="traffic-light tl-red" href="https://www.dulran.com"></a>
-    <a class="traffic-light tl-amber" href="https://www.dulran.com"></a>
-    <a class="traffic-light tl-green" href="https://www.dulran.com"></a>
+    <span class="traffic-light tl-red"></span>
+    <span class="traffic-light tl-amber"></span>
+    <span class="traffic-light tl-green"></span>
   </div>
   <!-- terminal prompt -->
   <span id="bar-prompt">~/projects<span class="bar-blink"></span></span>
 
   <span id="bar-title">Projects</span>
-  <span id="bar-count">12 items</span>
+  <span id="bar-count"></span>
 
   <!-- theme toggle -->
   <div id="theme-toggle" role="group" aria-label="Switch theme">
     <button class="toggle-pill active" id="pill-macos" onclick="setTheme('macos')">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-        <rect x="1" y="1" width="9" height="9" rx="2.5" stroke="currentColor" stroke-width="1.2"></rect>
-        <circle cx="3.2" cy="3.2" r=".9" fill="currentColor"></circle>
-        <circle cx="5.5" cy="3.2" r=".9" fill="currentColor"></circle>
-        <circle cx="7.8" cy="3.2" r=".9" fill="currentColor"></circle>
+        <rect x="1" y="1" width="9" height="9" rx="2.5" stroke="currentColor" stroke-width="1.2"/>
+        <circle cx="3.2" cy="3.2" r=".9" fill="currentColor"/>
+        <circle cx="5.5" cy="3.2" r=".9" fill="currentColor"/>
+        <circle cx="7.8" cy="3.2" r=".9" fill="currentColor"/>
       </svg>
       macOS
     </button>
     <button class="toggle-pill" id="pill-terminal" onclick="setTheme('terminal')">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-        <polyline points="2,4 4.5,5.5 2,7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></polyline>
-        <line x1="5.5" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></line>
+        <polyline points="2,4 4.5,5.5 2,7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="5.5" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
       </svg>
       Terminal
     </button>
@@ -519,127 +508,7 @@ html, body {
   <div id="grid-header">
     <div class="grid-header-line" id="header-line"></div>
   </div>
-  <div id="grid"><div class="tile" role="button" tabindex="0" aria-label="Orbital Mechanics Sim">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #0a2a4a, #0d0d0f)">
-        <span class="tile-index">00</span>
-        <span class="tile-badge badge-new">new</span>
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">🛸</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Orbital Mechanics Sim</div>
-        <div class="tile-desc">N-body gravity simulator with real-time trajectory plotting.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Nozzle CFD Tool">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #2a1a0a, #0d0d0f)">
-        <span class="tile-index">01</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">🔥</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Nozzle CFD Tool</div>
-        <div class="tile-desc">Convergent-divergent nozzle flow analysis using quasi-1D Euler.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="White Dwarf Model">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #1a1a2a, #0d0d0f)">
-        <span class="tile-index">02</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">⭐</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">White Dwarf Model</div>
-        <div class="tile-desc">Stellar structure via degenerate EOS and Euler integration.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Flight Controller">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #0a2a1a, #0d0d0f)">
-        <span class="tile-index">03</span>
-        <span class="tile-badge badge-wip">wip</span>
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">✈️</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Flight Controller</div>
-        <div class="tile-desc">PID + Kalman filter HIL-tested attitude control system.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Sensor Fusion IMU">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #1a0a2a, #0d0d0f)">
-        <span class="tile-index">04</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">📡</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Sensor Fusion IMU</div>
-        <div class="tile-desc">Gyro + baro fusion in Simulink with Monte Carlo noise model.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Rocket Dashboard">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #0a1a2a, #0d0d0f)">
-        <span class="tile-index">05</span>
-        <span class="tile-badge badge-live">live</span>
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">🚀</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Rocket Dashboard</div>
-        <div class="tile-desc">Real-time telemetry viewer built on Cloudflare Workers.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="e-Commerce Storefront">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #2a1a1a, #0d0d0f)">
-        <span class="tile-index">06</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">🛒</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">e-Commerce Storefront</div>
-        <div class="tile-desc">Single-product Stripe Checkout on Cloudflare Pages + KV.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Classroom Chat App">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #1a2a1a, #0d0d0f)">
-        <span class="tile-index">07</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">💬</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Classroom Chat App</div>
-        <div class="tile-desc">Covert real-time chat via Cloudflare Workers + Ably WebSockets.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Hypertrophy Tracker">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #2a2a0a, #0d0d0f)">
-        <span class="tile-index">08</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">💪</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Hypertrophy Tracker</div>
-        <div class="tile-desc">Weekly training log with progressive overload analytics.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Compressible Flow Calc">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #0a2a2a, #0d0d0f)">
-        <span class="tile-index">09</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">🌊</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Compressible Flow Calc</div>
-        <div class="tile-desc">Isentropic relations, normal shocks, and area-Mach relation solver.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="Gilman Essay Suite">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #1a1a1a, #0d0d0f)">
-        <span class="tile-index">10</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">📝</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">Gilman Essay Suite</div>
-        <div class="tile-desc">Structured scholarship essay drafting and revision assistant.</div>
-      </div></div><div class="tile" role="button" tabindex="0" aria-label="LaTeX Equation Kit">
-      <div class="tile-thumb" style="background:linear-gradient(135deg, #0d0d1a, #0d0d0f)">
-        <span class="tile-index">11</span>
-        
-        <span style="font-size:28px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">∂</span>
-      </div>
-      <div class="tile-underline"></div>
-      <div class="tile-body">
-        <div class="tile-title">LaTeX Equation Kit</div>
-        <div class="tile-desc">Quick-render library for physics equation LaTeX environments.</div>
-      </div></div></div>
+  <div id="grid"></div>
 </div>
 
 <!-- ── iframe view ── -->
@@ -647,12 +516,11 @@ html, body {
   <div id="iframe-bar">
     <button id="back-btn" onclick="closeProject()">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M9 2.5L4.5 7L9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M9 2.5L4.5 7L9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span id="back-label">Projects</span>
     </button>
-    <span id="iframe-title"></span>
-    <span id="iframe-spacer"></span>
+
   </div>
   <iframe id="project-frame" src="about:blank"></iframe>
 </div>
@@ -673,7 +541,8 @@ const projects = [
   { title: "Classroom Chat App",     slug: "classroom_chat",     desc: "Covert real-time chat via Cloudflare Workers + Ably WebSockets.",     emoji: "💬",               color: "#1a2a1a", src:"a.html" },
   { title: "Compressible Flow Calc", slug: "compressible_flow",  desc: "Isentropic relations, normal shocks, and area-Mach relation solver.", emoji: "🌊",               color: "#0a2a2a", src:"a.html" },
   { title: "Gilman Essay Suite",     slug: "gilman_essays",      desc: "Structured scholarship essay drafting and revision assistant.",       emoji: "📝",               color: "#1a1a1a", src:"a.html" },
-  { title: "LaTeX Equation Kit",     slug: "latex_eq_kit",       desc: "Quick-render library for physics equation LaTeX environments.",       emoji: "∂",                color: "#0d0d1a", src:"a.html" },
+  { title: "LaTeX Equation Kit",     slug: "latex_eq_kit",       desc: "Quick-render library for physics equation LaTeX environments.",       emoji: "∂",                color: "#0d0d1a", src:"a.html" }
+
 ];
 
 /* ── inline project page generator ── */
@@ -824,11 +693,8 @@ let currentProject = null;
 
 function openProject(p, i) {
   const theme = document.documentElement.getAttribute('data-theme');
-   
   currentProject = p;
   document.getElementById('project-frame').src = p.src || blobCache[theme][i];
-  document.getElementById('iframe-title').textContent =
-    theme === 'terminal' ? `~ /${p.slug}` : p.title;
   document.getElementById('grid-view').classList.add('hidden');
   document.getElementById('iframe-view').classList.add('visible');
   updateBarCopy();
@@ -864,7 +730,5 @@ document.addEventListener('keydown', e => {
   renderGrid();
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e18dc348b65d230',t:'MTc3NDM4ODY5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height="1" width="1" style="position: absolute; top: 0px; left: 0px; border: medium; visibility: hidden;"></iframe><script defer="" src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;5acfa305774c4ba8a35c7a3e9b1aadfd&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
-
-
-</body></html>
+</body>
+</html>
