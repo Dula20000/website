@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Simple Music Player</title>
+
+<style>
+body {
+    background-color: #f9f9f9;
+    font: normal 1em / 1.5em BlinkMacSystemFont, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+}
+
+h1 {
+    font-size: 1.5em;
+    color: #555;
+    text-align: center;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+}
+
+li {
+    margin: 10px 0;
+    cursor: pointer;
+    color: #0077cc;
+}
+
+li:hover {
+    text-decoration: underline;
+}
+
+audio {
+    display: block;
+    margin: 20px auto;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Song List</h1>
+
+<ul>
+    <li onclick="playSong('/God\'s Plan - Drake.mid')">God's Plan - Drake</li>
+    <li onclick="playSong('/box.mp3')">Box</li>
+    <li onclick="playSong('/fukumean.mp3')">Fukumean</li>
+    <li onclick="playSong('/kekedoyoloveme.mp3')">Keke Do You Love Me</li>
+    <li onclick="playSong('/lemonade.mp3')">Lemonade</li>
+    <li onclick="playSong('/maya.mp3')">Maya</li>
+    <li onclick="playSong('/somebodysme.mp3')">Somebody's Me</li>
+    <li onclick="playSong('/whatspopping.mp3')">What's Popping</li>
+</ul>
+
+<audio id="player" controls>
+    <source id="audio-source" src="" type="audio/mpeg">
+</audio>
+
+<script>
+function playSong(src) {
+    const player = document.getElementById("player");
+    const source = document.getElementById("audio-source");
+
+    source.src = src;
+    player.load();
+    player.play();
+}
+</script>
+
+</body>
+</html>
