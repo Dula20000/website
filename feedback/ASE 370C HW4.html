@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ASE 370C: Feedback Control Systems Spring 2026 Homework 4</title>
+
+<!-- External libraries included ONCE -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  body {
+    margin: 20px auto;
+    max-width: 1000px;
+    font-family: Arial, sans-serif;
+    background: white;
+    color: black;
+  }
+  hr {
+    margin: 50px 0;
+    border: none;
+    border-top: 2px solid #444;
+  }
+
+  .hw-container {
+    margin: 0 auto;
+    max-width: 1100px;
+    text-align: left;
+  }
+
+  :root {
+    color-scheme: light dark;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 0;
+  }
+
+  p.description {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    color: #4b5563;
+  }
+
+  .demo-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+    padding: 28px 32px 36px;
+    margin-bottom: 40px;
+  }
+
+  .exercise {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(45, 212, 191, 0.14));
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 16px;
+    padding: 22px 26px;
+    margin-bottom: 28px;
+  }
+
+  .exercise h2 {
+    margin: 0 0 12px;
+    font-size: 1.2rem;
+    color: #065f46;
+  }
+
+  .exercise p {
+    margin: 0 0 12px;
+    color: #065f46;
+    line-height: 1.7;
+  }
+
+  .equations {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.08));
+    border: 1px solid rgba(79, 70, 229, 0.15);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 16px 0 24px;
+    font-size: 1.05rem;
+    text-align: center;
+  }
+
+  .plot-container {
+    width: 100%;
+    height: 400px;
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 style="text-align:center; margin: 24px 0;">ASE 370C: Feedback Control Systems Spring 2026 Homework 4</h1>
+<div class="hw-container">
+<div class="page">
+  <p class="description">
+    <span style="color: #999;">© [2026] [Ufuk Topcu, Adam Thorpe, Mustafa Karabag, Vivian Chen, Filippos Fotiadis, Su Ann Low]. All rights reserved. All course material is intended exclusively for use by students enrolled in this course. Redistribution, posting on public websites, sharing on file-hosting services, or inclusion in other instructional materials is strictly prohibited without prior written permission of the authors. Unauthorized distribution may violate copyright law.</span>
+    <br><br>
+    Total points: 100 (= 60 + 40).
+    <br><br>
+    Submit your work to Gradescope as a single PDF. Solutions must be typed, NOT handwritten.
+    <br><br>
+    Your answers must show your reasoning and work. Include all calculations, figures, drawings, code, etc. that support your answers in the PDF.
+    <br><br>
+    You may use any numerical tool (e.g., MATLAB, Python) for computations and simulations throughout this homework.
+  </p>
+  <hr>
+
+  <!-- ============================================================ -->
+  <!-- Problem 1: Vectored-Thrust Aircraft Control -->
+  <!-- ============================================================ -->
+  <div class="demo-card">
+    <div class="exercise">
+      <h2>Problem 1: State Feedback Control of a Vectored-Thrust Aircraft <span style="font-weight: normal; font-size: 0.9rem; color: #1f2937; font-weight: 600;">(60 pts)</span></h2>
+
+      <div style="text-align: center; margin: 16px 0 20px;">
+        <img src="data:image/png;base64,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" alt="Vectored-thrust aircraft diagram" style="max-width: 320px; width: 100%;">
+      </div>
+
+      <p>The lateral dynamics of a vectored-thrust aircraft can be obtained by considering
+      the motion in the states \(s = (x, \theta, \dot{x}, \dot{\theta})\), where \(x\) and \(\theta\) denote the position and orientation
+      of the center of mass of the aircraft. The linearization of the dynamics around the hover
+      configuration gives the following linear system:</p>
+
+      <div class="equations">
+        \[
+        \dot{s} = \underbrace{\begin{bmatrix} 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & -g & -c/m & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}}_{A} s + \underbrace{\begin{bmatrix} 0 \\ 0 \\ 1/m \\ \tilde{r}/J \end{bmatrix}}_{B} u, \qquad y = \underbrace{\begin{bmatrix} 1 & 0 & 0 & 0 \end{bmatrix}}_{C} s,
+        \]
+      </div>
+
+      <p>where \(m = 4\,\text{kg}\), \(J = 0.0475\,\text{kg}\,\text{m}^2\), \(c = 0.05\,\text{Ns/m}\), \(g = 9.8\,\text{m/s}^2\), and \(\tilde{r} = 0.25\,\text{m}\).</p>
+    </div>
+
+    <!-- Part (a) -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    We begin by examining the open-loop behavior of the system.</p>
+
+    <div class="exercise">
+      <p><strong>(a)</strong> Show that the open-loop system is not stable.</p>
+    </div>
+
+    <!-- Guiding text: state feedback design -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    Since the open-loop system is not stable, we need a controller. We will design a state-feedback controller of the form</p>
+
+    <div class="equations">
+      \[ u = -Ks + k_r \, r, \]
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    where \(r\) is the reference input. The gain matrix \(K\) will allow us to place the eigenvalues of the closed-loop matrix \(A - BK\), and we will use the scalar gain \(k_r\) to obtain a steady-state gain of 1 from \(r\) to \(y\).</p>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    Let us begin with some design specifications and then relate them to eigenvalue placement. Set the percent overshoot \(M_p = 10\%\) and the 2% settling time \(t_s = 10\,\text{s}\). The following formulas relate \(M_p\) and \(t_s\) to the damping ratio \(\xi\) and the natural frequency \(\omega_n\) for a <u>second-order</u> system:</p>
+
+    <div class="equations">
+      \[ M_p = e^{-\pi\xi/\sqrt{1-\xi^2}}, \quad 0 \le \xi < 1, \]
+      \[ e^{-\xi\omega_n t_s} = 0.02. \]
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    However, we have a fourth-order system. We will pick two of the desired eigenvalues (a complex conjugate pair) as \(\lambda_r \pm \lambda_i j\) using the formulas above. Then, we will pick the other two eigenvalues to be "faster":</p>
+
+    <div class="equations">
+      \[ f \cdot \lambda_r \pm \lambda_i j, \]
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    where \(f > 1\) (in fact \(f \gg 1\)). With \(f\) significantly larger than 1, the two modes corresponding to the eigenvalues \(f \cdot \lambda_r \pm \lambda_i j\) will die out much faster than the modes corresponding to \(\lambda_r \pm \lambda_i j\). The latter modes will therefore dominate the response; they are often called the <em>dominant modes</em>.</p>
+
+    <!-- Part (b) -->
+    <div class="exercise">
+      <p><strong>(b)</strong> Let \(f = 5\). Using the design specifications above, determine the four desired eigenvalues for \(A - BK\).</p>
+    </div>
+
+    <!-- Part (c) -->
+    <div class="exercise">
+      <p><strong>(c)</strong> Using a pole placement function, find the gain matrix \(K\) so that the eigenvalues of \(A - BK\) are at the desired locations.</p>
+    </div>
+
+    <!-- Part (d) -->
+    <div class="exercise">
+      <p><strong>(d)</strong> Find the scalar gain \(k_r\) so that the steady-state gain from \(r\) to \(y\) (under a step input) is equal to 1.</p>
+    </div>
+
+    <!-- Guiding text: simulation -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    Now let us verify that the design meets the specifications by simulating the closed-loop system.</p>
+
+    <!-- Part (e) -->
+    <div class="exercise">
+      <p><strong>(e)</strong> Simulate the closed-loop step response (with \(r = 1\)) and plot the output \(y(t)\). Report the percent overshoot and settling time (<em>hint:</em> look for a step response analysis function). Are the design specifications met?</p>
+      <p><em>Hint:</em> The closed-loop system has the form \(\dot{s} = (A - BK)s + Bk_r r\), \(y = Cs\).</p>
+    </div>
+
+    <!-- Guiding text: robustness -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    The feedforward gain \(k_r\) was computed based on the nominal model. In practice, the plant model is never perfectly known. Let us investigate what happens when there is a mismatch between the true plant and the model we used for design.</p>
+
+    <!-- Part (f) -->
+    <div class="exercise">
+      <p><strong>(f)</strong> Introduce a perturbation to the \(A\) matrix:</p>
+      <div class="equations">
+        \[ A_{\text{pert}} = A + 0.02 \cdot \texttt{randn}(4,4) \]
+      </div>
+      <p>where \(\texttt{randn}(4,4) \) is a \(4\times 4\) matrix with entries sampled from normal distribution with mean \(0\) and variance \(1\).</p>
+      <p>Using the <em>same</em> \(K\) and \(k_r\) as before (designed for the nominal model), simulate the closed-loop system with \(A_{\text{pert}}\) replacing \(A\) in the plant. Plot the output \(y(t)\) and compare to the nominal case. Comment on what you observe — does the output still converge to the reference?</p>
+    </div>
+
+    <!-- Guiding text: integral action -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    As we saw, when the plant does not exactly match the nominal model, the feedforward controller may fail to track the reference in steady state. To eliminate this steady-state error, we will add <em>integral action</em> to the controller.</p>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    Let us assume that \(k_r = 0\) (i.e., no feedforward control) and add integral action to the full-state feedback controller. That is, the controller is in the form of</p>
+
+    <div class="equations">
+      \[ u = -\begin{bmatrix} K & k_i \end{bmatrix} \begin{bmatrix} s \\ z \end{bmatrix}, \]
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    where \(z\) is the integrator state satisfying \(\dot{z} = r - Cs = r - y\). The closed-loop dynamics of the augmented state \(\begin{bmatrix} s \\ z \end{bmatrix}\) are</p>
+
+    <div class="equations">
+      \[
+      \begin{bmatrix} \dot{s} \\ \dot{z} \end{bmatrix} = \left( \begin{bmatrix} A & 0_{4\times 1} \\ -C & 0 \end{bmatrix} - \begin{bmatrix} B \\ 0 \end{bmatrix} \begin{bmatrix} K & k_i \end{bmatrix} \right) \begin{bmatrix} s \\ z \end{bmatrix} + \begin{bmatrix} 0 \\ 1 \end{bmatrix} r
+      \]
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    and \(y = \begin{bmatrix} C & 0 \end{bmatrix} \begin{bmatrix} s \\ z \end{bmatrix}\). The integral action introduces a fifth state, so the closed-loop system now has five eigenvalues. Pick four of them as in part (b) and introduce a fifth (fast, real) eigenvalue at \(f \cdot \lambda_r\).</p>
+
+    <!-- Part (g) -->
+    <div class="exercise">
+      <p><strong>(g)</strong> Using a pole placement function, find \(K\) and \(k_i\) for the augmented system so that the closed-loop eigenvalues are at the five desired locations.</p>
+    </div>
+
+    <!-- Part (h) -->
+    <div class="exercise">
+      <p><strong>(h)</strong> Does the resulting closed-loop system have a steady-state gain from \(r\) to \(y\) equal to 1? Does it (at least roughly) meet the requirements on percent overshoot and settling time? Justify your answers using the formulas from earlier parts (you may evaluate them numerically).</p>
+    </div>
+
+    <!-- Part (i) -->
+    <div class="exercise">
+      <p><strong>(i)</strong> Simulate the closed-loop system with integral action under a unit step reference, using the <em>nominal</em> \(A\) matrix. Plot \(y(t)\) and verify that the specifications are met.</p>
+    </div>
+
+    <!-- Part (j) -->
+    <div class="exercise">
+      <p><strong>(j)</strong> Now simulate the closed-loop system with integral action using the <em>same</em> \(A_{\text{pert}}\) from part (f). Plot \(y(t)\) and compare to the nominal case. Comment on the differences between the nominal and perturbed cases. Does the integral controller handle the model mismatch better than the feedforward approach?</p>
+    </div>
+
+  </div>
+
+  <hr>
+
+  <!-- ============================================================ -->
+  <!-- Problem 2: Optimal Control -->
+  <!-- ============================================================ -->
+  <div class="demo-card">
+    <div class="exercise">
+      <h2>Problem 2: From LQR to Receding-Horizon Control <span style="font-weight: normal; font-size: 0.9rem; color: #1f2937; font-weight: 600;">(40 pts)</span></h2>
+
+      <p>Consider the system</p>
+
+      <div class="equations">
+        \[
+        \dot{x} = \underbrace{\begin{bmatrix} 0 & 1 \\ 0 & 0 \end{bmatrix}}_{A} x + \underbrace{\begin{bmatrix} 0 \\ 1 \end{bmatrix}}_{B} u,
+        \]
+      </div>
+
+      <p>with initial condition \(x_0 = \begin{bmatrix} 2 \\ 0 \end{bmatrix}\).</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PART I: Infinite-Horizon LQR (from class) -->
+    <!-- ============================================================ -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    <strong>Part I: Infinite-Horizon LQR.</strong> As we saw in class, the infinite-horizon LQR problem minimizes</p>
+
+    <div class="equations">
+      \[ J = \int_0^{\infty} \left( x(t)^\top Q\, x(t) + u(t)^\top R\, u(t) \right) dt \]
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    subject to the system dynamics. The solution is a state-feedback control law \(u = -Kx\), where \(K\) is a constant gain matrix.</p>
+
+    <!-- Part (a) -->
+    <div class="exercise">
+      <p><strong>(a)</strong> Using an LQR function, compute the optimal gain \(K\) and the closed-loop eigenvalues (i.e., the eigenvalues of \(A - BK\)) for each of the following three cases:</p>
+      <p style="margin-left: 20px;">
+        (i) \(Q = \begin{bmatrix} 10 & 0 \\ 0 & 10 \end{bmatrix}\), \(R = 0.1\).<br>
+        (ii) \(Q = \begin{bmatrix} 0.1 & 0 \\ 0 & 0.1 \end{bmatrix}\), \(R = 10\).<br>
+        (iii) \(Q = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}\), \(R = 1\).
+      </p>
+      <p>For each case, simulate the closed-loop system from \(x_0\) for 10 seconds and plot the state trajectories \(x_1(t), x_2(t)\) and the control input \(u(t)\). Use a 2 by 3 grid in your figure where columns are cases (i)-(iii), the first row is the plots of state trajectories \(x_1(t), x_2(t)\), and the second row is the plots for the control input \(u(t)\). Comment on how the choice of \(Q\) and \(R\) affects the convergence speed, the control effort, and the closed-loop eigenvalue locations.</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PART II: LQR and Constraints -->
+    <!-- ============================================================ -->
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px;">
+    <strong>Part II: LQR and Constraints.</strong> In practice, real-world systems often have constraints. For example, an aircraft's actuators can only produce a limited amount of force (input constraint), and the state may need to stay within a safe operating region (state constraint). LQR does not directly account for such constraints — it minimizes a cost function without any hard limits on the state or input. However, one can <em>indirectly</em> try to enforce constraints by tuning \(Q\) and \(R\): increasing \(R\) tends to reduce the control effort, and increasing \(Q\) tends to keep the state small. Let us see how well this works.</p>
+
+    <div class="exercise">
+      <p><strong>(b)</strong> Consider the same system and initial condition as above. Suppose the system is subject to the following constraints:</p>
+      <div class="equations">
+        \[ |u(t)| \leq 0.1 \quad \text{(input constraint)}, \qquad |x_2(t)| \leq 0.1 \quad \text{(state constraint)}. \]
+      </div>
+      <p>By trial and error, try to find diagonal matrices \(Q\) and a scalar \(R\) such that the LQR controller \(u = -Kx\) satisfies both constraints along the closed-loop trajectory from \(x_0\). Simulate the closed-loop system and plot \(x_1(t)\), \(x_2(t)\), and \(u(t)\). On the plots for \(x_2(t)\) and \(u(t)\), include horizontal lines at the constraint boundaries.</p>
+      <p>Report the values of \(Q\) and \(R\) you chose, and comment on the process. Were you able to satisfy both constraints simultaneously? How easy or difficult was it to find suitable values?</p>
+    </div>
+
+    <p style="line-height: 1.7; color: #1f2937; margin-bottom: 16px; font-style: italic;">
+    <strong>Remark.</strong> As you may have experienced, there is no direct way to enforce hard constraints on the state or input through LQR — you can only try to discourage large values by adjusting \(Q\) and \(R\), which is indirect and requires trial and error. There are other control design methods, such as <em>model predictive control</em> (MPC), that can handle constraints like \(|u| \leq 1\) directly as part of the controller design.</p>
+
+  </div>
+
+
+
+</div><!-- end .page -->
+</body>
+</html>
