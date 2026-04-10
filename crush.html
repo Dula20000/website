@@ -32,6 +32,15 @@
       flex-direction: column;
       align-items: center;
     }
+    
+    .description {
+    max-width: 700px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
+    margin-bottom: 20px;
+    opacity: 0.85;
+	}
     button{
     color:white;
     background-color:black;
@@ -140,7 +149,6 @@
   <div class="container">
     <h1>Es-tu mon écraser ? </h1>
     <h1>Saisissez votre nom de famille et voyez.</h1> 
-    <h1>Que des lettres simples</h1>
     <div class="buttons">
       <form id="form">
   <input type="text" id="username" name="username" placeholder="nom de famille">
@@ -149,6 +157,9 @@
 
     </div>
   </div>
+  <div class="description">
+  This website is my first learning and demonstration of protecting secret variables from appearing on public facing sites. The correct answer is not stored in the static frontend code. Instead, it is transmitted to a secure Cloudflare Worker, which compares it against a secret variable and returns whether the input is correct or incorrect. Cool stuff.
+</div>
 
 
 <!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
