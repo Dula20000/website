@@ -142,7 +142,7 @@
     <h1>Saisissez votre nom de famille et voyez.</h1> 
     <h1>Que des lettres simples</h1>
     <div class="buttons">
-      <form action="/submit-page" method="POST">
+      <form id="form">
   <input type="text" id="username" name="username" placeholder="nom de famille">
   <button type="submit">envoyer</button>
 </form>
@@ -157,6 +157,8 @@
 
 </body>
 <script>
+const form = document.querySelector("#form");
+const msg = document.getElementById("msg");
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -171,9 +173,7 @@ form.addEventListener("submit", async (e) => {
   try {
     const res = await fetch("https://cool-snow-aa47.junkmails20d.workers.dev", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username })
     });
 
@@ -185,7 +185,7 @@ form.addEventListener("submit", async (e) => {
     } else {
       msg.textContent = "Incorrect.";
     }
-  } catch (err) {
+  } catch {
     msg.textContent = "Erreur serveur.";
   }
 });
