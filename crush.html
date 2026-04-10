@@ -34,6 +34,176 @@
     }
     
     .description {
+    max-width: 800px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 100px;
+    opacity: 0.85;
+	}
+    button{
+    color:white;
+    background-color:black;
+    }
+    
+    .home-button {
+  position: absolute;
+  top: 0px;
+  left: 10px;
+  font-family: "Quantico", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #181818;
+  text-decoration: none;
+  padding: 6px 0px;
+  border: 0px solid #181818;
+  border-radius: 6px;
+  transition: 1s ease;
+  font-family: "Cormorant Garamond", serif; /* Updated font */
+}
+
+.home-button:hover {
+  color: #ffffff;
+  border-color: #1e660d;
+  transform: scale(1.08);
+}
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      opacity: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      display: inline-block;
+      border-right: 3px solid #181818;
+      animation: typingEffect 5s steps(50) 1s forwards, blinkCursor 0.75s step-end 2.8s forwards;
+    }
+
+    @keyframes typingEffect {
+      0% { width: 0; opacity: 1; }
+      100% { width: 100%; opacity: 1; }
+    }
+
+    @keyframes blinkCursor {
+      0%, 50% { border-color: #181818; }
+      100% { border-color: transparent; }
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      flex-direction: column;
+      justify-content: center;
+      margin-top: 20px;
+      text-align: center;
+      opacity: 0;
+      animation: fadeInButtons 1s ease-out forwards 4.2s;
+    }
+
+    @keyframes fadeInButtons {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .button {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #181818;
+      cursor: pointer;
+      text-align: left;
+      position: relative;
+      padding-left: 30px;
+      transition: transform 0.3s ease, color 0.3s ease;
+      text-decoration: none;
+    }
+
+    .button::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 2rem;
+      color: #181818;
+      opacity: 0.6;
+    }
+
+    .button:hover {
+      transform: scale(1.1);
+      color: #ffffff;
+    }
+
+    .button:hover::before {
+      color: #1e660d;
+    }
+
+    .button:focus {
+      outline: none;
+    }
+
+  </style>
+</head>
+<body>
+<div id="msg" class="error"></div>
+  <a href="https://www.dulran.com/home67.html" class="home-button">Home : Dulran</a>
+  <div class="container">
+    <h1>Es-tu mon écraser ? </h1>
+    <h1>Saisissez votre nom de famille et voyez.</h1> 
+    <div class="buttons">
+      <form id="form">
+  <input type="text" id="username" name="username" placeholder="nom de famille">
+  <button type="submit">envoyer</button>
+</form>
+
+    </div>
+    <div class="description">
+  This website is my first learning and demonstration of protecting secret variables from appearing on public facing sites. The correct answer is not stored in the static frontend code. Instead, it is transmitted to a secure  Worker JS, which compares it against a secret variable with the correct answer and returns whether the input is correct or incorrect. Cool stuff. There is however, a simple way to attack this which I won't mention. But this architecture counts on not having an unemployed curious person with time to kill stumbling upon this site.
+	</div>
+  </div>
+ 
+
+
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+
+</body>
+<script>
+const form = document.querySelector("#form");
+const msg = document.getElementById("msg");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById("username").value;
+
+  if (!username) {
+    msg.textContent = "Veuillez entrer un nom.";
+    return;
+  }
+
+  try {
+    const res = await fetch("https://cool-snow-aa47.junkmails20d.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      window.location.href =
+        "https://sites.google.com/view/whyishecorrect/home";
+    } else {
+      msg.textContent = "Incorrect.";
+    }
+  } catch {
+    msg.textContent = "Erreur serveur.";
+  }
+});
+</script>
+</html>
     max-width: 700px;
     font-size: 0.9rem;
     line-height: 1.4;
