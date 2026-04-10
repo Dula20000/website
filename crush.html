@@ -158,31 +158,8 @@
 </body>
 <script>
 
-
-const storedHash = "b57cff2013f53509506aabd63524b10e205f6300cf023db6840ec6fa2a8ba5bf";
-// Ce hachage correspond au nom de la personne dont on est amoureux.you know who
-
-const form = document.querySelector("form");
-const msg = document.getElementById("msg");
-
-// ===== buffer → hex =====
-function toHex(buffer) {
-  return [...new Uint8Array(buffer)]
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-// ===== SHA256 =====
-async function sha256(str) {
-  const enc = new TextEncoder();
-  const buf = enc.encode(str.toLowerCase().trim());
-  const hashBuf = await crypto.subtle.digest("SHA-256", buf);
-  return toHex(hashBuf);
-}
-
-// ===== form submit handler =====
 form.addEventListener("submit", async (e) => {
-  e.preventDefault(); // stops page reload
+  e.preventDefault();
 
   const username = document.getElementById("username").value;
 
@@ -191,13 +168,25 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  const hash = await sha256(username);
+  try {
+    const res = await fetch("https://cool-snow-aa47.junkmails20d.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username })
+    });
 
-  if (hash === storedHash) {
-    window.location.href =
-      "https://sites.google.com/view/whyishecorrect/home";
-  } else {
-    msg.textContent = "Incorrect.";
+    const data = await res.json();
+
+    if (data.ok) {
+      window.location.href =
+        "https://sites.google.com/view/whyishecorrect/home";
+    } else {
+      msg.textContent = "Incorrect.";
+    }
+  } catch (err) {
+    msg.textContent = "Erreur serveur.";
   }
 });
 </script>
