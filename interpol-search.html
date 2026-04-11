@@ -379,7 +379,7 @@
 </head>
 <body>
     <!-- Loading -->
-    <div class="loading-overlay" id="loading">
+    <div class="loading-overlay hidden" id="loading">
         <div class="spinner"></div>
         <div class="loading-text">Searching Interpol Database...</div>
     </div>
@@ -489,6 +489,35 @@
         let currentPage = 1;
         let activeTypes = ['red', 'yellow'];
         let currentResults = [];
+        let loadingRequests = 0;
+
+        function showLoading(message = 'Searching Interpol Database...') {
+            loadingRequests += 1;
+            document.getElementById('loading').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = message;
+        }
+
+        function hideLoading() {
+            loadingRequests = Math.max(0, loadingRequests - 1);
+            if (loadingRequests === 0) {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        async function apiFetch(url, options = {}, timeoutMs = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                return await fetch(url, {
+                    ...options,
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
 
         // Country list
         const COUNTRIES = {
@@ -549,7 +578,7 @@
                 const path = type === 'un'
                     ? `/notices/v1/un/persons/${noticeId}/images`
                     : `/notices/v1/${type}/${noticeId}/images`;
-                const res = await fetch(`${API_BASE}${path}`);
+                const res = await apiFetch(`${API_BASE}${path}`);
                 if (!res.ok) return null;
                 return await res.json();
             } catch { return null; }
@@ -590,13 +619,13 @@
         // Main search function
         async function search(page = 1) {
             currentPage = page;
-            document.getElementById('loading').classList.remove('hidden');
+            showLoading('Searching Interpol Database...');
 
             try {
                 let allResults = [];
                 let grandTotal = 0;
 
-                const requests = activeTypes.map(type => fetch(buildSearchURL(type, page)));
+                const requests = activeTypes.map(type => apiFetch(buildSearchURL(type, page)));
                 const responses = await Promise.all(requests);
 
                 for (let i = 0; i < responses.length; i++) {
@@ -622,7 +651,7 @@
 
                 // Fetch details for each notice in parallel
                 const detailRequests = allResults.map(n =>
-                    fetch(`${API_BASE}/notices/v1/${n.type}/${n.id}`)
+                    apiFetch(`${API_BASE}/notices/v1/${n.type}/${n.id}`)
                         .then(r => r.ok ? r.json() : null)
                 );
                 const details = await Promise.all(detailRequests);
@@ -643,7 +672,7 @@
                     </div>
                 `;
             } finally {
-                document.getElementById('loading').classList.add('hidden');
+                hideLoading();
             }
         }
 
@@ -788,7 +817,7 @@
             try {
                 // Fetch detail + images in parallel
                 const [detail, images] = await Promise.all([
-                    fetch(`${API_BASE}/notices/v1/${type}/${notice.entity_id}`).then(r => r.ok ? r.json() : null),
+                    apiFetch(`${API_BASE}/notices/v1/${type}/${notice.entity_id}`).then(r => r.ok ? r.json() : null),
                     fetchImages(type, notice.entity_id)
                 ]);
 
@@ -999,9 +1028,9 @@
         async function loadStats() {
             try {
                 const [redRes, yellowRes, unRes] = await Promise.all([
-                    fetch(`${API_BASE}/notices/v1/red?page=1&resultPerPage=1`),
-                    fetch(`${API_BASE}/notices/v1/yellow?page=1&resultPerPage=1`),
-                    fetch(`${API_BASE}/notices/v1/un?page=1&resultPerPage=1`)
+                    apiFetch(`${API_BASE}/notices/v1/red?page=1&resultPerPage=1`),
+                    apiFetch(`${API_BASE}/notices/v1/yellow?page=1&resultPerPage=1`),
+                    apiFetch(`${API_BASE}/notices/v1/un?page=1&resultPerPage=1`)
                 ]);
 
                 const red = redRes.ok ? await redRes.json() : null;
