@@ -39,14 +39,19 @@ body, html {
   position: relative;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 3s ease;
+  transition: opacity 1.5s ease-in;
 }
 
 /* CANVAS BACKGROUND */
 #canvas {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
+}
+
+/* Ensure canvas stays visible and doesn't get hidden */
+#canvas.tubes-active {
+  display: block !important;
 }
 
 /* TEXT GROUP */
@@ -106,9 +111,9 @@ body, html {
 
 <!-- MAIN CONTENT SECTION -->
 <div id="content">
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" class="tubes-active"></canvas>
 
-<div class="hero">
+<div class="hero" style="position: relative; z-index: 1;">
   <a href="https://dulran.com/resumesburntorange.html"><h1>RESUME</h1></a>
   <a href="https://dulran.com/projects"><h2>ABOUT/PROJECTS</h2></a>
   <a href="https://www.instagram.com/dul.is.running"><h3>GALLERY</h3></a>
@@ -120,15 +125,19 @@ body, html {
 // Tubes Cursor effect
 import TubesCursor from "https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js"
 
-const app = TubesCursor(document.getElementById('canvas'), {
+const canvasEl = document.getElementById('canvas');
+const app = TubesCursor(canvasEl, {
   tubes: {
     colors: ["#f967fb", "#53bc28", "#6958d5"],
     lights: {
       intensity: 200,
-      colors: ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"]
+      colors: ["#83f36e", "#fe8a2e", "#ff008c", "#60aed5"]
     }
   }
 })
+
+// Ensure tubes persist indefinitely
+canvasEl.classList.add('tubes-active');
 
 document.body.addEventListener('click', () => {
   const colors = randomColors(3)
@@ -144,7 +153,7 @@ function randomColors(count) {
 }
 
 
-// Auto-scroll reveal logic
+// Auto-scroll reveal logic with Safari autoplay fix
 const video = document.getElementById("introVideo");
 const content = document.getElementById("content");
 
@@ -155,24 +164,58 @@ function reveal() {
   window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
 }
 
+// Safari autoplay fix: ensure video is ready and actually playing
+async function tryPlayVideo(videoElement) {
+  try {
+    // Make sure video is loaded
+    if (videoElement.readyState >= 2) {
+      await videoElement.play();
+      return true;
+    }
+  } catch (err) {
+    console.log('Autoplay blocked, showing content immediately');
+  }
+  return false;
+}
+
 // Check if video has already been shown
 if (localStorage.getItem("videoPlayed")) {
   // Skip video entirely on repeat visits
   video.style.display = "none";
   reveal();
 } else {
-  // First visit: show video, then reveal when it ends
-  video.addEventListener("ended", () => {
-    localStorage.setItem("videoPlayed", "true");
-    reveal();
+  // Try to play video (Safari-safe)
+  tryPlayVideo(video).then((played) => {
+    if (!played) {
+      // If autoplay blocked, just show content
+      localStorage.setItem("videoPlayed", "true");
+      video.style.display = "none";
+      reveal();
+      return;
+    }
+    
+    // Video is playing, wait for it to end
+    video.addEventListener("ended", () => {
+      localStorage.setItem("videoPlayed", "true");
+      reveal();
+    });
   });
 
   // Safety fallback (6 sec)
   setTimeout(() => {
-    localStorage.setItem("videoPlayed", "true");
-    reveal();
+    if (!localStorage.getItem("videoPlayed")) {
+      localStorage.setItem("videoPlayed", "true");
+      video.style.display = "none";
+      reveal();
+    }
   }, 6000);
 }
+
+// Keep tubes rendering - ensure animation loop continues
+function animate() {
+  requestAnimationFrame(animate);
+}
+animate();
 </script>
 
 
