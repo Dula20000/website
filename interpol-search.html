@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Interpol Notice Search | International Wanted</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #080c14;
+            color: #e6edf3;
+            min-height: 100vh;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #080c14; z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .spinner {
+            width: 48px; height: 48px;
+            border: 3px solid rgba(220, 50, 50, 0.15);
+            border-top-color: #dc3232;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            margin-top: 18px; font-size: 13px; color: #6e7681;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(180deg, rgba(8,12,20,0.98) 0%, rgba(8,12,20,0.92) 70%, transparent 100%);
+            padding: 20px 24px 24px;
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header-inner { max-width: 1400px; margin: 0 auto; }
+
+        .header-top {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+        }
+        .logo {
+            font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #dc3232, #ff6b6b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .badge {
+            background: rgba(220, 50, 50, 0.12);
+            border: 1px solid rgba(220, 50, 50, 0.25);
+            color: #ff6b6b; padding: 3px 10px; border-radius: 20px;
+            font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+        }
+
+        /* Search */
+        .search-bar {
+            display: flex; gap: 8px; margin-bottom: 12px;
+        }
+        .search-input {
+            flex: 1; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; padding: 12px 16px;
+            color: #e6edf3; font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input::placeholder { color: #6e7681; }
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(220, 50, 50, 0.5);
+            box-shadow: 0 0 0 3px rgba(220, 50, 50, 0.1);
+        }
+        .search-btn {
+            background: linear-gradient(135deg, #dc3232, #b52020);
+            border: none; border-radius: 10px;
+            padding: 12px 24px; color: white;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .search-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(220, 50, 50, 0.4); }
+        .search-btn:active { transform: translateY(0); }
+
+        /* Filters */
+        .filters {
+            display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+        }
+        .filter-group {
+            display: flex; gap: 4px; align-items: center;
+        }
+        .filter-label {
+            font-size: 10px; color: #6e7681; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-right: 4px;
+        }
+        .filter-select, .filter-input {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 7px; padding: 6px 10px;
+            color: #e6edf3; font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .filter-select:focus, .filter-input:focus {
+            outline: none; border-color: rgba(220, 50, 50, 0.4);
+        }
+        .filter-select option { background: #1a1f2e; }
+        .filter-input { width: 80px; }
+
+        .notice-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 7px; padding: 6px 12px;
+            font-size: 11px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+        .notice-btn { color: #8b949e; }
+        .notice-btn:hover { background: rgba(255,255,255,0.08); color: #e6edf3; }
+        .notice-btn.active { background: rgba(220, 50, 50, 0.15); border-color: rgba(220, 50, 50, 0.35); color: #ff6b6b; }
+
+        /* Stats */
+        .stats-bar {
+            display: flex; gap: 20px; align-items: center;
+            margin-left: auto;
+        }
+        .stat-text { font-size: 11px; color: #6e7681; }
+        .stat-text strong { color: #e6edf3; font-weight: 700; }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px; margin: 0 auto; padding: 24px;
+        }
+
+        /* Results Grid */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        /* Notice Card */
+        .notice-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .notice-card:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(220, 50, 50, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        }
+
+        .notice-type-badge {
+            position: absolute; top: 12px; right: 12px;
+            padding: 4px 10px; border-radius: 6px;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            z-index: 2;
+        }
+        .notice-type-badge.red { background: rgba(220, 50, 50, 0.85); color: white; }
+        .notice-type-badge.yellow { background: rgba(220, 170, 30, 0.85); color: #1a1f2e; }
+        .notice-type-badge.un { background: rgba(88, 166, 255, 0.85); color: white; }
+
+        .notice-card-image {
+            width: 100%; height: 220px;
+            background: linear-gradient(135deg, #121826, #0d1117);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .notice-card-image img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .notice-card-image .placeholder {
+            font-size: 64px; opacity: 0.3;
+        }
+
+        .notice-card-body { padding: 16px; }
+        .notice-card-name {
+            font-size: 16px; font-weight: 700;
+            margin-bottom: 4px; line-height: 1.3;
+        }
+        .notice-card-aka {
+            font-size: 11px; color: #6e7681;
+            margin-bottom: 10px;
+        }
+        .notice-card-meta {
+            display: flex; flex-wrap: wrap; gap: 12px;
+            font-size: 11px; color: #8b949e;
+        }
+        .meta-item { display: flex; align-items: center; gap: 4px; }
+
+        .notice-card-charges {
+            margin-top: 12px; padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 11px; color: #ff6b6b;
+            max-height: 40px; overflow: hidden;
+            line-height: 1.4;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex; justify-content: center;
+            align-items: center; gap: 8px;
+            margin-top: 32px; padding: 16px;
+        }
+        .page-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 8px 14px;
+            color: #e6edf3; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .page-btn:hover { background: rgba(255,255,255,0.1); }
+        .page-btn.active {
+            background: rgba(220, 50, 50, 0.2);
+            border-color: rgba(220, 50, 50, 0.4);
+            color: #ff6b6b;
+        }
+        .page-btn:disabled { opacity: 0.3; cursor: default; }
+        .page-info { font-size: 12px; color: #6e7681; margin: 0 8px; }
+
+        /* Detail Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding: 40px 20px;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+
+        .modal {
+            background: #121826;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            max-width: 800px; width: 100%;
+            overflow: hidden;
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+
+        .modal-header {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; padding: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .modal-title { font-size: 22px; font-weight: 800; }
+        .modal-close {
+            background: rgba(255,255,255,0.06); border: none;
+            color: #8b949e; width: 36px; height: 36px;
+            border-radius: 8px; cursor: pointer;
+            font-size: 18px; display: flex; align-items: center;
+            justify-content: center; transition: all 0.2s; flex-shrink: 0;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.12); color: #e6edf3; }
+
+        .modal-body { padding: 24px; }
+
+        .detail-layout {
+            display: grid; grid-template-columns: 200px 1fr; gap: 24px;
+        }
+        @media (max-width: 600px) {
+            .detail-layout { grid-template-columns: 1fr; }
+        }
+
+        .detail-photo {
+            width: 200px; height: 260px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .detail-photo img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .detail-photo .placeholder { font-size: 72px; opacity: 0.3; }
+
+        .detail-info { display: flex; flex-direction: column; gap: 16px; }
+
+        .detail-section-title {
+            font-size: 10px; text-transform: uppercase;
+            letter-spacing: 1px; color: #dc3232;
+            font-weight: 600; margin-bottom: 8px;
+        }
+
+        .detail-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        .detail-item {
+            background: rgba(255,255,255,0.03);
+            padding: 10px 12px; border-radius: 8px;
+        }
+        .detail-label {
+            font-size: 10px; color: #6e7681;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .detail-value { font-size: 13px; color: #e6edf3; line-height: 1.4; }
+
+        .detail-full-width { grid-column: 1 / -1; }
+
+        .detail-charges {
+            background: rgba(220, 50, 50, 0.08);
+            border: 1px solid rgba(220, 50, 50, 0.2);
+            border-radius: 10px; padding: 14px;
+        }
+        .detail-charges .charge-item {
+            font-size: 12px; color: #ff6b6b;
+            margin-bottom: 8px; line-height: 1.4;
+        }
+        .detail-charges .charge-item:last-child { margin-bottom: 0; }
+        .detail-charges .charge-translation {
+            font-size: 11px; color: #8b949e;
+            margin-top: 2px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center; padding: 80px 20px;
+        }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+        .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .empty-text { font-size: 13px; color: #6e7681; max-width: 400px; margin: 0 auto; }
+
+        /* Welcome State */
+        .welcome {
+            text-align: center; padding: 80px 20px;
+        }
+        .welcome-icon { font-size: 80px; margin-bottom: 20px; }
+        .welcome h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+        .welcome p { font-size: 14px; color: #6e7681; max-width: 500px; margin: 0 auto 24px; line-height: 1.6; }
+        .quick-stats {
+            display: flex; justify-content: center; gap: 32px; margin-top: 24px;
+        }
+        .quick-stat { text-align: center; }
+        .quick-stat-val {
+            font-size: 24px; font-weight: 800;
+            color: #dc3232;
+        }
+        .quick-stat-lbl { font-size: 10px; color: #6e7681; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+        .disclaimer {
+            text-align: center; padding: 24px;
+            font-size: 11px; color: #484f58;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 16px; }
+            .search-bar { flex-direction: column; }
+            .filters { flex-direction: column; align-items: flex-start; }
+            .stats-bar { margin-left: 0; }
+            .results-grid { grid-template-columns: 1fr; }
+            .modal { margin: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Searching Interpol Database...</div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-inner">
+            <div class="header-top">
+                <div class="logo">🔍 INTERPOL NOTICE SEARCH</div>
+                <div class="badge">PUBLIC DATABASE</div>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" class="search-input" id="searchInput"
+                    placeholder="Search by name (e.g., John Smith)..."
+                    onkeydown="if(event.key==='Enter')search()">
+                <button class="search-btn" onclick="search()">🔍 Search</button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <span class="filter-label">Type</span>
+                    <button class="notice-btn active" data-type="red" onclick="toggleType(this)">🔴 Red</button>
+                    <button class="notice-btn active" data-type="yellow" onclick="toggleType(this)">🟡 Yellow</button>
+                    <button class="notice-btn" data-type="un" onclick="toggleType(this)">🔵 UN</button>
+                </div>
+
+                <div class="filter-group" style="margin-left:8px">
+                    <span class="filter-label">Sex</span>
+                    <select class="filter-select" id="sexFilter">
+                        <option value="">Any</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="margin-left:4px">
+                    <span class="filter-label">Nationality</span>
+                    <select class="filter-select" id="natFilter">
+                        <option value="">Any</option>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="margin-left:4px">
+                    <span class="filter-label">Age</span>
+                    <input type="number" class="filter-input" id="ageMin" placeholder="Min" min="0" max="150">
+                    <span style="color:#6e7681;font-size:11px">–</span>
+                    <input type="number" class="filter-input" id="ageMax" placeholder="Max" min="0" max="150">
+                </div>
+
+                <div class="stats-bar">
+                    <span class="stat-text" id="resultCount">Showing <strong>0</strong> results</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="container">
+        <div id="content">
+            <div class="welcome" id="welcomeState">
+                <div class="welcome-icon">🌐</div>
+                <h2>Is Your Friend Wanted?</h2>
+                <p>Search the INTERPOL public database for Red, Yellow, and UN Security Council notices. Find out if someone is internationally wanted, missing, or sanctioned.</p>
+
+                <div class="quick-stats" id="quickStats">
+                    <div class="quick-stat">
+                        <div class="quick-stat-val" id="statRed">—</div>
+                        <div class="quick-stat-lbl">Red Notices</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-val" id="statYellow">—</div>
+                        <div class="quick-stat-lbl">Yellow Notices</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-val" id="statUN">—</div>
+                        <div class="quick-stat-lbl">UN Notices</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        ⚠️ This app uses the public INTERPOL API. Data is sourced directly from Interpol's official notice system.
+        The presence of a name in this database does not imply guilt. All data is subject to Interpol's rules and regulations.
+        <br>Powered by <a href="https://interpol.api.bund.dev" target="_blank" style="color:#dc3232;text-decoration:none">interpol.api.bund.dev</a>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Loading...</div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div style="text-align:center;padding:40px;color:#6e7681">
+                    <div class="spinner" style="margin:0 auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://interpol.api.bund.dev/api';
+        let currentPage = 1;
+        let activeTypes = ['red', 'yellow'];
+        let currentResults = [];
+
+        // Country list
+        const COUNTRIES = {
+            AF:'Afghanistan',AL:'Albania',DZ:'Algeria',AO:'Angola',AR:'Argentina',AM:'Armenia',
+            AU:'Australia',AT:'Austria',AZ:'Azerbaijan',BS:'Bahamas',BH:'Bahrain',BD:'Bangladesh',
+            BY:'Belarus',BE:'Belgium',BJ:'Benin',BO:'Bolivia',BA:'Bosnia and Herzegovina',
+            BR:'Brazil',BG:'Bulgaria',BF:'Burkina Faso',BI:'Burundi',KH:'Cambodia',CM:'Cameroon',
+            CA:'Canada',CF:'Central African Republic',TD:'Chad',CL:'Chile',CN:'China',CO:'Colombia',
+            CD:'Congo (Democratic Republic)',CG:'Congo',CR:'Costa Rica',HR:'Croatia',CU:'Cuba',
+            CY:'Cyprus',CZ:'Czech Republic',DK:'Denmark',DJ:'Djibouti',DO:'Dominican Republic',
+            EC:'Ecuador',EG:'Egypt',SV:'El Salvador',GQ:'Equatorial Guinea',ER:'Eritrea',EE:'Estonia',
+            ET:'Ethiopia',FJ:'Fiji',FI:'Finland',FR:'France',GA:'Gabon',GM:'Gambia',GE:'Georgia',
+            DE:'Germany',GH:'Ghana',GR:'Greece',GT:'Guatemala',GN:'Guinea',GY:'Guyana',HT:'Haiti',
+            HN:'Honduras',HU:'Hungary',IS:'Iceland',IN:'India',ID:'Indonesia',IR:'Iran',IQ:'Iraq',
+            IE:'Ireland',IL:'Israel',IT:'Italy',CI:"Ivory Coast",JM:'Jamaica',JP:'Japan',JO:'Jordan',
+            KZ:'Kazakhstan',KE:'Kenya',KP:'North Korea',KR:'South Korea',KW:'Kuwait',KG:'Kyrgyzstan',
+            LA:'Laos',LV:'Latvia',LB:'Lebanon',LS:'Lesotho',LR:'Liberia',LY:'Libya',LI:'Liechtenstein',
+            LT:'Lithuania',LU:'Luxembourg',MG:'Madagascar',MW:'Malawi',MY:'Malaysia',ML:'Mali',
+            MT:'Malta',MR:'Mauritania',MX:'Mexico',MD:'Moldova',MC:'Monaco',MN:'Mongolia',
+            ME:'Montenegro',MA:'Morocco',MZ:'Mozambique',MM:'Myanmar',NA:'Namibia',NP:'Nepal',
+            NL:'Netherlands',NZ:'New Zealand',NI:'Nicaragua',NE:'Niger',NG:'Nigeria',NO:'Norway',
+            OM:'Oman',PK:'Pakistan',PA:'Panama',PY:'Paraguay',PE:'Peru',PH:'Philippines',PL:'Poland',
+            PT:'Portugal',QA:'Qatar',RO:'Romania',RU:'Russia',RW:'Rwanda',SA:'Saudi Arabia',
+            SN:'Senegal',RS:'Serbia',SG:'Singapore',SK:'Slovakia',SI:'Slovenia',SO:'Somalia',
+            ZA:'South Africa',ES:'Spain',LK:'Sri Lanka',SD:'Sudan',SR:'Suriname',SE:'Sweden',
+            CH:'Switzerland',SY:'Syria',TW:'Taiwan',TJ:'Tajikistan',TZ:'Tanzania',TH:'Thailand',
+            TG:'Togo',TN:'Tunisia',TR:'Turkey',TM:'Turkmenistan',UG:'Uganda',UA:'Ukraine',
+            AE:'UAE',GB:'United Kingdom',US:'United States',UY:'Uruguay',UZ:'Uzbekistan',VE:'Venezuela',
+            VN:'Vietnam',YE:'Yemen',ZM:'Zambia',ZW:'Zimbabwe',XU:'Unknown'
+        };
+
+        // Populate country dropdown
+        function initCountries() {
+            const sel = document.getElementById('natFilter');
+            Object.entries(COUNTRIES).sort((a,b) => a[1].localeCompare(b[1])).forEach(([code, name]) => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = name;
+                sel.appendChild(opt);
+            });
+        }
+
+        // Toggle notice type
+        function toggleType(btn) {
+            const type = btn.dataset.type;
+            btn.classList.toggle('active');
+            if (activeTypes.includes(type)) {
+                activeTypes = activeTypes.filter(t => t !== type);
+            } else {
+                activeTypes.push(type);
+            }
+            currentPage = 1;
+        }
+
+        // Fetch notice images
+        async function fetchImages(type, noticeId) {
+            try {
+                const path = type === 'un'
+                    ? `/notices/v1/un/persons/${noticeId}/images`
+                    : `/notices/v1/${type}/${noticeId}/images`;
+                const res = await fetch(`${API_BASE}${path}`);
+                if (!res.ok) return null;
+                return await res.json();
+            } catch { return null; }
+        }
+
+        // Get image URL for a notice
+        function getImageUrl(type, noticeId) {
+            return `${API_BASE}/notices/v1/${type}/${noticeId}/images`;
+        }
+
+        // Build search URL for a type
+        function buildSearchURL(type, page) {
+            const name = document.getElementById('searchInput').value.trim();
+            const sex = document.getElementById('sexFilter').value;
+            const nat = document.getElementById('natFilter').value;
+            const ageMin = document.getElementById('ageMin').value;
+            const ageMax = document.getElementById('ageMax').value;
+            const perPage = 40;
+
+            let url = `${API_BASE}/notices/v1/${type}?page=${page}&resultPerPage=${perPage}`;
+
+            if (name) {
+                const parts = name.trim().split(' ');
+                if (parts.length > 1) {
+                    url += `&forename=${encodeURIComponent(parts[0])}&name=${encodeURIComponent(parts.slice(1).join(' '))}`;
+                } else {
+                    url += `&name=${encodeURIComponent(name)}`;
+                }
+            }
+            if (sex) url += `&sexId=${sex}`;
+            if (nat) url += `&nationality=${nat}`;
+            if (ageMin) url += `&ageMin=${ageMin}`;
+            if (ageMax) url += `&ageMax=${ageMax}`;
+
+            return url;
+        }
+
+        // Main search function
+        async function search(page = 1) {
+            currentPage = page;
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                let allResults = [];
+                let grandTotal = 0;
+
+                const requests = activeTypes.map(type => fetch(buildSearchURL(type, page)));
+                const responses = await Promise.all(requests);
+
+                for (let i = 0; i < responses.length; i++) {
+                    if (!responses[i].ok) continue;
+                    const data = await responses[i].json();
+                    const type = activeTypes[i];
+                    const notices = data._embedded?.notices || [];
+
+                    notices.forEach(n => {
+                        // Parse the notice URL to get the ID
+                        const match = n.match(/\/notices\/v1\/(\w+)\/([\w-]+)/);
+                        if (match) {
+                            allResults.push({
+                                id: match[2],
+                                type: match[1],
+                                url: n
+                            });
+                        }
+                    });
+
+                    grandTotal += data.total || 0;
+                }
+
+                // Fetch details for each notice in parallel
+                const detailRequests = allResults.map(n =>
+                    fetch(`${API_BASE}/notices/v1/${n.type}/${n.id}`)
+                        .then(r => r.ok ? r.json() : null)
+                );
+                const details = await Promise.all(detailRequests);
+
+                // Combine results with details
+                currentResults = details
+                    .filter(Boolean)
+                    .map((detail, i) => ({ ...detail, _noticeType: allResults[i].type }));
+
+                renderResults(currentResults, grandTotal, page);
+            } catch (err) {
+                console.error('Search error:', err);
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <div class="empty-title">Search Failed</div>
+                        <div class="empty-text">Could not connect to the Interpol API. Please try again later.</div>
+                    </div>
+                `;
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        // Render results
+        function renderResults(results, total, page) {
+            document.getElementById('resultCount').innerHTML = `Showing <strong>${results.length}</strong> of <strong>${total.toLocaleString()}</strong> results`;
+
+            if (results.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div class="empty-title">No Results Found</div>
+                        <div class="empty-text">No Interpol notices match your search criteria. Try different keywords or broaden your filters.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const paginationInfo = detectPagination(total, page);
+
+            let html = `<div class="results-grid">`;
+            results.forEach((notice, idx) => {
+                const firstName = notice.forename || '';
+                const lastName = notice.name || '';
+                const fullName = `${firstName} ${lastName}`.trim().toUpperCase();
+                const type = notice._noticeType;
+                const typeLabel = type === 'red' ? '🔴 Red' : type === 'yellow' ? '🟡 Yellow' : '🔵 UN';
+                const sex = notice.sex_id === 'M' ? 'Male' : notice.sex_id === 'F' ? 'Female' : 'Unknown';
+                const nationalities = (notice.nationalities || []).map(c => COUNTRIES[c] || c).join(', ') || 'Unknown';
+                const dob = notice.date_of_birth ? notice.date_of_birth.replace(/\//g, '-') : '';
+                const age = dob ? calcAge(dob) : '';
+                const charges = notice.arrest_warrants?.map(w => w.charge).filter(Boolean) || [];
+
+                html += `
+                    <div class="notice-card" onclick="showDetail(${idx})">
+                        <div class="notice-type-badge ${type === 'un' ? 'un' : type}">${typeLabel}</div>
+                        <div class="notice-card-image" id="img-${idx}">
+                            <div class="placeholder">👤</div>
+                        </div>
+                        <div class="notice-card-body">
+                            <div class="notice-card-name">${fullName || 'Unknown'}</div>
+                            ${notice.name_in_original_script ? `<div class="notice-card-aka">${notice.name_in_original_script}</div>` : ''}
+                            <div class="notice-card-meta">
+                                <span class="meta-item">🎂 ${age ? age + ' yrs' : (dob || '—')}</span>
+                                <span class="meta-item">🌍 ${nationalities}</span>
+                                <span class="meta-item">♂️ ${sex}</span>
+                            </div>
+                            ${charges.length > 0 ? `
+                                <div class="notice-card-charges">⚖️ ${charges[0]}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            // Pagination
+            if (paginationInfo.totalPages > 1) {
+                html += `<div class="pagination">`;
+                if (page > 1) {
+                    html += `<button class="page-btn" onclick="search(${page - 1})">← Previous</button>`;
+                }
+                for (let p = paginationInfo.start; p <= paginationInfo.end; p++) {
+                    html += `<button class="page-btn ${p === page ? 'active' : ''}" onclick="search(${p})">${p}</button>`;
+                }
+                if (page < paginationInfo.totalPages) {
+                    html += `<button class="page-btn" onclick="search(${page + 1})">Next →</button>`;
+                }
+                html += `<span class="page-info">Page ${page} of ${paginationInfo.totalPages.toLocaleString()}</span>`;
+                html += `</div>`;
+            }
+
+            document.getElementById('content').innerHTML = html;
+
+            // Load images asynchronously
+            results.forEach((notice, idx) => {
+                loadNoticeImage(notice._noticeType, notice.entity_id, idx);
+            });
+        }
+
+        // Load image for a notice
+        async function loadNoticeImage(type, entityId, idx) {
+            try {
+                const imgData = await fetchImages(type, entityId);
+                const container = document.getElementById(`img-${idx}`);
+                if (!container) return;
+
+                if (imgData?._links?.thumbnail?.href) {
+                    const imgUrl = imgData._links.thumbnail.href;
+                    container.innerHTML = `<img src="${imgUrl}" alt="Notice Photo" onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'>👤</div>'">`;
+                } else {
+                    container.innerHTML = `<div class="placeholder">👤</div>`;
+                }
+            } catch {
+                const container = document.getElementById(`img-${idx}`);
+                if (container) container.innerHTML = `<div class="placeholder">👤</div>`;
+            }
+        }
+
+        // Detect pagination
+        function detectPagination(total, page) {
+            const perPage = 40;
+            const totalPages = Math.ceil(total / perPage);
+            const start = Math.max(1, page - 3);
+            const end = Math.min(totalPages, page + 3);
+            return { totalPages, start, end };
+        }
+
+        // Calculate age from DOB
+        function calcAge(dob) {
+            const d = new Date(dob);
+            const diff = Date.now() - d.getTime();
+            return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+        }
+
+        // Show detail modal
+        async function showDetail(idx) {
+            const notice = currentResults[idx];
+            if (!notice) return;
+
+            const modal = document.getElementById('modal');
+            modal.classList.add('open');
+
+            const firstName = notice.forename || '';
+            const lastName = notice.name || '';
+            const fullName = `${firstName} ${lastName}`.trim().toUpperCase() || 'Unknown';
+            const type = notice._noticeType;
+
+            document.getElementById('modalTitle').innerHTML = `
+                <span class="notice-type-badge ${type}" style="display:inline-block;margin-right:8px;vertical-align:middle">${type === 'red' ? '🔴 Red' : type === 'yellow' ? '🟡 Yellow' : '🔵 UN'} Notice</span>
+                ${fullName}
+            `;
+
+            const body = document.getElementById('modalBody');
+            body.innerHTML = `
+                <div style="text-align:center;padding:30px;color:#6e7681">
+                    <div class="spinner" style="margin:0 auto"></div>
+                    <div style="margin-top:12px;font-size:12px">Loading full details...</div>
+                </div>
+            `;
+
+            try {
+                // Fetch detail + images in parallel
+                const [detail, images] = await Promise.all([
+                    fetch(`${API_BASE}/notices/v1/${type}/${notice.entity_id}`).then(r => r.ok ? r.json() : null),
+                    fetchImages(type, notice.entity_id)
+                ]);
+
+                renderDetail(detail || notice, images, type);
+            } catch (err) {
+                console.error('Detail fetch error:', err);
+                renderDetail(notice, null, type);
+            }
+        }
+
+        // Render detail modal
+        function renderDetail(notice, images, type) {
+            const firstName = notice.forename || '';
+            const lastName = notice.name || '';
+            const fullName = `${firstName} ${lastName}`.trim().toUpperCase() || 'Unknown';
+            const dob = notice.date_of_birth || 'Unknown';
+            const pob = notice.place_of_birth || 'Unknown';
+            const sex = notice.sex_id === 'M' ? 'Male' : notice.sex_id === 'F' ? 'Female' : 'Unknown';
+            const height = notice.height ? `${notice.height}m` : 'Unknown';
+            const nationalities = (notice.nationalities || []).map(c => COUNTRIES[c] || c).join(', ') || 'Unknown';
+            const languages = (notice.languages_spoken_ids || []).map(l => LANGUAGES[l] || l).join(', ') || 'Unknown';
+            const eyes = (notice.eyes_colors_id || []).map(e => EYE_COLORS[e] || e).join(', ') || 'Unknown';
+            const hair = (notice.hairs_id || []).map(h => HAIR_COLORS[h] || h).join(', ') || 'Unknown';
+            const distinguishing = notice.distinguishing_marks || 'None recorded';
+
+            const weight = notice.weight ? `${notice.weight}kg` : 'Unknown';
+            const aliases = (notice.aliases || []).join(', ') || 'None recorded';
+
+            // Photo
+            let photoHTML = `<div class="detail-photo"><div class="placeholder">👤</div></div>`;
+            if (images?._links?.thumbnail?.href) {
+                photoHTML = `<div class="detail-photo"><img src="${images._links.thumbnail.href}" alt="${fullName}" onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'>👤</div>'"></div>`;
+            } else if (images?._links?.notice?.href) {
+                const noticeId = notice.entity_id || '';
+                const imgUrl = `${API_BASE}/notices/v1/${type}/${noticeId}/images`;
+            }
+
+            // Charges
+            let chargesHTML = '';
+            if (notice.arrest_warrants && notice.arrest_warrants.length > 0) {
+                chargesHTML = `
+                    <div class="detail-charges">
+                        <div class="detail-section-title">⚖️ Arrest Warrants & Charges</div>
+                        ${notice.arrest_warrants.map((w, i) => `
+                            <div class="charge-item">
+                                ${i + 1}. ${w.charge || 'Unspecified charge'}
+                                ${w.charge_translation ? `<div class="charge-translation">📝 ${w.charge_translation}</div>` : ''}
+                                ${w.issuing_country_id ? `<div class="charge-translation">🌍 Issued by: ${COUNTRIES[w.issuing_country_id] || w.issuing_country_id}</div>` : ''}
+                                ${w.weight ? `<div class="charge-translation">📊 Weight: ${w.weight}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // UN-specific fields
+            let unHTML = '';
+            if (type === 'un') {
+                unHTML = `
+                    <div class="detail-item detail-full-width">
+                        <div class="detail-label">UN Reference</div>
+                        <div class="detail-value">${notice.un_reference || '—'}</div>
+                    </div>
+                    <div class="detail-item detail-full-width">
+                        <div class="detail-label">UN Resolution</div>
+                        <div class="detail-value">${notice.un_resolution || '—'}</div>
+                    </div>
+                    ${notice.summary ? `
+                    <div class="detail-item detail-full-width">
+                        <div class="detail-label">Summary</div>
+                        <div class="detail-value">${notice.summary}</div>
+                    </div>` : ''}
+                    ${notice.aliases?.length ? `
+                    <div class="detail-item detail-full-width">
+                        <div class="detail-label">Aliases</div>
+                        <div class="detail-value">${notice.aliases.join(', ')}</div>
+                    </div>` : ''}
+                    ${notice.profession ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Profession</div>
+                        <div class="detail-value">${notice.profession}</div>
+                    </div>` : ''}
+                    ${notice.main_activity ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Main Activity</div>
+                        <div class="detail-value">${notice.main_activity}</div>
+                    </div>` : ''}
+                    ${notice.additional_information ? `
+                    <div class="detail-item detail-full-width">
+                        <div class="detail-label">Additional Information</div>
+                        <div class="detail-value">${notice.additional_information}</div>
+                    </div>` : ''}
+                `;
+            }
+
+            const dobFormatted = dob !== 'Unknown' ? dob.replace(/\//g, '-') : 'Unknown';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-layout">
+                    ${photoHTML}
+                    <div class="detail-info">
+                        <div class="detail-section-title">Personal Information</div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">First Name</div>
+                                <div class="detail-value">${firstName || 'Unknown'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Last Name</div>
+                                <div class="detail-value">${lastName || 'Unknown'}</div>
+                            </div>
+                            ${notice.birth_name ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Birth Name</div>
+                                <div class="detail-value">${notice.birth_name}</div>
+                            </div>` : ''}
+                            ${notice.name_in_original_script ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Original Script</div>
+                                <div class="detail-value">${notice.name_in_original_script}</div>
+                            </div>` : ''}
+                            ${notice.forename_in_original_script ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Forename (Original)</div>
+                                <div class="detail-value">${notice.forename_in_original_script}</div>
+                            </div>` : ''}
+                            <div class="detail-item">
+                                <div class="detail-label">Date of Birth</div>
+                                <div class="detail-value">${dobFormatted} ${dob !== 'Unknown' ? `(${calcAge(dob)} yrs)` : ''}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Place of Birth</div>
+                                <div class="detail-value">${pob}</div>
+                            </div>
+                            ${notice.country_of_birth_id ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Country of Birth</div>
+                                <div class="detail-value">${COUNTRIES[notice.country_of_birth_id] || notice.country_of_birth_id}</div>
+                            </div>` : ''}
+                            <div class="detail-item">
+                                <div class="detail-label">Sex</div>
+                                <div class="detail-value">${sex}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Nationality</div>
+                                <div class="detail-value">${nationalities}</div>
+                            </div>
+                            ${type !== 'un' ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Height</div>
+                                <div class="detail-value">${height}</div>
+                            </div>` : ''}
+                            ${type === 'yellow' || type === 'un' ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Weight</div>
+                                <div class="detail-value">${weight}</div>
+                            </div>` : ''}
+                            <div class="detail-item">
+                                <div class="detail-label">Eye Color</div>
+                                <div class="detail-value">${eyes}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Hair Color</div>
+                                <div class="detail-value">${hair}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Languages</div>
+                                <div class="detail-value">${languages}</div>
+                            </div>
+                            ${notice.father_forename ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Father's Name</div>
+                                <div class="detail-value">${notice.father_forename} ${notice.father_name || ''}</div>
+                            </div>` : ''}
+                            ${notice.mother_forename ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Mother's Name</div>
+                                <div class="detail-value">${notice.mother_forename} ${notice.mother_name || ''}</div>
+                            </div>` : ''}
+                            <div class="detail-item detail-full-width">
+                                <div class="detail-label">Distinguishing Marks</div>
+                                <div class="detail-value">${distinguishing}</div>
+                            </div>
+                            ${type !== 'un' ? `
+                            <div class="detail-item detail-full-width">
+                                <div class="detail-label">Aliases</div>
+                                <div class="detail-value">${aliases}</div>
+                            </div>` : ''}
+                            ${unHTML}
+                        </div>
+
+                        ${chargesHTML}
+
+                        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+                            <a href="https://www.interpol.int/en/How-we-work/Notices/View-${type === 'un' ? 'Un' : type.charAt(0).toUpperCase() + type.slice(1)}-Notices-Search" target="_blank" class="detail-link" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(220,50,50,0.1);border:1px solid rgba(220,50,50,0.25);border-radius:8px;color:#ff6b6b;text-decoration:none;font-size:12px;font-weight:500">🔗 View on Interpol.int</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('open');
+        }
+
+        // Load initial stats
+        async function loadStats() {
+            try {
+                const [redRes, yellowRes, unRes] = await Promise.all([
+                    fetch(`${API_BASE}/notices/v1/red?page=1&resultPerPage=1`),
+                    fetch(`${API_BASE}/notices/v1/yellow?page=1&resultPerPage=1`),
+                    fetch(`${API_BASE}/notices/v1/un?page=1&resultPerPage=1`)
+                ]);
+
+                const red = redRes.ok ? await redRes.json() : null;
+                const yellow = yellowRes.ok ? await yellowRes.json() : null;
+                const un = unRes.ok ? await unRes.json() : null;
+
+                if (red) document.getElementById('statRed').textContent = (red.total || 0).toLocaleString();
+                if (yellow) document.getElementById('statYellow').textContent = (yellow.total || 0).toLocaleString();
+                if (un) document.getElementById('statUN').textContent = (un.total || 0).toLocaleString();
+            } catch {
+                // Stats unavailable
+            }
+        }
+
+        // Language codes
+        const LANGUAGES = {
+            AFR:'Afrikaans',ARA:'Arabic',BER:'Berber',BOS:'Bosnian',BUL:'Bulgarian',
+            CHI:'Chinese',CRE:'Creole',CZE:'Czech',DAN:'Danish',DUT:'Dutch',ENG:'English',
+            EST:'Estonian',FIN:'Finnish',FRE:'French',GER:'German',GRE:'Greek',
+            HEB:'Hebrew',HIN:'Hindi',HUN:'Hungarian',IND:'Indonesian',ITA:'Italian',
+            JPN:'Japanese',KOR:'Korean',LAT:'Latin',LIT:'Lithuanian',MAC:'Macedonian',
+            MAL:'Malay',PER:'Persian',POL:'Polish',POR:'Portuguese',PUS:'Pashto',
+            RUM:'Romanian',RUS:'Russian',SER:'Serbian',SLO:'Slovak',SOM:'Somali',
+            SPA:'Spanish',SWE:'Swedish',TAG:'Tagalog',TUR:'Turkish',UKR:'Ukrainian',
+            URD:'Urdu',VIE:'Vietnamese',GER:'German',ARABIC:'Arabic'
+        };
+
+        // Eye color codes
+        const EYE_COLORS = {
+            BRO:'Brown',BLU:'Blue',GRE:'Green',HAZ:'Hazel',BLA:'Black',
+            GREY:'Grey',MAR:'Maroon',PINK:'Pink',UNK:'Unknown'
+        };
+
+        // Hair color codes
+        const HAIR_COLORS = {
+            BLA:'Black',BLN:'Blond',BRO:'Brown',RED:'Red/Auburn',
+            GREY:'Grey',BAL:'Bald',BRO:'Brown',DYE:'Dyed',UNK:'Unknown'
+        };
+
+        // Init
+        initCountries();
+        loadStats();
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+    </script>
+</body>
+</html>
