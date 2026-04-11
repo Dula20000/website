@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 NASA EONET | Earth Events Observatory</title>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #060a14;
+            color: #e6edf3;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #060a14;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 0.6s, visibility 0.6s;
+        }
+        .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .loader-ring {
+            width: 60px; height: 60px;
+            border: 3px solid rgba(0, 210, 255, 0.15);
+            border-top-color: #00d2ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            margin-top: 20px; font-size: 13px; color: #8b949e; letter-spacing: 0.5px;
+        }
+
+        /* Header */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            padding: 16px 24px 20px;
+            background: linear-gradient(180deg, rgba(6, 10, 20, 0.97) 0%, rgba(6, 10, 20, 0.85) 60%, transparent 100%);
+            z-index: 1000; pointer-events: auto;
+            backdrop-filter: blur(12px);
+        }
+        .header-inner { max-width: 1600px; margin: 0 auto; }
+
+        .header-top {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+        }
+        .logo {
+            font-size: 24px; font-weight: 900; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5, #00ff88);
+            background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+        @keyframes shimmer { 0%,100% { background-position: 0% center; } 50% { background-position: 200% center; } }
+
+        .live-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(0, 255, 136, 0.12); border: 1px solid rgba(0, 255, 136, 0.25);
+            padding: 3px 10px; border-radius: 20px; font-size: 11px;
+            font-weight: 600; color: #00ff88; letter-spacing: 0.5px;
+        }
+        .live-dot {
+            width: 6px; height: 6px; background: #00ff88; border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.7); } 50% { box-shadow: 0 0 0 6px rgba(0,255,136,0); } }
+
+        .subtitle {
+            font-size: 12px; color: #6e7681; margin-left: 2px;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #8b949e; padding: 5px 12px; border-radius: 7px;
+            font-size: 11px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .filter-btn:hover { background: rgba(255,255,255,0.08); color: #e6edf3; }
+        .filter-btn.active {
+            background: rgba(0, 210, 255, 0.15);
+            border-color: rgba(0, 210, 255, 0.35);
+            color: #00d2ff;
+        }
+        .filter-btn .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block;
+        }
+        .filter-btn .count {
+            background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px;
+            font-size: 10px; font-weight: 600;
+        }
+        .filter-btn.active .count { background: rgba(0, 210, 255, 0.2); }
+
+        .time-group { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+        .time-label { font-size: 10px; color: #6e7681; margin-right: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .time-btn {
+            background: transparent; border: 1px solid rgba(255,255,255,0.06);
+            color: #58a6ff; padding: 3px 9px; border-radius: 5px;
+            font-size: 11px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .time-btn:hover { background: rgba(88,166,255,0.1); }
+        .time-btn.active {
+            background: rgba(88,166,255,0.18);
+            border-color: rgba(88,166,255,0.4);
+            color: #79c0ff;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            position: absolute; bottom: 24px; left: 24px;
+            background: rgba(6, 10, 20, 0.92);
+            backdrop-filter: blur(20px);
+            border-radius: 14px; padding: 16px 22px;
+            z-index: 1000; pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex; gap: 28px;
+        }
+        .stat { text-align: center; }
+        .stat-val {
+            font-size: 28px; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, #00d2ff, #00ff88);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-lbl {
+            font-size: 9px; color: #6e7681; margin-top: 4px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            position: absolute; top: 0; right: 0;
+            width: 420px; height: 100%;
+            background: rgba(6, 10, 20, 0.96);
+            backdrop-filter: blur(20px);
+            z-index: 1001; pointer-events: auto;
+            border-left: 1px solid rgba(255,255,255,0.08);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .detail-panel.open { transform: translateX(0); }
+
+        .detail-header {
+            padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .detail-close {
+            background: rgba(255,255,255,0.06); border: none;
+            color: #8b949e; width: 32px; height: 32px;
+            border-radius: 8px; cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .detail-close:hover { background: rgba(255,255,255,0.12); color: #e6edf3; }
+
+        .detail-title {
+            font-size: 18px; font-weight: 700; line-height: 1.4;
+            margin-right: 12px;
+        }
+
+        .detail-body {
+            flex: 1; overflow-y: auto; padding: 20px;
+        }
+        .detail-body::-webkit-scrollbar { width: 5px; }
+        .detail-body::-webkit-scrollbar-track { background: transparent; }
+        .detail-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .detail-section { margin-bottom: 24px; }
+        .detail-section-title {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            color: #00d2ff; margin-bottom: 12px; font-weight: 600;
+        }
+
+        .detail-cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .detail-cat {
+            padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;
+            border: 1px solid;
+        }
+
+        .detail-meta { display: grid; gap: 12px; }
+        .meta-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+        .meta-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .meta-label { font-size: 10px; color: #6e7681; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .meta-value { font-size: 13px; color: #e6edf3; line-height: 1.4; }
+
+        .detail-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: #00d2ff; text-decoration: none; font-size: 13px;
+            font-weight: 500; padding: 8px 14px;
+            background: rgba(0, 210, 255, 0.1);
+            border-radius: 8px; transition: all 0.2s;
+        }
+        .detail-link:hover { background: rgba(0, 210, 255, 0.18); }
+
+        /* Magnitude Chart */
+        .mag-chart {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px; padding: 14px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .mag-chart canvas { width: 100% !important; height: 160px !important; }
+
+        /* Timeline */
+        .timeline { position: relative; padding-left: 24px; }
+        .timeline::before {
+            content: ''; position: absolute; left: 6px; top: 0; bottom: 0;
+            width: 2px; background: rgba(255,255,255,0.08);
+        }
+        .timeline-item {
+            position: relative; padding-bottom: 16px;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute; left: -21px; top: 3px;
+            width: 10px; height: 10px; border-radius: 50%;
+            border: 2px solid #00d2ff;
+            background: #060a14;
+        }
+        .timeline-item:first-child .timeline-dot { background: #00d2ff; }
+        .timeline-date { font-size: 11px; color: #6e7681; margin-bottom: 4px; }
+        .timeline-content { font-size: 12px; color: #e6edf3; }
+        .timeline-mag { color: #ff9f43; font-weight: 600; }
+
+        /* Event List Panel */
+        .event-list-panel {
+            position: absolute; top: 0; left: 0;
+            width: 340px; height: 100%;
+            background: rgba(6, 10, 20, 0.96);
+            backdrop-filter: blur(20px);
+            z-index: 999; pointer-events: auto;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .event-list-panel.open { transform: translateX(0); }
+
+        .list-toggle {
+            position: absolute; top: 50%; left: 0;
+            transform: translate(-100%, -50%);
+            background: rgba(6, 10, 20, 0.9);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-left: none; border-radius: 0 8px 8px 0;
+            padding: 12px 8px; color: #00d2ff; cursor: pointer;
+            z-index: 1000; writing-mode: vertical-rl;
+            font-size: 11px; font-weight: 600; letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        .list-toggle:hover { background: rgba(0, 210, 255, 0.12); }
+
+        .list-header {
+            padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .list-header h3 { font-size: 16px; font-weight: 700; }
+        .list-header .count-lbl { font-size: 12px; color: #6e7681; margin-top: 4px; }
+
+        .event-list {
+            flex: 1; overflow-y: auto; padding: 12px;
+        }
+        .event-list::-webkit-scrollbar { width: 5px; }
+        .event-list::-webkit-scrollbar-track { background: transparent; }
+        .event-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .event-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 14px;
+            margin-bottom: 8px; cursor: pointer;
+            transition: all 0.25s;
+        }
+        .event-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(0, 210, 255, 0.3);
+            transform: translateX(-4px);
+        }
+        .event-item.active {
+            background: rgba(0, 210, 255, 0.08);
+            border-color: rgba(0, 210, 255, 0.4);
+        }
+
+        .event-item-title {
+            font-size: 13px; font-weight: 600; line-height: 1.4;
+            margin-bottom: 6px; color: #e6edf3;
+        }
+        .event-item-cats { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+        .event-item-cat {
+            font-size: 10px; padding: 2px 7px; border-radius: 4px;
+            font-weight: 500;
+        }
+        .event-item-meta {
+            font-size: 10px; color: #6e7681;
+            display: flex; gap: 10px;
+        }
+        .event-item-status {
+            font-size: 10px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px;
+        }
+        .event-item-status.open { background: rgba(255,136,0,0.15); color: #ffa657; }
+        .event-item-status.closed { background: rgba(35,134,54,0.25); color: #3fb950; }
+
+        /* Popup Styles */
+        .leaflet-popup-content-wrapper {
+            background: rgba(6, 10, 20, 0.96) !important;
+            color: #e6edf3 !important;
+            border: 1px solid rgba(0, 210, 255, 0.25) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+        }
+        .leaflet-popup-tip {
+            background: rgba(6, 10, 20, 0.96) !important;
+            border: 1px solid rgba(0, 210, 255, 0.25) !important;
+            box-shadow: none !important;
+        }
+        .leaflet-popup-close-button { color: #8b949e !important; }
+        .leaflet-popup-close-button:hover { color: #e6edf3 !important; }
+
+        .popup-box { padding: 4px; min-width: 260px; }
+        .popup-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+        .popup-row { font-size: 11px; color: #8b949e; margin-bottom: 4px; display: flex; gap: 6px; }
+        .popup-row .icon { flex-shrink: 0; width: 16px; text-align: center; }
+        .popup-row .val { color: #e6edf3; }
+        .popup-mag {
+            margin-top: 10px; padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 12px; color: #ff9f43; font-weight: 500;
+        }
+        .popup-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 10px; padding: 6px 12px;
+            background: rgba(0, 210, 255, 0.15);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 6px; color: #00d2ff;
+            text-decoration: none; font-size: 11px; font-weight: 500;
+            transition: all 0.2s;
+        }
+        .popup-btn:hover { background: rgba(0, 210, 255, 0.25); }
+        .popup-btn-details {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 6px; padding: 6px 12px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px; color: #e6edf3;
+            text-decoration: none; font-size: 11px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .popup-btn-details:hover { background: rgba(255,255,255,0.1); }
+
+        /* Legend */
+        .legend {
+            position: absolute; bottom: 80px; right: 24px;
+            background: rgba(6, 10, 20, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 10px; padding: 14px 16px;
+            z-index: 998; pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .legend-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #6e7681; margin-bottom: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .legend-item:last-child { margin-bottom: 0; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .legend-label { font-size: 11px; color: #8b949e; }
+
+        @media (max-width: 768px) {
+            .header { padding: 12px 16px 16px; }
+            .logo { font-size: 18px; }
+            .filter-bar { display: none; }
+            .detail-panel, .event-list-panel { width: 100%; }
+            .stats-bar { bottom: 16px; left: 16px; right: 16px; gap: 16px; justify-content: space-around; }
+            .stat-val { font-size: 22px; }
+            .legend { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading">
+        <div class="loader-ring"></div>
+        <div class="loading-text">Loading NASA Earth Events...</div>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-inner">
+            <div class="header-top">
+                <div class="logo">🌍 EONET OBSERVATORY</div>
+                <div class="live-badge"><span class="live-dot"></span>LIVE DATA</div>
+            </div>
+            <div class="subtitle">NASA Earth Observatory Natural Event Tracker — Global monitoring of natural and environmental events</div>
+            <div class="filter-bar">
+                <button class="filter-btn active" data-status="all" onclick="setStatus('all')">All Events<span class="count" id="countAll">0</span></button>
+                <button class="filter-btn" data-status="open" onclick="setStatus('open')">
+                    <span class="dot" style="background:#ffa657"></span>Open<span class="count" id="countOpen">0</span>
+                </button>
+                <button class="filter-btn" data-status="closed" onclick="setStatus('closed')">
+                    <span class="dot" style="background:#3fb950"></span>Closed<span class="count" id="countClosed">0</span>
+                </button>
+                <div class="time-group">
+                    <span class="time-label">Time</span>
+                    <button class="time-btn" data-days="3" onclick="setDays(3)">3d</button>
+                    <button class="time-btn" data-days="7" onclick="setDays(7)">7d</button>
+                    <button class="time-btn" data-days="14" onclick="setDays(14)">14d</button>
+                    <button class="time-btn active" data-days="30" onclick="setDays(30)">30d</button>
+                    <button class="time-btn" data-days="90" onclick="setDays(90)">90d</button>
+                    <button class="time-btn" data-days="365" onclick="setDays(365)">1y</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-lbl">Total Events</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="statActive">0</div>
+            <div class="stat-lbl">Active Now</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="statObservations">0</div>
+            <div class="stat-lbl">Observations</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="statCategories">0</div>
+            <div class="stat-lbl">Categories</div>
+        </div>
+    </div>
+
+    <!-- Event List Panel -->
+    <div class="event-list-panel" id="eventListPanel">
+        <button class="list-toggle" onclick="toggleEventList()">EVENT LIST</button>
+        <div class="list-header">
+            <h3>📋 Event Log</h3>
+            <div class="count-lbl" id="listCount">0 events loaded</div>
+        </div>
+        <div class="event-list" id="eventList"></div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <div class="detail-title" id="detailTitle">Event Details</div>
+            <button class="detail-close" onclick="closeDetail()">✕</button>
+        </div>
+        <div class="detail-body" id="detailBody"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend" id="legend">
+        <div class="legend-title">Event Categories</div>
+        <div id="legendItems"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://eonet.gsfc.nasa.gov/api/v3';
+
+        const CATEGORIES = {
+            wildfires: { title: 'Wildfires', color: '#ff6b35', icon: '🔥' },
+            severeStorms: { title: 'Severe Storms', color: '#58a6ff', icon: '🌪️' },
+            volcanoes: { title: 'Volcanoes', color: '#ff9f43', icon: '🌋' },
+            earthquakes: { title: 'Earthquakes', color: '#e056a1', icon: '💥' },
+            floods: { title: 'Floods', color: '#3498db', icon: '🌊' },
+            drought: { title: 'Drought', color: '#e74c3c', icon: '☀️' },
+            tempExtremes: { title: 'Temperatures', color: '#f39c12', icon: '🌡️' },
+            snow: { title: 'Snow', color: '#bdc3c7', icon: '❄️' },
+            seaLakeIce: { title: 'Sea & Lake Ice', color: '#00d2ff', icon: '🧊' },
+            landslides: { title: 'Landslides', color: '#8e44ad', icon: '⛰️' },
+            waterColor: { title: 'Water Color', color: '#1abc9c', icon: '🌈' },
+            dustHaze: { title: 'Dust & Haze', color: '#d35400', icon: '🌫️' },
+            manmade: { title: 'Man-made', color: '#c0392b', icon: '⚠️' }
+        };
+
+        let allEvents = [];
+        let currentStatus = 'all';
+        let currentDays = 30;
+        let map, markersLayer, tracksLayer, selectedEventId = null;
+
+        // Init map
+        function initMap() {
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([30, 0], 2);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                subdomains: 'abcd'
+            }).addTo(map);
+
+            markersLayer = L.layerGroup().addTo(map);
+            tracksLayer = L.layerGroup().addTo(map);
+
+            // Close detail panel on map click
+            map.on('click', () => {
+                closeDetail();
+            });
+        }
+
+        // Fetch events from API
+        async function fetchEvents() {
+            const params = new URLSearchParams();
+            if (currentStatus !== 'all') params.set('status', currentStatus);
+            params.set('days', currentDays);
+            params.set('limit', 500);
+
+            const res = await fetch(`${API_BASE}/events?${params}`);
+            const data = await res.json();
+            return data.events || [];
+        }
+
+        // Get detailed event data
+        async function fetchEventDetail(eventId) {
+            const res = await fetch(`${API_BASE}/events/${eventId}`);
+            const data = await res.json();
+            return data.events?.[0] || null;
+        }
+
+        // Get GeoJSON for event tracks
+        async function fetchEventGeoJSON(eventId) {
+            const res = await fetch(`${API_BASE}/events/${eventId}/geojson`);
+            const data = await res.json();
+            return data;
+        }
+
+        // Build legend
+        function buildLegend(events) {
+            const cats = new Set();
+            events.forEach(e => e.categories?.forEach(c => cats.add(c.id)));
+
+            const container = document.getElementById('legendItems');
+            container.innerHTML = '';
+
+            cats.forEach(id => {
+                const cat = CATEGORIES[id];
+                if (!cat) return;
+                const div = document.createElement('div');
+                div.className = 'legend-item';
+                div.innerHTML = `<div class="legend-dot" style="background:${cat.color}"></div><div class="legend-label">${cat.icon} ${cat.title}</div>`;
+                container.appendChild(div);
+            });
+        }
+
+        // Create a marker for an event
+        function createEventMarker(event, isLatest = false) {
+            const cat = event.categories?.[0];
+            const color = CATEGORIES[cat?.id]?.color || '#00d2ff';
+            const isOpen = !event.closed;
+
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="
+                    width: ${isLatest ? 28 : 20}px;
+                    height: ${isLatest ? 28 : 20}px;
+                    background: ${color};
+                    border: 3px solid ${isOpen ? 'rgba(255,255,255,0.35)' : 'rgba(100,100,100,0.4)'};
+                    border-radius: 50%;
+                    box-shadow: 0 0 ${isLatest ? 20 : 12}px ${color}50;
+                    ${isOpen ? 'animation: markerPulse 2.5s ease-in-out infinite;' : ''}
+                "></div>`,
+                iconSize: [isLatest ? 28 : 20, isLatest ? 28 : 20],
+                iconAnchor: [isLatest ? 14 : 10, isLatest ? 14 : 10]
+            });
+
+            const marker = L.marker(
+                [event.geometry.coordinates[1], event.geometry.coordinates[0]],
+                { icon }
+            );
+
+            marker.bindPopup(buildPopup(event, cat), { maxWidth: 320 });
+            marker.eventData = event;
+            return marker;
+        }
+
+        // Build popup content
+        function buildPopup(event, cat) {
+            const dateStr = event.date ? new Date(event.date).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : 'N/A';
+            const status = event.closed ? 'Closed' : 'Active';
+            const mag = event.magnitudeValue ? 
+                `<div class="popup-mag">📊 ${event.magnitudeDescription || 'Magnitude'}: <strong>${event.magnitudeValue}</strong> ${event.magnitudeUnit || ''}</div>` : '';
+            const sourceUrl = event.sources?.[0]?.url || '';
+            const sourceName = event.sources?.[0]?.id || 'NASA';
+
+            return `
+                <div class="popup-box">
+                    <div class="popup-title">${event.title}</div>
+                    <div class="popup-row"><span class="icon">📅</span><span class="val">${dateStr}</span></div>
+                    <div class="popup-row"><span class="icon">🏷️</span><span class="val">${status}</span></div>
+                    <div class="popup-row"><span class="icon">🗂️</span><span class="val">${cat?.icon || ''} ${cat?.title || event.categories?.[0]?.title || 'Unknown'}</span></div>
+                    <div class="popup-row"><span class="icon">📡</span><span class="val">${sourceName}</span></div>
+                    ${event.description ? `<div class="popup-row"><span class="icon">📝</span><span class="val">${event.description}</span></div>` : ''}
+                    ${mag}
+                    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                        <a href="${event.link || '#'}" target="_blank" class="popup-btn">🔗 API Details</a>
+                        ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" class="popup-btn">📡 Source</a>` : ''}
+                        <button class="popup-btn-details" onclick="showEventDetail('${event.id}')">📊 Full Report</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render all events on map
+        function renderMap(events) {
+            markersLayer.clearLayers();
+            tracksLayer.clearLayers();
+
+            let totalObservations = 0;
+
+            events.forEach(event => {
+                if (!event.geometry) return;
+
+                if (event.geometry.type === 'Point') {
+                    const marker = createEventMarker(event);
+                    markersLayer.addLayer(marker);
+                    totalObservations++;
+                } else if (event.geometry.type === 'LineString' || event.geometry.type === 'MultiLineString') {
+                    const cat = event.categories?.[0];
+                    const color = CATEGORIES[cat?.id]?.color || '#00d2ff';
+                    const coords = event.geometry.type === 'LineString'
+                        ? event.geometry.coordinates
+                        : event.geometry.coordinates.flat();
+
+                    const line = L.polyline(coords.map(c => [c[1], c[0]]), {
+                        color, weight: 3, opacity: 0.7,
+                        dashArray: '8, 6'
+                    });
+                    line.bindPopup(buildPopup({
+                        ...event,
+                        date: event.geometryDates?.[0],
+                        sources: event.sources
+                    }, cat));
+                    tracksLayer.addLayer(line);
+                }
+            });
+
+            // Update stats
+            document.getElementById('statTotal').textContent = events.length;
+            document.getElementById('statActive').textContent = events.filter(e => !e.closed).length;
+            document.getElementById('statObservations').textContent = totalObservations || events.length;
+
+            const uniqueCats = [...new Set(events.flatMap(e => e.categories?.map(c => c.id) || []))];
+            document.getElementById('statCategories').textContent = uniqueCats.length;
+
+            // Counts
+            document.getElementById('countAll').textContent = allEvents.length;
+            document.getElementById('countOpen').textContent = allEvents.filter(e => !e.closed).length;
+            document.getElementById('countClosed').textContent = allEvents.filter(e => e.closed).length;
+
+            buildLegend(events);
+            updateEventList(events);
+        }
+
+        // Update event list sidebar
+        function updateEventList(events) {
+            const list = document.getElementById('eventList');
+            list.innerHTML = '';
+
+            document.getElementById('listCount').textContent = `${events.length} events loaded`;
+
+            const sorted = [...events].sort((a, b) => {
+                const dateA = a.date || a.geometry?.date || '';
+                const dateB = b.date || b.geometry?.date || '';
+                return new Date(dateB) - new Date(dateA);
+            });
+
+            sorted.forEach(event => {
+                const cat = event.categories?.[0];
+                const color = CATEGORIES[cat?.id]?.color || '#00d2ff';
+                const status = event.closed ? 'closed' : 'open';
+                const isActive = selectedEventId === event.id;
+
+                const div = document.createElement('div');
+                div.className = `event-item ${isActive ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="event-item-title">${event.title}</div>
+                    <div class="event-item-cats">
+                        ${event.categories?.map(c => `<span class="event-item-cat" style="background:${(CATEGORIES[c.id]?.color || '#00d2ff')}25;color:${CATEGORIES[c.id]?.color || '#00d2ff'}">${CATEGORIES[c.id]?.icon || ''} ${c.title}</span>`).join('')}
+                    </div>
+                    <div class="event-item-meta">
+                        <span>📅 ${event.date ? new Date(event.date).toLocaleDateString() : 'N/A'}</span>
+                        <span class="event-item-status ${status}">${status === 'open' ? '● Active' : '✓ Closed'}</span>
+                    </div>
+                    ${event.magnitudeValue ? `<div class="event-item-meta" style="margin-top:4px;color:#ff9f43">📊 ${event.magnitudeValue} ${event.magnitudeUnit || ''}</div>` : ''}
+                `;
+
+                div.addEventListener('click', () => {
+                    const geo = event.geometry;
+                    if (geo) {
+                        let coords;
+                        if (geo.type === 'Point') {
+                            coords = [geo.coordinates[1], geo.coordinates[0]];
+                        } else if (geo.type === 'LineString') {
+                            const mid = Math.floor(geo.coordinates.length / 2);
+                            coords = [geo.coordinates[mid][1], geo.coordinates[mid][0]];
+                        }
+                        if (coords) {
+                            map.flyTo(coords, 6, { duration: 1.2 });
+                            showEventDetail(event.id);
+                        }
+                    }
+                });
+
+                list.appendChild(div);
+            });
+        }
+
+        // Show detailed event report
+        async function showEventDetail(eventId) {
+            selectedEventId = eventId;
+            const panel = document.getElementById('detailPanel');
+            panel.classList.add('open');
+
+            // Close event list if open
+            document.getElementById('eventListPanel').classList.remove('open');
+
+            const event = allEvents.find(e => e.id === eventId);
+            if (!event) return;
+
+            document.getElementById('detailTitle').textContent = event.title;
+
+            const body = document.getElementById('detailBody');
+            body.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#6e7681;">
+                    <div class="loader-ring" style="margin:0 auto;width:30px;height:30px;border-width:2px;"></div>
+                    <div style="margin-top:12px;font-size:12px;">Loading detailed report...</div>
+                </div>
+            `;
+
+            try {
+                // Fetch full event detail and GeoJSON in parallel
+                const [detail, geojson] = await Promise.all([
+                    fetchEventDetail(eventId),
+                    fetchEventGeoJSON(eventId)
+                ]);
+
+                renderDetailPanel(detail || event, geojson);
+            } catch (err) {
+                console.error('Failed to load event detail:', err);
+                renderDetailPanel(event, null);
+            }
+        }
+
+        function renderDetailPanel(event, geojson) {
+            const body = document.getElementById('detailBody');
+
+            // Build observation timeline
+            let timelineHTML = '';
+            let observations = [];
+
+            if (geojson && geojson.features) {
+                observations = geojson.features.filter(f => f.geometry?.type === 'Point');
+            }
+
+            if (observations.length > 0) {
+                const sorted = observations.sort((a, b) => new Date(b.properties.date) - new Date(a.properties.date));
+                timelineHTML = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">📍 Observation Timeline (${observations.length} observations)</div>
+                        <div class="timeline">
+                            ${sorted.slice(0, 30).map(obs => {
+                                const d = new Date(obs.properties.date);
+                                const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                const mag = obs.properties.magnitudeValue ? 
+                                    `<span class="timeline-mag">${obs.properties.magnitudeValue} ${obs.properties.magnitudeUnit || ''}</span>` : '';
+                                const src = obs.properties.sources?.[0]?.id || '';
+                                return `
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-date">${dateStr}</div>
+                                        <div class="timeline-content">${mag} ${src ? `<span style="color:#6e7681">— ${src}</span>` : ''}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                            ${observations.length > 30 ? `<div style="text-align:center;font-size:11px;color:#6e7681;padding:8px;">...and ${observations.length - 30} more observations</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Build magnitude chart if we have data
+            let magChartHTML = '';
+            if (observations.length > 1 && observations[0].properties.magnitudeValue) {
+                const chartId = 'magChart_' + event.id;
+                magChartHTML = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">📈 Magnitude Over Time</div>
+                        <div class="mag-chart"><canvas id="${chartId}"></canvas></div>
+                    </div>
+                `;
+            }
+
+            // Sources
+            const sourcesHTML = (event.sources || []).map(s => `
+                <div class="meta-item">
+                    <div class="meta-icon">📡</div>
+                    <div>
+                        <div class="meta-label">Data Source</div>
+                        <div class="meta-value">
+                            ${s.id}
+                            ${s.url ? ` — <a href="${s.url}" target="_blank" style="color:#00d2ff;text-decoration:none;">View Source</a>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Categories
+            const catsHTML = (event.categories || []).map(c => {
+                const cat = CATEGORIES[c.id];
+                const color = cat?.color || '#00d2ff';
+                return `<span class="detail-cat" style="background:${color}20;color:${color};border-color:${color}40">${cat?.icon || ''} ${c.title}</span>`;
+            }).join('');
+
+            const status = event.closed ? 'Closed' : 'Active';
+            const statusColor = event.closed ? '#3fb950' : '#ffa657';
+            const startDate = event.geometry?.[0]?.date || '';
+            const endDate = event.closed || 'Still Active';
+            const formattedStart = startDate ? new Date(startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown';
+
+            body.innerHTML = `
+                ${catsHTML ? `<div class="detail-section"><div class="detail-cats">${catsHTML}</div></div>` : ''}
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Event Information</div>
+                    <div class="detail-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">🏷️</div>
+                            <div>
+                                <div class="meta-label">Status</div>
+                                <div class="meta-value" style="color:${statusColor};font-weight:600">${status}</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">📅</div>
+                            <div>
+                                <div class="meta-label">First Detected</div>
+                                <div class="meta-value">${formattedStart}</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">✅</div>
+                            <div>
+                                <div class="meta-label">Last Updated</div>
+                                <div class="meta-value">${event.closed ? new Date(event.closed).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Still Active'}</div>
+                            </div>
+                        </div>
+                        ${event.description ? `
+                        <div class="meta-item">
+                            <div class="meta-icon">📝</div>
+                            <div>
+                                <div class="meta-label">Description</div>
+                                <div class="meta-value">${event.description}</div>
+                            </div>
+                        </div>` : ''}
+                        ${event.geometry?.[0]?.magnitudeValue ? `
+                        <div class="meta-item">
+                            <div class="meta-icon">📊</div>
+                            <div>
+                                <div class="meta-label">Latest Magnitude</div>
+                                <div class="meta-value" style="color:#ff9f43;font-weight:600">${event.geometry[0].magnitudeValue} ${event.geometry[0].magnitudeUnit || ''} ${event.geometry[0].magnitudeDescription ? '— ' + event.geometry[0].magnitudeDescription : ''}</div>
+                            </div>
+                        </div>` : ''}
+                        ${event.geometry?.type === 'Point' && event.geometry.coordinates ? `
+                        <div class="meta-item">
+                            <div class="meta-icon">📍</div>
+                            <div>
+                                <div class="meta-label">Coordinates</div>
+                                <div class="meta-value">${event.geometry.coordinates[1].toFixed(4)}°N, ${event.geometry.coordinates[0].toFixed(4)}°E</div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                ${sourcesHTML ? `
+                <div class="detail-section">
+                    <div class="detail-section-title">Data Sources</div>
+                    ${sourcesHTML}
+                </div>` : ''}
+
+                ${magChartHTML}
+                ${timelineHTML}
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Links</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <a href="${event.link || '#'}" target="_blank" class="detail-link">🔗 API Endpoint</a>
+                        ${event.sources?.[0]?.url ? `<a href="${event.sources[0].url}" target="_blank" class="detail-link">📡 Source Page</a>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Draw magnitude chart
+            if (observations.length > 1 && observations[0].properties.magnitudeValue) {
+                drawMagnitudeChart(event.id, observations);
+            }
+
+            // Highlight track on map
+            highlightTrack(event.id);
+        }
+
+        // Draw magnitude chart using canvas
+        function drawMagnitudeChart(eventId, observations) {
+            const canvas = document.getElementById('magChart_' + eventId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = canvas.offsetWidth * dpr;
+            canvas.height = 160 * dpr;
+            ctx.scale(dpr, dpr);
+
+            const w = canvas.offsetWidth;
+            const h = 160;
+            const padding = { top: 20, right: 20, bottom: 30, left: 50 };
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+
+            const data = observations
+                .filter(o => o.properties.magnitudeValue != null)
+                .map(o => ({ date: new Date(o.properties.date), value: o.properties.magnitudeValue }))
+                .sort((a, b) => a.date - b.date);
+
+            if (data.length < 2) return;
+
+            const minVal = Math.min(...data.map(d => d.value));
+            const maxVal = Math.max(...data.map(d => d.value));
+            const range = maxVal - minVal || 1;
+            const minDate = data[0].date;
+            const maxDate = data[data.length - 1].date;
+            const dateRange = maxDate - minDate || 1;
+
+            const x = (d) => padding.left + ((d.date - minDate) / dateRange) * chartW;
+            const y = (v) => padding.top + chartH - ((v - minVal) / range) * chartH;
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const gy = padding.top + (chartH / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, gy);
+                ctx.lineTo(w - padding.right, gy);
+                ctx.stroke();
+
+                const val = maxVal - (range / 4) * i;
+                ctx.fillStyle = '#6e7681';
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'right';
+                ctx.fillText(val.toFixed(1), padding.left - 8, gy + 3);
+            }
+
+            // Date labels
+            ctx.fillStyle = '#6e7681';
+            ctx.font = '9px Inter';
+            ctx.textAlign = 'center';
+            const steps = Math.min(5, data.length);
+            for (let i = 0; i < steps; i++) {
+                const idx = Math.floor((i / (steps - 1)) * (data.length - 1));
+                const d = data[idx].date;
+                ctx.fillText(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), x(data[idx]), h - 6);
+            }
+
+            // Area fill
+            const cat = allEvents.find(e => e.id === eventId)?.categories?.[0];
+            const color = CATEGORIES[cat?.id]?.color || '#00d2ff';
+
+            ctx.beginPath();
+            ctx.moveTo(x(data[0]), y(data[0].value));
+            data.forEach(d => ctx.lineTo(x(d), y(d.value)));
+            ctx.lineTo(x(data[data.length - 1]), padding.top + chartH);
+            ctx.lineTo(x(data[0]), padding.top + chartH);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+            grad.addColorStop(0, color + '40');
+            grad.addColorStop(1, color + '05');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Line
+            ctx.beginPath();
+            ctx.moveTo(x(data[0]), y(data[0].value));
+            data.forEach(d => ctx.lineTo(x(d), y(d.value)));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Dots
+            data.forEach(d => {
+                ctx.beginPath();
+                ctx.arc(x(d), y(d.value), 3, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            });
+        }
+
+        // Highlight event track on map
+        function highlightTrack(eventId) {
+            // Reset previous highlight
+            document.querySelectorAll('.event-item').forEach(el => el.classList.remove('active'));
+
+            // Fetch geojson to show track
+            fetchEventGeoJSON(eventId).then(geojson => {
+                tracksLayer.clearLayers();
+
+                if (geojson?.features) {
+                    geojson.features.forEach(f => {
+                        if (f.geometry?.type === 'LineString') {
+                            const cat = allEvents.find(e => e.id === eventId)?.categories?.[0];
+                            const color = CATEGORIES[cat?.id]?.color || '#00d2ff';
+                            const line = L.polyline(f.geometry.coordinates.map(c => [c[1], c[0]]), {
+                                color, weight: 4, opacity: 0.8,
+                                dashArray: null
+                            });
+                            tracksLayer.addLayer(line);
+
+                            // Fit bounds
+                            map.fitBounds(line.getBounds(), { padding: [80, 80] });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Close detail panel
+        function closeDetail() {
+            document.getElementById('detailPanel').classList.remove('open');
+            selectedEventId = null;
+            tracksLayer.clearLayers();
+            updateEventList(allEvents);
+        }
+
+        // Toggle event list
+        function toggleEventList() {
+            document.getElementById('eventListPanel').classList.toggle('open');
+        }
+
+        // Filter controls
+        async function setStatus(status) {
+            currentStatus = status;
+            document.querySelectorAll('[data-status]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === status);
+            });
+            await loadData();
+        }
+
+        async function setDays(days) {
+            currentDays = days;
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.days) === days);
+            });
+            await loadData();
+        }
+
+        // Load all data
+        async function loadData() {
+            document.getElementById('loading').classList.remove('hidden');
+            try {
+                allEvents = await fetchEvents();
+                renderMap(allEvents);
+                closeDetail();
+            } catch (err) {
+                console.error('Failed to load events:', err);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes markerPulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.4); opacity: 0.6; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Init
+        initMap();
+        loadData();
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadData, 300000);
+    </script>
+</body>
+</html>
