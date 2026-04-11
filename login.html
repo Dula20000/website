@@ -5,61 +5,421 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: sans-serif;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      margin: 0;
-      background: #f0f0f0;
+      overflow: hidden;
+      background: #0a0a0f;
     }
-    .box {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+
+    /* Animated mesh gradient background */
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: 
+        radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99, 102, 241, 0.4) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(168, 85, 247, 0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 90%, rgba(236, 72, 153, 0.3) 0%, transparent 60%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgPulse {
+      0% { opacity: 0.8; transform: scale(1) rotate(0deg); }
+      100% { opacity: 1; transform: scale(1.1) rotate(3deg); }
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 1;
+      animation: float 12s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .orb-1 {
+      width: 300px; height: 300px;
+      background: rgba(99, 102, 241, 0.5);
+      top: -100px; left: -50px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 250px; height: 250px;
+      background: rgba(168, 85, 247, 0.45);
+      bottom: -80px; right: -40px;
+      animation-delay: -4s;
+      animation-duration: 15s;
+    }
+    .orb-3 {
+      width: 200px; height: 200px;
+      background: rgba(236, 72, 153, 0.4);
+      top: 50%; left: 60%;
+      animation-delay: -8s;
+      animation-duration: 18s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -40px) scale(1.1); }
+      50% { transform: translate(-20px, 20px) scale(0.95); }
+      75% { transform: translate(40px, 30px) scale(1.05); }
+    }
+
+    /* Grid pattern overlay */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 10;
       display: flex;
       flex-direction: column;
-      gap: 0.8rem;
-      width: 300px;
+      align-items: center;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
     }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glassmorphic card */
+    .box {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      padding: 3rem 2.5rem;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      width: 380px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -50%;
+      width: 200%; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8), transparent);
+      animation: shimmer 4s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(50%); }
+    }
+
+    /* Title */
+    h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e0e7ff, #c4b5fd, #f9a8d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+
+    /* Input wrapper */
+    .input-wrapper {
+      position: relative;
+      animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+    .input-wrapper:nth-child(1) { animation-delay: 0.1s; }
+    .input-wrapper:nth-child(2) { animation-delay: 0.15s; }
+    .input-wrapper:nth-child(3) { animation-delay: 0.2s; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .input-wrapper svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: rgba(255, 255, 255, 0.449);
+      transition: color 0.3s ease;
+      pointer-events: none;
+    }
+
+    .input-wrapper:focus-within svg {
+      color: #a78bfa;
+    }
+
     input {
-      padding: 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
+      width: 100%;
+      padding: 0.9rem 1rem 0.9rem 2.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: #e5e7eb;
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: rgba(167, 139, 250, 0.5);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 
+        0 0 0 4px rgba(167, 139, 250, 0.15),
+        0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    input:hover:not(:focus) {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    /* Button */
+    .btn-wrapper {
+      animation: fadeIn 0.6s 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
     button {
-      padding: 0.7rem;
-      background: #4f46e5;
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      background-size: 200% 200%;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 12px;
       font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.3px;
     }
-    button:hover { background: #4338ca; }
-    #error-msg { color: red; font-size: 0.9rem; }
-    #result-img, #result-video { max-width: 100%; margin-top: 1rem; display: none; }
+
+    button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #818cf8, #c084fc, #f472b6);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    button:hover::before {
+      opacity: 1;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 
+        0 15px 35px rgba(99, 102, 241, 0.4),
+        0 5px 15px rgba(168, 85, 247, 0.3);
+    }
+
+    button:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    button span {
+      position: relative;
+      z-index: 1;
+    }
+
+    button.loading {
+      pointer-events: none;
+    }
+
+    button.loading span {
+      opacity: 0;
+    }
+
+    button.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      top: 50%;
+      left: 50%;
+      margin: -10px 0 0 -10px;
+      z-index: 2;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error message */
+    #error-msg {
+      color: #fca5a5;
+      font-size: 0.85rem;
+      text-align: center;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.7rem;
+      border-radius: 10px;
+      display: none;
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    /* Result media */
+    #result-img, #result-video {
+      max-width: 100%;
+      margin-top: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: none;
+      animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: rise linear infinite;
+    }
+
+    @keyframes rise {
+      0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-10vh) scale(1);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div class="box">
-    <h2 style="margin:0">Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <input type="text" id="fileId" placeholder="File ID (e.g. photo1)">
-    <button onclick="getFile()">Submit</button>
-    <p id="error-msg"></p>
+  <!-- Background elements -->
+  <div class="bg-gradient"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="grid-overlay"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="container">
+    <div class="box">
+      <h2>Login</h2>
+      
+      <div class="input-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 0116.5 0H4.5z"/>
+        </svg>
+        <input type="text" id="username" placeholder="Username">
+      </div>
+      
+      <div class="input-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+        </svg>
+        <input type="password" id="password" placeholder="Password">
+      </div>
+      
+      <div class="input-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/>
+        </svg>
+        <input type="text" id="fileId" placeholder="File ID (e.g. photo1)">
+      </div>
+      
+      <div class="btn-wrapper">
+        <button onclick="getFile()" id="submit-btn"><span>Submit</span></button>
+      </div>
+      
+      <p id="error-msg"></p>
+    </div>
+
+    <img id="result-img">
+    <video id="result-video" controls></video>
   </div>
 
-  <img id="result-img">
-  <video id="result-video" controls></video>
-
   <script>
+    // Generate floating particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDuration = (Math.random() * 8 + 6) + 's';
+      particle.style.animationDelay = (Math.random() * 5) + 's';
+      particle.style.width = particle.style.height = (Math.random() * 3 + 2) + 'px';
+      particlesContainer.appendChild(particle);
+    }
+
     async function hashPassword(password) {
       const encoded = new TextEncoder().encode(password);
       const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
@@ -72,13 +432,18 @@
       const password = document.getElementById("password").value;
       const fileId = document.getElementById("fileId").value.trim();
       const errorMsg = document.getElementById("error-msg");
+      const btn = document.getElementById("submit-btn");
 
       errorMsg.textContent = "";
+      errorMsg.style.display = "none";
 
       if (!username || !password || !fileId) {
         errorMsg.textContent = "Please fill in all fields.";
+        errorMsg.style.display = "block";
         return;
       }
+
+      btn.classList.add("loading");
 
       const hashedPassword = await hashPassword(password);
 
@@ -92,11 +457,16 @@
         data = await res.json();
       } catch {
         errorMsg.textContent = "Network error, please try again.";
+        errorMsg.style.display = "block";
+        btn.classList.remove("loading");
         return;
       }
 
+      btn.classList.remove("loading");
+
       if (!res.ok) {
         errorMsg.textContent = data.error || "Something went wrong.";
+        errorMsg.style.display = "block";
         return;
       }
 
