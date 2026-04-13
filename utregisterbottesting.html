@@ -9,10 +9,11 @@
         }
         table {
             border-collapse: collapse;
+            margin-top: 20px;
         }
-        td {
+        td, th {
             padding: 8px 12px;
-            vertical-align: middle;
+            border: 1px solid #ccc;
         }
         input, select, button {
             padding: 5px;
@@ -24,7 +25,7 @@
 <h2>Registration for Spring 2026</h2>
 <p style="color: green;">Please select a registration action.</p>
 
-<table border="0">
+<table>
     <tr>
         <th>SELECT</th>
         <th>UNIQUE NUMBER</th>
@@ -38,7 +39,7 @@
         <td>REGISTER for or ADD</td>
     </tr>
 
-    <!-- DROP ROW -->
+    <!-- DROP -->
     <tr>
         <td><input type="radio" name="action"></td>
         <td>
@@ -49,7 +50,7 @@
         <td>DROP</td>
     </tr>
 
-    <!-- DROP DEPENDENT ROW (HAS SECOND INPUT) -->
+    <!-- DROP DEPENDENT (HAS SECOND INPUT) -->
     <tr>
         <td><input type="radio" name="action"></td>
         <td>
@@ -63,7 +64,7 @@
         </td>
     </tr>
 
-    <!-- PASS/FAIL ROW -->
+    <!-- PASS/FAIL -->
     <tr>
         <td><input type="radio" name="action"></td>
         <td>
@@ -80,11 +81,51 @@
 <button onclick="submitForm()">Submit</button>
 <button>Estimate Tuition Bill</button>
 
+<h3 id="summary">You are scheduled for 0 classes</h3>
+
+<table id="schedule">
+    <tr>
+        <th>Unique</th>
+        <th>Course</th>
+        <th>Status</th>
+        <th>Meeting</th>
+        <th>Title</th>
+    </tr>
+</table>
+
 <script>
+let courseCount = 0;
+
 function submitForm() {
-    const reg = document.getElementById("register_input").value;
-    const dep = document.getElementById("dependent_input").value;
-    alert("Register input: " + reg + "\nDependent input: " + dep);
+    const code = document.getElementById("register_input").value.trim();
+
+    if (!code) {
+        alert("Enter a course unique number");
+        return;
+    }
+
+    // Fake course data (just to simulate)
+    const courseName = "COURSE " + code;
+    const status = "MW 2:00-3:00P";
+    const meeting = "ROOM 1.101";
+    const title = "AUTO-REGISTERED";
+
+    const table = document.getElementById("schedule");
+
+    const row = table.insertRow(-1);
+
+    row.insertCell(0).innerText = code;
+    row.insertCell(1).innerText = courseName;
+    row.insertCell(2).innerText = status;
+    row.insertCell(3).innerText = meeting;
+    row.insertCell(4).innerText = title;
+
+    courseCount++;
+    document.getElementById("summary").innerText =
+        "You are scheduled for " + courseCount + " class(es)";
+
+    // Clear input after submit (matches real UX better)
+    document.getElementById("register_input").value = "";
 }
 </script>
 
