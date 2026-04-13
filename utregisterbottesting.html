@@ -1,65 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Course Registration</title>
+    <title>Mock UT Registration</title>
     <style>
         body {
             font-family: Arial;
-            text-align: center;
-            margin-top: 50px;
+            padding: 40px;
         }
-        input {
-            padding: 10px;
-            font-size: 16px;
+        table {
+            border-collapse: collapse;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-left: 10px;
+        td {
+            padding: 8px 12px;
+            vertical-align: middle;
         }
-        #log {
-            margin-top: 30px;
-            width: 60%;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: left;
-            border: 1px solid #ccc;
-            padding: 10px;
-            height: 200px;
-            overflow-y: scroll;
+        input, select, button {
+            padding: 5px;
         }
     </style>
 </head>
 <body>
 
-    <h2>Course Registration Test</h2>
+<h2>Registration for Spring 2026</h2>
+<p style="color: green;">Please select a registration action.</p>
 
-    <input id="courseInput" placeholder="Enter course code" />
-    <button id="registerButton">Submit</button>
+<table border="0">
+    <tr>
+        <th>SELECT</th>
+        <th>UNIQUE NUMBER</th>
+        <th>TRANSACTION</th>
+    </tr>
 
-    <div id="log"></div>
+    <!-- REGISTER ROW -->
+    <tr>
+        <td><input type="radio" name="action" checked></td>
+        <td><input type="text" id="register_input"></td>
+        <td>REGISTER for or ADD</td>
+    </tr>
 
-    <script>
-        const logDiv = document.getElementById("log");
+    <!-- DROP ROW -->
+    <tr>
+        <td><input type="radio" name="action"></td>
+        <td>
+            <select>
+                <option>Select unique to:</option>
+            </select>
+        </td>
+        <td>DROP</td>
+    </tr>
 
-        document.getElementById("registerButton").addEventListener("click", () => {
-            const course = document.getElementById("courseInput").value;
-            if (course.trim() === "") return;
+    <!-- DROP DEPENDENT ROW (HAS SECOND INPUT) -->
+    <tr>
+        <td><input type="radio" name="action"></td>
+        <td>
+            <select>
+                <option>Select unique to:</option>
+            </select>
+        </td>
+        <td>
+            DROP DEPENDENT UPON successfully ADDING
+            <input type="text" id="dependent_input">
+        </td>
+    </tr>
 
-            const entry = document.createElement("div");
-            entry.textContent = "Registered for: " + course + " at " + new Date().toLocaleTimeString();
-            logDiv.appendChild(entry);
+    <!-- PASS/FAIL ROW -->
+    <tr>
+        <td><input type="radio" name="action"></td>
+        <td>
+            <select>
+                <option>Select unique to:</option>
+            </select>
+        </td>
+        <td>CHANGE to or from PASS/FAIL or CREDIT/NO CREDIT basis</td>
+    </tr>
+</table>
 
-            document.getElementById("courseInput").value = "";
-        });
+<br>
 
-        // Allow Enter key
-        document.getElementById("courseInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                document.getElementById("registerButton").click();
-            }
-        });
-    </script>
+<button onclick="submitForm()">Submit</button>
+<button>Estimate Tuition Bill</button>
+
+<script>
+function submitForm() {
+    const reg = document.getElementById("register_input").value;
+    const dep = document.getElementById("dependent_input").value;
+    alert("Register input: " + reg + "\nDependent input: " + dep);
+}
+</script>
 
 </body>
 </html>
