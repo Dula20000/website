@@ -461,24 +461,13 @@
         <br>
         <br>
         <br>
-    <table width="100%" style="margin-bottom: 1em;">
+    <table width="100%" style="margin-bottom: 1em;" id="courseScheduleTable">
         <tbody><tr>
             <th colspan="7" class="classScheduleHeader">
-                You are scheduled for 6
-    
-                classes  
-    
-                and 14
-    
-                hours
-    
-                for Fall 2026
+                <span id="scheduleSummary">You are scheduled for 0 classes and 0 hours for Fall 2026</span>
             </th>
         </tr>
-        
-    
-        
-        
+
         <tr>
             <th class="classScheduleUniqueHeader">Unique</th>
             <th class="classScheduleCourseHeader">Course</th>
@@ -486,179 +475,12 @@
             <th class="classScheduleMeetingHeader" colspan="3">Meeting Information</th>
             <th class="classScheduleTitleHeader">Title</th>
         </tr>
-        
-        
-        
-        
-    
-        <tr>
-            <td class="classScheduleUnique">15790</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 376K</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                MWF
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                11:00- 12:00
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ECJ 1.202
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                PROPULSION
+
+        <tr id="emptyScheduleRow">
+            <td colspan="7" class="classScheduleUnique" style="text-align:center; padding: 2em 0; color: #888;">
+                No courses added yet. Use the form above to register courses.
             </td>
         </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">16055</td>
-            <td class="classScheduleCourse" nowrap="nowrap">COE 362</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                MW
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                12:30-  2:00P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ASE 2.134
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                ENGR PROBABILITY AND STATS
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">15720</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 367K</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TTH
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                 9:30- 11:00
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                CPE 2.208
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                FLIGHT DYNAMICS
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">15750</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 374D</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TTH
-                
-                <br>
-                W
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                 2:00-  3:30P
-                
-                <br>
-                 5:00-  7:00P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ASE 2.134
-                
-                <br>
-                ASE 2.134
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                AEROSPACE SYS SENIOR DSGN I
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">13642</td>
-            <td class="classScheduleCourse" nowrap="nowrap">KIN 106C</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TTH
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                11:00- 12:30P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TSC 1.500
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                BEGINNING SWIMMING II
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">15715</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 166M</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                M
-                
-                <br>
-                F
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                 3:30-  5:00P
-                
-                <br>
-                 3:30-  5:00P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ECJ 1.314
-                
-                <br>
-                ECJ 1.314
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                SPACECRAFT SYSTEMS LABORATORY
-            </td>
-        </tr>
-    
     </tbody></table>
     
     
@@ -807,4 +629,130 @@
     
       
     
+    <script type="text/javascript">
+        // Course registry for testing
+        var registeredCourses = [];
+
+        // Mock course database for testing display
+        var courseDatabase = {
+            '15790': { course: 'ASE 376K', title: 'PROPULSION', days: 'MWF', time: '11:00-12:00', room: 'ECJ 1.202', hours: 3 },
+            '16055': { course: 'COE 362', title: 'ENGR PROBABILITY AND STATS', days: 'MW', time: '12:30-2:00P', room: 'ASE 2.134', hours: 3 },
+            '15720': { course: 'ASE 367K', title: 'FLIGHT DYNAMICS', days: 'TTH', time: '9:30-11:00', room: 'CPE 2.208', hours: 3 },
+            '15750': { course: 'ASE 374D', title: 'AEROSPACE SYS SENIOR DSGN I', days: 'TTH/W', time: '2:00-3:30P/5:00-7:00P', room: 'ASE 2.134', hours: 3 },
+            '13642': { course: 'KIN 106C', title: 'BEGINNING SWIMMING II', days: 'TTH', time: '11:00-12:30P', room: 'TSC 1.500', hours: 2 },
+            '15715': { course: 'ASE 166M', title: 'SPACECRAFT SYSTEMS LABORATORY', days: 'M/F', time: '3:30-5:00P', room: 'ECJ 1.314', hours: 1 }
+        };
+
+        function searchCheck() {
+            var uniqueAdd = document.getElementById('s_unique_add').value.trim();
+            var requestType = document.querySelector('input[name="s_request"]:checked').value;
+
+            if (requestType === 'STADD' && uniqueAdd) {
+                // Check if course already registered
+                if (registeredCourses.includes(uniqueAdd)) {
+                    document.getElementById('message').innerHTML = '<span class="notification" style="color: red;">Course already registered.</span>';
+                    return false;
+                }
+
+                // Add course if it exists in database
+                if (courseDatabase[uniqueAdd]) {
+                    registeredCourses.push(uniqueAdd);
+                    updateScheduleTable();
+                    document.getElementById('message').innerHTML = '<span class="notification" style="color: green;">Course ' + uniqueAdd + ' added successfully.</span>';
+                    document.getElementById('s_unique_add').value = '';
+                } else {
+                    document.getElementById('message').innerHTML = '<span class="notification" style="color: red;">Course ' + uniqueAdd + ' not found.</span>';
+                }
+            } else if (requestType === 'STDRP') {
+                var uniqueDrop = document.getElementById('s_unique_drop').value;
+                if (uniqueDrop !== ' ') {
+                    var index = registeredCourses.indexOf(uniqueDrop);
+                    if (index > -1) {
+                        registeredCourses.splice(index, 1);
+                        updateScheduleTable();
+                        document.getElementById('message').innerHTML = '<span class="notification" style="color: green;">Course ' + uniqueDrop + ' dropped.</span>';
+                    } else {
+                        document.getElementById('message').innerHTML = '<span class="notification" style="color: red;">Course ' + uniqueDrop + ' not found in schedule.</span>';
+                    }
+                }
+            }
+
+            return false; // Prevent actual form submission
+        }
+
+        function updateScheduleTable() {
+            var table = document.getElementById('courseScheduleTable');
+            var tbody = table.getElementsByTagName('tbody')[0];
+            var summary = document.getElementById('scheduleSummary');
+
+            // Clear existing course rows (keep header rows)
+            var emptyRow = document.getElementById('emptyScheduleRow');
+            if (emptyRow) {
+                emptyRow.remove();
+            }
+
+            // Remove all course data rows
+            var rows = tbody.getElementsByTagName('tr');
+            while (rows.length > 2) {
+                tbody.deleteRow(2);
+                rows = tbody.getElementsByTagName('tr');
+            }
+
+            if (registeredCourses.length === 0) {
+                // Show empty state
+                var newRow = tbody.insertRow();
+                newRow.id = 'emptyScheduleRow';
+                var cell = newRow.insertCell();
+                cell.colSpan = 7;
+                cell.className = 'classScheduleUnique';
+                cell.style.textAlign = 'center';
+                cell.style.padding = '2em 0';
+                cell.style.color = '#888';
+                cell.textContent = 'No courses added yet. Use the form above to register courses.';
+                summary.textContent = 'You are scheduled for 0 classes and 0 hours for Fall 2026';
+            } else {
+                // Calculate total hours
+                var totalHours = 0;
+
+                // Add each registered course
+                registeredCourses.forEach(function(unique) {
+                    var course = courseDatabase[unique];
+                    if (course) {
+                        totalHours += course.hours;
+                        var newRow = tbody.insertRow();
+                        newRow.innerHTML =
+                            '<td class="classScheduleUnique">' + unique + '</td>' +
+                            '<td class="classScheduleCourse" nowrap="nowrap">' + course.course + '</td>' +
+                            '<td class="classScheduleStatus"></td>' +
+                            '<td class="classScheduleMeeting" nowrap="nowrap">' + course.days + '</td>' +
+                            '<td class="classScheduleMeeting" nowrap="nowrap">' + course.time + '</td>' +
+                            '<td class="classScheduleMeeting" nowrap="nowrap">' + course.room + '</td>' +
+                            '<td class="classScheduleTitle" nowrap="nowrap">' + course.title + '</td>';
+                    }
+                });
+
+                summary.textContent = 'You are scheduled for ' + registeredCourses.length + ' classes and ' + totalHours + ' hours for Fall 2026';
+            }
+
+            // Update dropdown options to reflect registered courses
+            var dropSelect = document.getElementById('s_unique_drop');
+            var swapSelect = document.getElementById('s_swap_unique_drop');
+            var pfSelect = document.getElementById('s_unique_pass_fail');
+
+            [dropSelect, swapSelect, pfSelect].forEach(function(select) {
+                // Keep first option, clear rest
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+                // Add registered courses
+                registeredCourses.forEach(function(unique) {
+                    var option = document.createElement('option');
+                    option.value = unique;
+                    option.textContent = unique;
+                    select.appendChild(option);
+                });
+            });
+        }
+    </script>
+
     </body></html>
