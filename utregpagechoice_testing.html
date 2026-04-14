@@ -90,10 +90,6 @@
     }
                                           
     
-    function searchCheck() {
-        // Mock search check for testing
-        return true;
-    }
     
     
     
@@ -193,7 +189,13 @@
                                     </li>
                                   
                                 <li>
-                                Course Schedule
+                                Course Schedules
+                              </li>
+                          
+                                <li class="secondary">
+                                <a href="https://utdirect.utexas.edu/apps/registrar/course_schedule/20266" target="_blank">
+                                  Summer 2026
+                                </a>
                               </li>
                           
                                 <li class="secondary">
@@ -305,7 +307,7 @@
     
             <div class="pageTitle noTabs"> <!-- PAGETITLE -->      
           
-                    <div id="pgTitle"><h1>Registration for Fall 2026</h1></div>
+                    <div id="pgTitle"><h1>Registration semester selection</h1></div>
           
                 <div id="utilities"> <!-- UTILITIES -->
                    
@@ -315,382 +317,40 @@
           
           </div><!-- UTD_TOPPAGE CLOSE-->
     
-        <div id="service_content"><div id="e_message">
-    </div>
-    <div id="regContent">
-      <div id="n_message">        
-    
+        <div id="service_content"><div id="regContent">
+        <p>
+            Please select a registration semester:
+        </p>
+        <br>
+                
         <div>
-            <span class="notification">
-                Please select a registration action.
-            </span>
+        
+            <form action="utregisterbottesting.html" method="post">  
+                <input type="hidden" name="s_request" value="STGEM">
+                <input type="hidden" name="s_student_eid" value="">
+                <input type="hidden" name="s_ccyys" value="20266">
+                <input type="hidden" name="s_nonce" value="CBB7283222E0FD9CB26ACFC4DF1256A92044A654">			
+                
+                <input type="submit" name="submit" value="Summer 2026 Registration">
+            </form>
         </div>
         <br>
-    
-       </div>
-    
                 
-    
-        <form action="utregisterbottesting.html" name="regform" id="regform" onsubmit="return searchCheck()">
-            
-            <a href="#" name="focus_point" id="focus_point">
-            <div id="message"></div>
-            <div id="message2"></div></a>            
-    
-            <input type="hidden" name="s_ccyys" id="s_ccyys" value="20269">
-            <input type="hidden" name="s_student_eid" value="">
-            <input type="hidden" name="s_nonce" value="A8F25B5DFD9E6D6A7565433797A1E36720EE8BA0">		
-    
-            <table width="100%" cellpadding="3">
-                <tbody><tr valign="bottom">
-                    <th class="radio">SELECT</th>
-                    <th class="uniqueText" nowrap="nowrap">UNIQUE NUMBER</th>
-                    <th class="transactionText">TRANSACTION</th>
-                </tr>
-    
-    <tr>                                                                
-        <td>
-            <input type="radio" name="s_request" id="ds_request_STADD" value="STADD" checked="checked">
-        </td>
-        <td>                                   
-            <input type="text" name="s_unique_add" id="s_unique_add" size="6" maxlength="5" value="">
-        </td>
-        <td class="transactionText">
-            REGISTER for or ADD
-        </td>
-    </tr>
-    
-                                         
-    <tr>
-        <td>
-            <input type="radio" name="s_request" id="s_request_STDRP" value="STDRP">
-        </td>          
-        <td>
-            <select name="s_unique_drop" id="s_unique_drop">
-    <option value=" ">Select unique to:</option>
-    
-    <option value="15790">15790</option>
-    
-    <option value="16055">16055</option>
-    
-    <option value="15720">15720</option>
-    
-    <option value="15750">15750</option>
-    
-    <option value="13642">13642</option>
-    
-    <option value="15715">15715</option>
-    
-                                                                                        
-            </select>
-        </td>
-        <td class="transactionText">
-            DROP
-        </td>
-    </tr>                                                          
-    
-    
-    <tr>
-        <td>
-            <input type="radio" name="s_request" id="s_request_STSWP" value="STSWP">
-        </td>
-        <td>
-            <select name="s_swap_unique_drop" id="s_swap_unique_drop">
-    <option value=" ">Select unique to:</option>
-    
-    <option value="15790">15790</option>
-    
-    <option value="16055">16055</option>
-    
-    <option value="15720">15720</option>
-    
-    <option value="15750">15750</option>
-    
-    <option value="13642">13642</option>
-    
-    <option value="15715">15715</option>
-    
-            
-            </select>
-        </td>
-        <td class="transactionText">                                                                           
-            DROP DEPENDENT
-                    UPON successfully ADDING <input type="text" name="s_swap_unique_add" id="s_swap_unique_add" value="" size="6" maxlength="5">
+        <div>
         
-        </td>
-    </tr>
-    
-    
-    <tr>
-        <td>
-            <input type="radio" name="s_request" id="s_request_STCPF" value="STCPF">
-        </td>
-        <td>
-            <select name="s_unique_pass_fail" id="s_unique_pass_fail">
-    <option value=" ">Select unique to:</option>
-    
-    <option value="15790">15790</option>
-    
-    <option value="16055">16055</option>
-    
-    <option value="15720">15720</option>
-    
-    <option value="15750">15750</option>
-    
-    <option value="13642">13642</option>
-    
-    <option value="15715">15715</option>
-    
-            
-            </select>
-        </td>
-        <td class="transactionText">
-            CHANGE to or from PASS/FAIL or CREDIT/NO CREDIT basis
-        </td>
-    </tr>
-    
-    
-            </tbody></table>
-            <br>
-            <input type="submit" name="s_submit" value="Submit">
-            &nbsp;&nbsp;&nbsp;
-    
-            <input type="button" name="s_tuition" value="Estimate Tuition Bill" onclick="feeBill();">
-        </form>
-            
+            <form action="utregisterbottesting.html" method="post">  
+                <input type="hidden" name="s_request" value="STGAR">
+                <input type="hidden" name="s_student_eid" value="">
+                <input type="hidden" name="s_ccyys" value="20269">
+                <input type="hidden" name="s_nonce" value="CBB7283222E0FD9CB26ACFC4DF1256A92044A654">			
+                
+                <input type="submit" name="submit" value="Fall 2026 Registration">
+            </form>
+        </div>
         <br>
-        <br>
-        <br>
-    <table width="100%" style="margin-bottom: 1em;">
-        <tbody><tr>
-            <th colspan="7" class="classScheduleHeader">
-                You are scheduled for 6
-    
-                classes  
-    
-                and 14
-    
-                hours
-    
-                for Fall 2026
-            </th>
-        </tr>
-        
-    
-        
-        
-        <tr>
-            <th class="classScheduleUniqueHeader">Unique</th>
-            <th class="classScheduleCourseHeader">Course</th>
-            <th class="classScheduleStatusHeader">Status</th>
-            <th class="classScheduleMeetingHeader" colspan="3">Meeting Information</th>
-            <th class="classScheduleTitleHeader">Title</th>
-        </tr>
-        
-        
-        
-        
-    
-        <tr>
-            <td class="classScheduleUnique">15790</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 376K</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                MWF
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                11:00- 12:00
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ECJ 1.202
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                PROPULSION
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">16055</td>
-            <td class="classScheduleCourse" nowrap="nowrap">COE 362</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                MW
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                12:30-  2:00P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ASE 2.134
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                ENGR PROBABILITY AND STATS
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">15720</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 367K</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TTH
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                 9:30- 11:00
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                CPE 2.208
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                FLIGHT DYNAMICS
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">15750</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 374D</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TTH
                 
-                <br>
-                W
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                 2:00-  3:30P
-                
-                <br>
-                 5:00-  7:00P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ASE 2.134
-                
-                <br>
-                ASE 2.134
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                AEROSPACE SYS SENIOR DSGN I
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">13642</td>
-            <td class="classScheduleCourse" nowrap="nowrap">KIN 106C</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TTH
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                11:00- 12:30P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                TSC 1.500
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                BEGINNING SWIMMING II
-            </td>
-        </tr>
-    
-        <tr>
-            <td class="classScheduleUnique">15715</td>
-            <td class="classScheduleCourse" nowrap="nowrap">ASE 166M</td>
-            <td class="classScheduleStatus"></td>
-            
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                M
-                
-                <br>
-                F
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                 3:30-  5:00P
-                
-                <br>
-                 3:30-  5:00P
-                    
-            </td>
-            <td class="classScheduleMeeting" nowrap="nowrap">
-    
-                ECJ 1.314
-                
-                <br>
-                ECJ 1.314
-                    
-            </td>			
-            <td class="classScheduleTitle" nowrap="nowrap">
-                SPACECRAFT SYSTEMS LABORATORY
-            </td>
-        </tr>
-    
-    </tbody></table>
-    
-    
-    
-    
-    
-    
-      <a href="#TB_inline?width=75%&amp;height=200&amp;inlineId=hiddenModalContent" class="thickbox" style="font-size: 1.2em;">Check textbooks for
-       these courses
-      </a>
-    
-      <div id="hiddenModalContent" style="position:absolute;left:-9999em">
-        <p>You are leaving the UT-Austin Registrar website.</p>
-        <p>We encourage students to be smart consumers when shopping for their course materials.  There are many sources for them.  
-           Remember to plan ahead, do your research, and shop around for the best deals.</p>
-        <br>
-    
-        <p style="text-align:center">
-    
-          <input type="button" value="Confirm" onclick="window.open('https://academics.universitycoop.com/adoption-search?sn=20269__ASE__376K__15790%2C20269__COE__362__16055%2C20269__ASE__367K__15720%2C20269__ASE__374D__15750%2C20269__KIN__106C__13642%2C20269__ASE__166M__15715&amp;idelim=__');tb_remove()">
-        </p>
-      </div>
-    
-    
-    
-    
     </div> <!-- regContent -->
-    
-    <form name="feebillform" action="utregisterbottesting.html" method="get"></form>
-    
     <br><br><br>
-    
     
     
     

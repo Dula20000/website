@@ -1,73 +1,136 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Mock UT Login</title>
-    <style>
-        body {
-            font-family: Arial;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-box {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 300px;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        input {
-            width: 100%;
-            padding: 8px;
-            margin: 10px 0;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #bf5700;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #a64b00;
-        }
+<html xmlns="http://www.w3.org/1999/xhtml" lang="EN"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>UTDirect Login</title>
+    
+    <style type="text/css">
+      @import url(/utdirect/system/css/utd_typography.css);
+      @import url(/utdirect/system/css/custom_utdirect.css);
+      
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f4f0;
+        margin: 0;
+        padding: 0;
+      }
+      
+      #login-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 100px auto;
+        background: white;
+        padding: 30px;
+        border: 1px solid #dfd2c4;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      
+      h1 {
+        color: #bf5700;
+        font-size: 24px;
+        text-align: center;
+        margin-bottom: 25px;
+      }
+      
+      .form-group {
+        margin-bottom: 15px;
+      }
+      
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #555;
+      }
+      
+      input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      
+      .btn-login {
+        width: 100%;
+        padding: 12px;
+        background-color: #bf5700;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      
+      .btn-login:hover {
+        background-color: #a64b00;
+      }
+      
+      #header {
+        background-color: #333;
+        height: 50px;
+        width: 100%;
+      }
+      
+      #footer {
+        text-align: center;
+        padding: 20px;
+        color: #888;
+        font-size: 12px;
+        border-top: 1px solid #eee;
+        margin-top: 50px;
+      }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h2>UTDirect Login</h2>
+<div id="header"></div>
 
-    <input type="text" id="username" placeholder="UT EID">
-    <input type="password" id="password" placeholder="Password">
+<div id="login-container">
+    <h1>UTDirect Login</h1>
+    
+    <div class="form-group">
+        <label for="username">UT EID</label>
+        <input type="text" id="username" placeholder="Enter your UT EID">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+    </div>
+    
+    <button class="btn-login" onclick="login()">Log In</button>
+    
+    <p style="font-size: 12px; color: #666; margin-top: 20px; text-align: center;">
+        Forgot your UT EID or password? <br>
+        <a href="#" style="color: #bf5700;">Get help logging in</a>
+    </p>
+</div>
 
-    <button onclick="login()">Login</button>
+<div id="footer">
+    © The University of Texas at Austin 2026
 </div>
 
 <script>
 function login() {
-    const user = document.getElementById("username").value;
+    const user = document.getElementById("username").value.trim();
     const pass = document.getElementById("password").value;
 
     if (user && pass) {
-        // simulate redirect after login
-        window.location.href = "utregisterbottesting.html";
+        // Redirect to the semester selection page
+        window.location.href = "utregpagechoice_testing.html";
     } else {
-        alert("Enter credentials");
+        alert("Please enter both UT EID and Password");
     }
 }
+
+// Allow Enter key to submit
+document.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        login();
+    }
+});
 </script>
 
 </body>
