@@ -1,639 +1,199 @@
-<html xmlns="http://www.w3.org/1999/xhtml" lang="EN"><head>
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-    
-    
-      <title>Registration</title>
-    
-    
-    <script language="javascript" type="text/javascript" src="/utdirect/system/utd_javascript.js"></script>
-    <script language="javascript" type="text/javascript" src="/utdirect/system/js/jquery-1.4.2.js"></script>
-    <script language="javascript" type="text/javascript" src="/utdirect/system/js/jquery.hint.js"></script>
-    <script language="javascript" type="text/javascript" src="/utdirect/system/js/utd.js"></script>
-    
-    
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="iso-8859-1">
+    <title>Registration</title>
     <style type="text/css">
-      @import url(/utdirect/system/css/utd_typography.css);
-      @import url(/utdirect/system/css/custom_utdirect.css);
-      @import url(/utdirect/system/css/utd_subnav.css);
-    
-    </style>
-    
-    
-    <link rel="stylesheet" href="/utdirect/system/css/utd_css_print.css" media="print">
-    
-    
-    <script language="JavaScript" type="text/javascript">
-    
-    
-    
-      function utd_load_a() {
-        utd_load();
-    
-      }
-    
-    
-      function utd_unload_a() {
-        utd_unload();
-    
-      }
-    </script>
-    
-    
-        <script language="JavaScript" type="text/javascript" src="jquery-1.3.2.min.js"></script>
-    
-        <script language="JavaScript" type="text/javascript" src="thickbox.js"></script>
-    
-        <script language="JavaScript" type="text/javascript" src="registration.js"></script>
-    
-    
-                  
-    
-    <script language="JavaScript" type="text/javascript">  // Here begin the Javascript functions
-                                                   //  Incorporated to fix IE5 crashes 
-                                                   //       while keeping same page layout
-                                                   
-    <!--  // hiding from old browsers 
-    var ie4 = (document.all && !document.getElementById) ? true : false;
-    var ns4 = (document.layers) ? true : false;
-    var ie5 = (document.all && document.getElementById) ? true : false;
-    var ns6 = (document.getElementById && !document.all) ? true : false;
-    var mac = (navigator.platform.indexOf("Mac") != -1) ? true : false;
-    var win = (navigator.platform.indexOf("Win") != -1) ? true  :false;
-    if (ie4 || ie5) {
-        document.domain = "utexas.edu";  
-    }
-    
-    
-    function feeBill() {                           
-      if (ns4) {
-            document.content.document.feebillform.submit();
-      } else{
-        document.feebillform.submit();
-      }
-    }
-    
-    /* nrkre added 07/12 */
-    function validateForm() {
-    /*  alert("testing");
-      var x=document.forms["confirmEmailAddress"]["ack_degr_plan"].checked; */
-      var ack_sw=document.getElementById("ack_sw").value;
-      var x=document.getElementById("ack_degr_plan").checked;
-    /*  alert(x); */
-      if (ack_sw == 'Y') {
-        if (x) {
-          ignore;
-        }else{
-          alert("Please acknowledge the Degree Plan Statement before proceeding");
-          return false;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #fff;
         }
-      } 
-    }
-                                          
-    
-    function searchCheck() {
-        // Mock search check for testing
-        return true;
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //-->
-    </script>
-        <link rel="stylesheet" type="text/css" href="regStyles.css" media="all">
-    
-        <link rel="stylesheet" type="text/css" href="thickbox.css" media="all">
-    
-    
-    </head>
-    
-    
-    <body class="minWidth" onload="utd_load_a();" onunload="utd_unload_a();">
-    <div id="skip"><a href="#main_content">Skip to Main Content</a></div> 
-    
-    
-      <div id="header"> <!-- HEADER -->
-        <div id="mainnavtext"> <!-- MAINNAVTEXT -->
-          <ul>
-              <li>
-                <a href="/utdirect/help/index.WBX?c=0" onclick="utd_openNPW('/utdirect/help/index.WBX?c=0','win','height=400,width=500,location=no,menubar=no,resizable=yes,scrollbars=yes,status=no,toolbar=no'); return false;">
-                  UT Direct Help
-                </a>
-              </li>
-              <li class="last_item">
-                <a href="/security-443/logoff.cgi?goto=http://www.utexas.edu">
-                  Logoff
-                </a>
-              </li>
-            <li class="last_item">
-              <a href="/utdirect/index.WBX?t=MYHOME" title="My Home Tab" accesskey="1">
-                <img alt="UT Direct Home" title="UT Direct Home" src="/utdirect/system/images/home.png">
-              </a>
-            </li>
-            <li class="last_item">
-              <a id="search_link" href="#">
-                <img alt="Search UT Direct" title="Search UT Direct" src="/utdirect/system/images/search.png">
-              </a>
-            </li>
-          </ul>
-        </div> <!-- MAINNAVTEXT CLOSE -->
-        <div id="search_display">   <!-- SEARCH_DISPLAY -->
-          <form name="utd_search" id="search_form" action="/utdirect/search/index.WBX" method="get">
-            <input type="hidden" name="s_component" value="0">
-            <input type="hidden" name="s_environment" value="PUTD">
-            <input type="hidden" name="s_security_flag" value="S">
-            
-            <label for="search_type" class="nodisplaytext">Select the type of search to perform:</label>
-            <select id="search_type" name="s_search_type">
-              <option value="SS">any word</option>
-              <option value="AW">all words</option>
-              <option value="EX">exact phrase</option>
-            </select>
-            
-            <label for="search_term" class="nodisplaytext">Enter a search term:</label>
-            <input id="search_term" type="text" name="input_srch_string" size="72" maxlength="126" title="You may search for a maximum of 7 words" value="">
-            <input type="submit" value="search">
-          </form>
-        </div>   <!-- SEARCH_DISPLAY CLOSE -->
-        <div id="header_bottom"> <!-- HEADER_BOTTOM -->
-        </div> <!-- HEADER_BOTTOM CLOSE -->
-    
-            <div id="ut_ribbon" onclick="location.href='http://www.utexas.edu';" style="cursor:pointer;" title="Link to University of Texas homepage">  <!-- UT_RIBBON -->
-            </div>  <!-- UT_RIBBON CLOSE -->
-    
-      </div>  <!-- HEADER CLOSE -->
-    
-    
-          <div id="navbar_ut_direct_logo" onclick="location.href='/utdirect/index.WBX';" style="cursor:pointer;" title="Link to UT Direct homepage">  <!-- NAVBAR_UT_DIRECT_LOGO -->
-          </div>
-    
-     
-      <div id="utd_container">  <!-- UTD_CONTAINER -->
-    
-         <div id="navbarFloat">  <!-- NAVBARFLOAT -->
-           <div id="navbarContainer">  <!-- NAVBARCONTAINER -->
-            <div id="navbar">  <!-- NAVBAR -->
-              <div id="navbar_menu">  <!-- NAVBAR_MENU -->
-                          
-                  <div id="navbar1" class="menu"> <!-- NAVBAR1 -->
-                    <h1>NAVIGATION MENU</h1>
-                      <ul>
-                               
-                                    <li>
-                                      <a href="index.html">
-                                        Home
-                                      </a>
-                                    </li>
-                                  
-                                <li>
-                                Course Schedule
-                              </li>
-                          
-                                <li class="secondary">
-                                <a href="https://utdirect.utexas.edu/apps/registrar/course_schedule/20269" target="_blank">
-                                  Fall 2026
-                                </a>
-                              </li>
-                               
-                                   <li>
-                                     <a href="/apps/studentfinancials/mytuitionbill/" target="_blank">
-                                       My Tuition Bill
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="../registrar/ris.WBX" target="_blank">
-                                       RIS page
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="../registration/optionalFees.WBX" target="_blank">
-                                       Optional Fees
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="../registrar/waitlist/wl_see_my_waitlists.WBX" target="_blank">
-                                       See My Waitlists
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="https://utdirect.utexas.edu/apps/reg/registration/cancel" target="_blank">
-                                       Cancel My Registration
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="http://registrar.utexas.edu/students/registration/during" target="_blank">
-                                       Registration Directions
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="https://registrar.utexas.edu/students/registration/during/waitlists" target="_blank">
-                                       Waitlist Directions
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="http://www.utexas.edu/student/registrar/registration#web" target="_blank">
-                                       Help
-                                     </a>
-                                   </li>
-                                  
-                             <li>
-                               <h2>Related links</h2>
-                             </li>
-                               
-                                   <li>
-                                     <a href="http://www.utexas.edu/student/registrar/" target="_blank">
-                                       Registrar
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="http://www.utexas.edu/student/admissions/" target="_blank">
-                                       Admissions
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="https://utdirect.utexas.edu/apps/degree/audits/" target="_blank">
-                                       IDA
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="http://www.utexas.edu/student/" target="_blank">
-                                       Student Affairs
-                                     </a>
-                                   </li>
-                               
-                                   <li>
-                                     <a href="http://www.utexas.edu/policies/privacy/" target="_blank">
-                                       Privacy Policy
-                                     </a>
-                                   </li>
-                            
-                              </ul>
-                      </div>  <!-- NAVBAR1 CLOSE -->           
-    
-                  </div>  <!-- NAVBAR_MENU CLOSE -->
-              </div>  <!-- NAVBAR CLOSE -->
-            </div>  <!-- NAVBARCONTAINER CLOSE -->
-            
-    
-              <div id="navbar_bottom">  <!-- NAVBAR_BOTTOM -->
-              </div>  <!-- NAVBAR_BOTTOM CLOSE -->
-    
-            
-          </div>  <!-- NAVBARFLOAT -->
-               
-            <div id="content">  <!-- CONTENT -->
-              <a name="main_content"></a>        
-          
-              <div id="utd_toppage">           <!-- UTD_TOPPAGE -->
-    
-            <div class="pageTitle noTabs"> <!-- PAGETITLE -->      
-          
-                    <div id="pgTitle"><h1>Registration for Fall 2026</h1></div>
-          
-                <div id="utilities"> <!-- UTILITIES -->
-                   
-                  </div> <!-- UTILITIES CLOSE -->
-    
-            </div> <!-- PAGETITLE CLOSE -->
-          
-          </div><!-- UTD_TOPPAGE CLOSE-->
-    
-        <div id="service_content"><div id="e_message">
-    </div>
-    <div id="regContent">
-      <div id="n_message">        
-    
-        <div>
-            <span class="notification">
-                Please select a registration action.
-            </span>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th {
+            background: #bf5700;
+            color: #fff;
+            padding: 6px;
+            text-align: left;
+        }
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+        }
+        .radio { width: 50px; }
+        .uniqueText { width: 150px; }
+        .transactionText { text-align: left; }
+        .classScheduleHeader { background: #f5f5f5; padding: 10px; }
+        .classScheduleUniqueHeader,
+        .classScheduleCourseHeader,
+        .classScheduleStatusHeader,
+        .classScheduleMeetingHeader,
+        .classScheduleTitleHeader { background: #bf5700; color: #fff; padding: 6px; }
+        .classScheduleUnique,
+        .classScheduleCourse,
+        .classScheduleStatus,
+        .classScheduleMeeting,
+        .classScheduleTitle { padding: 6px; border-bottom: 1px solid #ddd; }
+        .notification { font-weight: bold; padding: 10px; }
+        input[type="text"], select {
+            padding: 4px;
+            border: 1px solid #ccc;
+        }
+        input[type="submit"], input[type="button"] {
+            padding: 6px 16px;
+            background: #bf5700;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover, input[type="button"]:hover {
+            background: #a04900;
+        }
+        #n_message { margin-bottom: 15px; }
+        #message, #message2 { margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="skip"><a href="#main_content">Skip to Main Content</a></div>
+
+    <div id="content">
+        <a name="main_content"></a>
+
+        <div id="utd_toppage">
+            <div class="pageTitle noTabs">
+                <div id="pgTitle"><h1>Registration for Fall 2026</h1></div>
+                <div id="utilities"></div>
+            </div>
         </div>
-        <br>
-    
-       </div>
-    
-                
-    
-        <form action="utregisterbottesting.html" name="regform" id="regform" onsubmit="return searchCheck()">
-            
-            <a href="#" name="focus_point" id="focus_point">
-            <div id="message"></div>
-            <div id="message2"></div></a>            
-    
-            <input type="hidden" name="s_ccyys" id="s_ccyys" value="20269">
-            <input type="hidden" name="s_student_eid" value="">
-            <input type="hidden" name="s_nonce" value="A8F25B5DFD9E6D6A7565433797A1E36720EE8BA0">		
-    
-            <table width="100%" cellpadding="3">
-                <tbody><tr valign="bottom">
-                    <th class="radio">SELECT</th>
-                    <th class="uniqueText" nowrap="nowrap">UNIQUE NUMBER</th>
-                    <th class="transactionText">TRANSACTION</th>
-                </tr>
-    
-    <tr>                                                                
-        <td>
-            <input type="radio" name="s_request" id="ds_request_STADD" value="STADD" checked="checked">
-        </td>
-        <td>                                   
-            <input type="text" name="s_unique_add" id="s_unique_add" size="6" maxlength="5" value="">
-        </td>
-        <td class="transactionText">
-            REGISTER for or ADD
-        </td>
-    </tr>
-    
-                                         
-    <tr>
-        <td>
-            <input type="radio" name="s_request" id="s_request_STDRP" value="STDRP">
-        </td>          
-        <td>
-            <select name="s_unique_drop" id="s_unique_drop">
-    <option value=" ">Select unique to:</option>
-    
-    <option value="15790">15790</option>
-    
-    <option value="16055">16055</option>
-    
-    <option value="15720">15720</option>
-    
-    <option value="15750">15750</option>
-    
-    <option value="13642">13642</option>
-    
-    <option value="15715">15715</option>
-    
-                                                                                        
-            </select>
-        </td>
-        <td class="transactionText">
-            DROP
-        </td>
-    </tr>                                                          
-    
-    
-    <tr>
-        <td>
-            <input type="radio" name="s_request" id="s_request_STSWP" value="STSWP">
-        </td>
-        <td>
-            <select name="s_swap_unique_drop" id="s_swap_unique_drop">
-    <option value=" ">Select unique to:</option>
-    
-    <option value="15790">15790</option>
-    
-    <option value="16055">16055</option>
-    
-    <option value="15720">15720</option>
-    
-    <option value="15750">15750</option>
-    
-    <option value="13642">13642</option>
-    
-    <option value="15715">15715</option>
-    
-            
-            </select>
-        </td>
-        <td class="transactionText">                                                                           
-            DROP DEPENDENT
-                    UPON successfully ADDING <input type="text" name="s_swap_unique_add" id="s_swap_unique_add" value="" size="6" maxlength="5">
-        
-        </td>
-    </tr>
-    
-    
-    <tr>
-        <td>
-            <input type="radio" name="s_request" id="s_request_STCPF" value="STCPF">
-        </td>
-        <td>
-            <select name="s_unique_pass_fail" id="s_unique_pass_fail">
-    <option value=" ">Select unique to:</option>
-    
-    <option value="15790">15790</option>
-    
-    <option value="16055">16055</option>
-    
-    <option value="15720">15720</option>
-    
-    <option value="15750">15750</option>
-    
-    <option value="13642">13642</option>
-    
-    <option value="15715">15715</option>
-    
-            
-            </select>
-        </td>
-        <td class="transactionText">
-            CHANGE to or from PASS/FAIL or CREDIT/NO CREDIT basis
-        </td>
-    </tr>
-    
-    
-            </tbody></table>
-            <br>
-            <input type="submit" name="s_submit" value="Submit">
-            &nbsp;&nbsp;&nbsp;
-    
-            <input type="button" name="s_tuition" value="Estimate Tuition Bill" onclick="feeBill();">
-        </form>
-            
-        <br>
-        <br>
-        <br>
-    <table width="100%" style="margin-bottom: 1em;" id="courseScheduleTable">
-        <tbody><tr>
-            <th colspan="7" class="classScheduleHeader">
-                <span id="scheduleSummary">You are scheduled for 0 classes and 0 hours for Fall 2026</span>
-            </th>
-        </tr>
 
-        <tr>
-            <th class="classScheduleUniqueHeader">Unique</th>
-            <th class="classScheduleCourseHeader">Course</th>
-            <th class="classScheduleStatusHeader">Status</th>
-            <th class="classScheduleMeetingHeader" colspan="3">Meeting Information</th>
-            <th class="classScheduleTitleHeader">Title</th>
-        </tr>
+        <div id="service_content">
+            <div id="e_message"></div>
 
-        <tr id="emptyScheduleRow">
-            <td colspan="7" class="classScheduleUnique" style="text-align:center; padding: 2em 0; color: #888;">
-                No courses added yet. Use the form above to register courses.
-            </td>
-        </tr>
-    </tbody></table>
-    
-    
-    
-    
-    
-    
-      <a href="#TB_inline?width=75%&amp;height=200&amp;inlineId=hiddenModalContent" class="thickbox" style="font-size: 1.2em;">Check textbooks for
-       these courses
-      </a>
-    
-      <div id="hiddenModalContent" style="position:absolute;left:-9999em">
-        <p>You are leaving the UT-Austin Registrar website.</p>
-        <p>We encourage students to be smart consumers when shopping for their course materials.  There are many sources for them.  
-           Remember to plan ahead, do your research, and shop around for the best deals.</p>
-        <br>
-    
-        <p style="text-align:center">
-    
-          <input type="button" value="Confirm" onclick="window.open('https://academics.universitycoop.com/adoption-search?sn=20269__ASE__376K__15790%2C20269__COE__362__16055%2C20269__ASE__367K__15720%2C20269__ASE__374D__15750%2C20269__KIN__106C__13642%2C20269__ASE__166M__15715&amp;idelim=__');tb_remove()">
-        </p>
-      </div>
-    
-    
-    
-    
-    </div> <!-- regContent -->
-    
-    <form name="feebillform" action="utregisterbottesting.html" method="get"></form>
-    
-    <br><br><br>
-    
-    
-    
-    
-      </div> <!-- SERVICE_CONTENT -->
-     </div> <!-- CONTENT CLOSE  or  CONTENT_FULLPAGE CLOSE-->
-    </div> <!-- UTD_CONTAINER CLOSE -->
-    
-    
-    <div id="utd_close" class="#min_width_style">
-      
-      <!--div "footer_top" contains the departmental footer div and the site map divs -->
-      <div id="footer_top">
-      <div id="dept_footer">
-    
-    
-    <ul>
-    
-        <li class="first_item">Comments to: <a href="mailto:registration@austin.utexas.edu" onmouseover="status='Send us your comments.'; return true;" onmouseout="status=' '; return true;">Registration Team</a></li>
-    
-          <li class=""><a href="http://www.utexas.edu/student/registrar/" target="_blank" onmouseover="status='The Office of the Registrar'; return true;" onmouseout="status=' '; return true;">The Office of the Registrar</a></li>
-    
-        <li class="last_item">Last updated: 12/13/2005</li>
-    
-    </ul>
-    <div>
-    
-    </div><!-- close for legal notice -->
-    
-    
-      </div> <!-- close DEPT_FOOTER div -->
-    <div id="site_map">
-      <h3>Sitemap
-      <span class="pad10"></span></h3>
-      
-      <div id="site_map1">
-        <ul>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=ACADEMICS&amp;s_env=PUTD&amp;s_sf=S">Academics</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=ADMINISTRATIVEAPPLICATIONS&amp;s_env=PUTD&amp;s_sf=S">Administrative Applications</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=ADMISSIONS&amp;s_env=PUTD&amp;s_sf=S">Admissions</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=AROUNDCAMPUS&amp;s_env=PUTD&amp;s_sf=S">Around Campus</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=COLLEGES&amp;s_env=PUTD&amp;s_sf=S">Colleges, Schools and Academic Units</a></li>
-        </ul>
-      </div>
-      
-      <div id="site_map2">
-        <ul>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=COMPUTINGANDTECHNOLOGY&amp;s_env=PUTD&amp;s_sf=S">Computing and Technology</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=DIRECTORIESANDOFFICES&amp;s_env=PUTD&amp;s_sf=S">Directories and Offices</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=EMPLOYMENTANDCAREERS&amp;s_env=PUTD&amp;s_sf=S">Employment and Careers</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=FINANCES&amp;s_env=PUTD&amp;s_sf=S">Finances</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=GRADUATION&amp;s_env=PUTD&amp;s_sf=S">Graduation</a></li>
-        </ul>
-      </div>
-      
-      <div id="site_map3">
-        <ul>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=INSTRUCTION&amp;s_env=PUTD&amp;s_sf=S">Instruction</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=NEWS&amp;s_env=PUTD&amp;s_sf=S">News, Events and Calendars</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=PERSONALINFO&amp;s_env=PUTD&amp;s_sf=S">Personal Info</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=RESEARCH&amp;s_env=PUTD&amp;s_sf=S">Research</a></li>
-          <li><a href="/utdirect/sitemap/index.WBX?s_cin=WORKINGATUT&amp;s_env=PUTD&amp;s_sf=S">Working at UT</a></li>
-        </ul>
-      </div>
-      
-      <div id="ut_wordmark_footer" onclick="location.href='http://www.utexas.edu';" style="cursor:pointer;" title="Link to The University of Texas at Austin home page"><img src="/utdirect/system/images/ut_logo_footer.png" width="130" height="69" alt="the university of texas at austin"><br>
-                  <!-- The University of Texas at Austin
-                       1 University Station
-                       Austin, Texas  78712 -->
-                 
-      </div>
-    
-    </div><!-- close site_map div -->
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-      </div> <!-- close for footer_top -->
-    
-    
-    
-    <div id="footer_bottom" class="_bottom">
-      <!--div "footer_tower" is absolutely positioned on top of the "footer_top" and "footer_bottom"  
-      and contains the graphic with the wordmark and tower in the background-->
-      <div id="footer_tower"></div>
-      <div id="footer_ribbon" class="">
-    
-        <div id="ut_footer">
-    
-        <ul>
-    
-    
-            <li><a href="/security-443/logoff.cgi?goto=http://www.utexas.edu" target="_top" onmouseover="status='LOGOFF'; return true;" onmouseout="status=' '; return true;">Logoff</a></li>
-    
-        <li><a href="mailto:utd-stewards@utlists.utexas.edu" target="_top" onmouseover="status='Send a comment to the UT Direct team.'; return true;" onmouseout="status=' '; return true;">UT Direct Comments</a></li>
-        <li><a href="http://www.utexas.edu/web-privacy-policy" target="_blank" onmouseover="status='Read the UT Austin Web Privacy Policy.'; return true;" onmouseout="status=' '; return true;">Web Privacy Policy</a></li>
-        <li class="last_item"><a href="http://www.utexas.edu/web-accessibility-policy" target="_blank" accesskey="0">Web Accessibility</a></li>
-      </ul>
-    
-      <div id="ut_copyright">©<a href="http://www.utexas.edu" target="_blank" onmouseover="status='Go to the UT Home Page.'; return true;" onmouseout="status=' '; return true;">The University of Texas at Austin</a> 2019</div>
-    
-      </div> <!-- close ut_footer -->
-    </div> <!-- close footer_ribbon -->
-    </div> <!-- close footer_bottom -->
-    
-    </div> <!-- utd_close --> 
-    
-      
-    
+            <div id="regContent">
+                <div id="n_message">
+                    <div>
+                        <span class="notification">Please select a registration action.</span>
+                    </div>
+                    <br>
+                </div>
+
+                <form action="utregisterbottesting.html" name="regform" id="regform" method="get">
+
+                    <a href="#" name="focus_point" id="focus_point"></a>
+                    <div id="message"></div>
+                    <div id="message2"></div>
+
+                    <input type="hidden" name="s_ccyys" id="s_ccyys" value="20269">
+                    <input type="hidden" name="s_student_eid" id="s_student_eid" value="">
+
+                    <table width="100%" cellpadding="3">
+                        <tbody>
+                            <tr valign="bottom">
+                                <th class="radio">SELECT</th>
+                                <th class="uniqueText" nowrap="nowrap">UNIQUE NUMBER</th>
+                                <th class="transactionText">TRANSACTION</th>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <input type="radio" name="s_request" id="ds_request_STADD" value="STADD" checked="checked">
+                                </td>
+                                <td>
+                                    <input type="text" name="s_unique_add" id="s_unique_add" size="6" maxlength="5" value="">
+                                </td>
+                                <td class="transactionText">
+                                    REGISTER for or ADD
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <input type="radio" name="s_request" id="s_request_STDRP" value="STDRP">
+                                </td>
+                                <td>
+                                    <select name="s_unique_drop" id="s_unique_drop">
+                                        <option value=" ">Select unique to:</option>
+                                    </select>
+                                </td>
+                                <td class="transactionText">
+                                    DROP
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <input type="radio" name="s_request" id="s_request_STSWP" value="STSWP">
+                                </td>
+                                <td>
+                                    <select name="s_swap_unique_drop" id="s_swap_unique_drop">
+                                        <option value=" ">Select unique to:</option>
+                                    </select>
+                                </td>
+                                <td class="transactionText">
+                                    DROP DEPENDENT UPON successfully ADDING
+                                    <input type="text" name="s_swap_unique_add" id="s_swap_unique_add" value="" size="6" maxlength="5">
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <input type="radio" name="s_request" id="s_request_STCPF" value="STCPF">
+                                </td>
+                                <td>
+                                    <select name="s_unique_pass_fail" id="s_unique_pass_fail">
+                                        <option value=" ">Select unique to:</option>
+                                    </select>
+                                </td>
+                                <td class="transactionText">
+                                    CHANGE to or from PASS/FAIL or CREDIT/NO CREDIT basis
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <br>
+                    <input type="submit" name="s_submit" id="s_submit" value="Submit">
+                    &nbsp;&nbsp;&nbsp;
+                    <input type="button" name="s_tuition" id="s_tuition" value="Estimate Tuition Bill">
+                </form>
+
+                <br><br><br>
+
+                <table width="100%" style="margin-bottom: 1em;" id="courseScheduleTable">
+                    <tbody>
+                        <tr>
+                            <th colspan="7" class="classScheduleHeader">
+                                <span id="scheduleSummary">You are scheduled for 0 classes and 0 hours for Fall 2026</span>
+                            </th>
+                        </tr>
+
+                        <tr>
+                            <th class="classScheduleUniqueHeader">Unique</th>
+                            <th class="classScheduleCourseHeader">Course</th>
+                            <th class="classScheduleStatusHeader">Status</th>
+                            <th class="classScheduleMeetingHeader" colspan="3">Meeting Information</th>
+                            <th class="classScheduleTitleHeader">Title</th>
+                        </tr>
+
+                        <tr id="emptyScheduleRow">
+                            <td colspan="7" class="classScheduleUnique" style="text-align:center; padding: 2em 0; color: #888;">
+                                No courses added yet. Use the form above to register courses.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
     <script type="text/javascript">
-        // Course registry for testing
         var registeredCourses = [];
 
-        // Mock course database for testing display
         var courseDatabase = {
             '15790': { course: 'ASE 376K', title: 'PROPULSION', days: 'MWF', time: '11:00-12:00', room: 'ECJ 1.202', hours: 3 },
             '16055': { course: 'COE 362', title: 'ENGR PROBABILITY AND STATS', days: 'MW', time: '12:30-2:00P', room: 'ASE 2.134', hours: 3 },
@@ -643,18 +203,18 @@
             '15715': { course: 'ASE 166M', title: 'SPACECRAFT SYSTEMS LABORATORY', days: 'M/F', time: '3:30-5:00P', room: 'ECJ 1.314', hours: 1 }
         };
 
-        function searchCheck() {
+        document.getElementById('regform').addEventListener('submit', function(e) {
+            e.preventDefault();
+
             var uniqueAdd = document.getElementById('s_unique_add').value.trim();
             var requestType = document.querySelector('input[name="s_request"]:checked').value;
 
             if (requestType === 'STADD' && uniqueAdd) {
-                // Check if course already registered
                 if (registeredCourses.includes(uniqueAdd)) {
                     document.getElementById('message').innerHTML = '<span class="notification" style="color: red;">Course already registered.</span>';
-                    return false;
+                    return;
                 }
 
-                // Add course if it exists in database
                 if (courseDatabase[uniqueAdd]) {
                     registeredCourses.push(uniqueAdd);
                     updateScheduleTable();
@@ -676,22 +236,18 @@
                     }
                 }
             }
-
-            return false; // Prevent actual form submission
-        }
+        });
 
         function updateScheduleTable() {
             var table = document.getElementById('courseScheduleTable');
             var tbody = table.getElementsByTagName('tbody')[0];
             var summary = document.getElementById('scheduleSummary');
 
-            // Clear existing course rows (keep header rows)
             var emptyRow = document.getElementById('emptyScheduleRow');
             if (emptyRow) {
                 emptyRow.remove();
             }
 
-            // Remove all course data rows
             var rows = tbody.getElementsByTagName('tr');
             while (rows.length > 2) {
                 tbody.deleteRow(2);
@@ -699,7 +255,6 @@
             }
 
             if (registeredCourses.length === 0) {
-                // Show empty state
                 var newRow = tbody.insertRow();
                 newRow.id = 'emptyScheduleRow';
                 var cell = newRow.insertCell();
@@ -711,10 +266,8 @@
                 cell.textContent = 'No courses added yet. Use the form above to register courses.';
                 summary.textContent = 'You are scheduled for 0 classes and 0 hours for Fall 2026';
             } else {
-                // Calculate total hours
                 var totalHours = 0;
 
-                // Add each registered course
                 registeredCourses.forEach(function(unique) {
                     var course = courseDatabase[unique];
                     if (course) {
@@ -734,17 +287,14 @@
                 summary.textContent = 'You are scheduled for ' + registeredCourses.length + ' classes and ' + totalHours + ' hours for Fall 2026';
             }
 
-            // Update dropdown options to reflect registered courses
             var dropSelect = document.getElementById('s_unique_drop');
             var swapSelect = document.getElementById('s_swap_unique_drop');
             var pfSelect = document.getElementById('s_unique_pass_fail');
 
             [dropSelect, swapSelect, pfSelect].forEach(function(select) {
-                // Keep first option, clear rest
                 while (select.options.length > 1) {
                     select.remove(1);
                 }
-                // Add registered courses
                 registeredCourses.forEach(function(unique) {
                     var option = document.createElement('option');
                     option.value = unique;
@@ -755,4 +305,5 @@
         }
     </script>
 
-    </body></html>
+</body>
+</html>
