@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Les Bleus — 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=EB+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0c2752;
+      --gold: #f0e0a0;
+      --gold-soft: rgba(240, 224, 160, 0.75);
+      --gold-dim: rgba(240, 224, 160, 0.18);
+      --gold-glow: rgba(240, 224, 160, 0.06);
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background-color: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+      position: relative;
+    }
+
+    /* Subtle noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Radial vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(4, 12, 30, 0.7) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Decorative top rule */
+    .rule-top, .rule-bottom {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
+      z-index: 1;
+      opacity: 0;
+      animation: fadeRule 1.5s ease forwards;
+    }
+    .rule-top {
+      top: 0;
+      height: 120px;
+      animation-delay: 0.3s;
+    }
+    .rule-bottom {
+      bottom: 0;
+      height: 120px;
+      animation-delay: 0.4s;
+    }
+
+    .rule-h-top, .rule-h-bottom {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-dim) 30%, var(--gold-dim) 70%, transparent);
+      z-index: 1;
+      opacity: 0;
+      animation: fadeRule 1.5s ease forwards;
+    }
+    .rule-h-bottom {
+      top: auto;
+      bottom: 0;
+      animation-delay: 0.2s;
+    }
+
+    @keyframes fadeRule {
+      to { opacity: 1; }
+    }
+
+    /* Main container */
+    .stage {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      padding: 40px 48px;
+      max-width: 780px;
+      text-align: center;
+    }
+
+    /* Logo placeholder */
+    .logo-slot {
+      width: 120px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      opacity: 0;
+      transform: scale(0.85);
+      animation: logoReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+    }
+
+    .logo-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .logo-placeholder-text {
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      opacity: 0.5;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    @keyframes logoReveal {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Eyebrow label */
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      opacity: 0;
+      animation: fadeUp 1s ease 0.8s forwards;
+      font-weight: 300;
+    }
+
+    /* Main text */
+    .declaration {
+      font-size: clamp(22px, 3.2vw, 36px);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--gold);
+      line-height: 1.72;
+      letter-spacing: 0.01em;
+      min-height: 3.2em;
+      position: relative;
+    }
+
+    .declaration .typed-text {
+      display: inline;
+    }
+
+    /* Cursor */
+    .cursor {
+      display: inline-block;
+      width: 1.5px;
+      height: 1em;
+      background: var(--gold);
+      margin-left: 3px;
+      vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+      opacity: 1;
+      transform: translateY(-0.06em);
+    }
+
+    .cursor.done {
+      animation: cursorFade 0.8s ease 1.6s forwards;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    @keyframes cursorFade {
+      to { opacity: 0; }
+    }
+
+    /* URL line */
+    .url-line {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(16px, 1.5vw, 18px);
+      font-weight: 300;
+      font-style: normal;
+      letter-spacing: 0.12em;
+      color: var(--gold-soft);
+      opacity: 0;
+      animation: fadeUp 1s ease forwards;
+      animation-play-state: paused;
+    }
+    .signature {
+      font-size: 13px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      opacity: 0;
+      animation: fadeUp 1s ease forwards;
+      animation-play-state: paused;
+      font-weight: 300;
+    }
+
+    /* Corner ornaments */
+    .corner {
+      position: fixed;
+      width: 36px;
+      height: 36px;
+      z-index: 2;
+      opacity: 0;
+      animation: fadeRule 2s ease 1s forwards;
+    }
+    .corner svg { width: 100%; height: 100%; }
+    .corner.tl { top: 28px; left: 28px; }
+    .corner.tr { top: 28px; right: 28px; transform: scaleX(-1); }
+    .corner.bl { bottom: 28px; left: 28px; transform: scaleY(-1); }
+    .corner.br { bottom: 28px; right: 28px; transform: scale(-1); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glow pulse on text once done */
+    @keyframes goldGlow {
+      0%, 100% { text-shadow: 0 0 40px rgba(240, 224, 160, 0.0); }
+      50% { text-shadow: 0 0 60px rgba(240, 224, 160, 0.12), 0 0 120px rgba(240, 224, 160, 0.05); }
+    }
+
+    .declaration.glow-active {
+      animation: goldGlow 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Structural rules -->
+  <div class="rule-top"></div>
+  <div class="rule-bottom"></div>
+  <div class="rule-h-top"></div>
+  <div class="rule-h-bottom"></div>
+
+  <!-- Corner ornaments -->
+  <div class="corner tl">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
+      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
+    </svg>
+  </div>
+  <div class="corner tr">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
+      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
+    </svg>
+  </div>
+  <div class="corner bl">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
+      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
+    </svg>
+  </div>
+  <div class="corner br">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
+      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
+    </svg>
+  </div>
+
+  <!-- Main content -->
+  <div class="stage">
+
+    <div class="logo-slot" id="logoSlot">
+      <img src="https://www.dulran.com/logofiles/crestlogomedium.png" alt="Les Bleus" />
+    </div>
+
+    <span class="eyebrow">FIFA World Cup 2026</span>
+
+    <p class="declaration" id="declaration">
+      <span class="typed-text" id="typedText"></span><span class="cursor" id="cursor"></span>
+    </p>
+
+    <span class="url-line" id="urlLine">dulran.com/fifa</span>
+
+    <span class="signature" id="signature">Allez les Bleus &nbsp;·&nbsp; Since 2018</span>
+
+  </div>
+
+  <script>
+    const message = "Je réaffirme par la présente mon soutien aux Bleus pour la Coupe du Monde de la FIFA 2026, comme je le fais depuis 2018.";
+    const typedEl = document.getElementById('typedText');
+    const cursor  = document.getElementById('cursor');
+    const sigEl   = document.getElementById('signature');
+    const urlEl   = document.getElementById('urlLine');
+    const declEl  = document.getElementById('declaration');
+
+    const START_DELAY  = 1400;
+    const CHAR_SPEED   = 46;
+    const VARIANCE     = 18;
+
+    let i = 0;
+
+    function typeNext() {
+      if (i < message.length) {
+        typedEl.textContent += message[i];
+        i++;
+        const delay = CHAR_SPEED + (Math.random() * VARIANCE * 2 - VARIANCE);
+        const ch = message[i - 1];
+        const extra = (ch === ',' || ch === '.') ? 180 : 0;
+        setTimeout(typeNext, delay + extra);
+      } else {
+        cursor.classList.add('done');
+        declEl.classList.add('glow-active');
+        sigEl.style.animationPlayState = 'running';
+        urlEl.style.animationPlayState = 'running';
+      }
+    }
+
+    setTimeout(typeNext, START_DELAY);
+  </script>
+</body>
+</html>
