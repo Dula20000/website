@@ -117,8 +117,6 @@
     .logo-slot {
       width: 120px;
       height: 120px;
-      border: 1.5px solid var(--gold-dim);
-      border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -127,21 +125,11 @@
       opacity: 0;
       transform: scale(0.85);
       animation: logoReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
-      background: radial-gradient(ellipse at center, rgba(240,224,160,0.05) 0%, transparent 70%);
-      position: relative;
-    }
-
-    .logo-slot::before {
-      content: '';
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 1px solid var(--gold-glow);
     }
 
     .logo-slot img {
-      width: 80%;
-      height: 80%;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
     }
 
@@ -297,12 +285,8 @@
   <!-- Main content -->
   <div class="stage">
 
-    <!-- Logo placeholder: replace the inner content with an <img> tag pointing to your logo -->
     <div class="logo-slot" id="logoSlot">
-      <!-- TO USE: replace everything inside this div with:
-           <img src="YOUR_LOGO_PATH.png" alt="Les Bleus" />
-      -->
-      <span class="logo-placeholder-text">Place<br>Logo<br>Here</span>
+      <img src="https://www.dulran.com/logofiles/crestlogomedium.png" alt="Les Bleus" />
     </div>
 
     <span class="eyebrow">FIFA World Cup 2026</span>
@@ -322,10 +306,9 @@
     const sigEl   = document.getElementById('signature');
     const declEl  = document.getElementById('declaration');
 
-    // Delay before typing starts (let logo + eyebrow settle)
-    const START_DELAY  = 1400; // ms
-    const CHAR_SPEED   = 46;   // ms per character
-    const VARIANCE     = 18;   // random variance ±ms
+    const START_DELAY  = 1400;
+    const CHAR_SPEED   = 46;
+    const VARIANCE     = 18;
 
     let i = 0;
 
@@ -334,15 +317,12 @@
         typedEl.textContent += message[i];
         i++;
         const delay = CHAR_SPEED + (Math.random() * VARIANCE * 2 - VARIANCE);
-        // Slight pause after punctuation
         const ch = message[i - 1];
         const extra = (ch === ',' || ch === '.') ? 180 : 0;
         setTimeout(typeNext, delay + extra);
       } else {
-        // Typing done
         cursor.classList.add('done');
         declEl.classList.add('glow-active');
-        // Reveal signature
         sigEl.style.animationPlayState = 'running';
       }
     }
