@@ -181,7 +181,7 @@ if (!localStorage.getItem("animationPlayed")) {
   });
 
   animation.addEventListener("complete", () => {
-    localStorage.setItem("animationPlayed", "true");// this should be true if I want the loading screen to show up once for the same computer but
+    localStorage.setItem("animationPlayed", "false");// this should be true if I want the loading screen to show up once for the same computer but
     //but I set it equal to flase for now so i can see the logo showing up
     
     const animDiv = document.getElementById("animation");
