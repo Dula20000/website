@@ -39,18 +39,21 @@ body, html {
   position: relative;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 30s ease;
+  transition: opacity 0.7s ease;
+  isolation: isolate;
 }
 
 /* CANVAS BACKGROUND */
 #canvas {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
 }
 
 /* TEXT GROUP */
 .hero {
+  position: relative;
+  z-index: 1;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -101,6 +104,7 @@ body, html {
   left: 0;
   width: 100%;
   height: 100%;
+  background: black;
   pointer-events: none; /* lets user interact with page below */
   z-index: 9999;
 }
@@ -159,9 +163,13 @@ function reveal() {
   window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
 }
 
+window.revealHomeContent = reveal;
 
-// Safety fallback (1 sec)
-setTimeout(reveal, 1000);
+if (window.homeIntroReadyToReveal) {
+  reveal();
+} else if (localStorage.getItem("animationPlayed")) {
+  setTimeout(reveal, 1000);
+}
 </script>
 <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
 <script>
@@ -169,6 +177,14 @@ setTimeout(reveal, 1000);
 //very important line
 //localStorage.removeItem("animationPlayed"); // comment this line if you dont want to loop
 //VVIP line
+
+function revealAfterIntro() {
+  window.homeIntroReadyToReveal = true;
+
+  if (window.revealHomeContent) {
+    window.revealHomeContent();
+  }
+}
 
 if (!localStorage.getItem("animationPlayed")) {
 
@@ -190,11 +206,13 @@ if (!localStorage.getItem("animationPlayed")) {
   
     setTimeout(() => {
       animDiv.remove();
+      revealAfterIntro();
     }, 800);
  });//hiding the animation and removing the layer after one loop
 
 } else {
   document.getElementById("animation").style.display = "none";
+  revealAfterIntro();
 }
 
 </script>
@@ -214,5 +232,4 @@ if (!localStorage.getItem("animationPlayed")) {
 </style>
 
 <!-- MAIN CONTENT SECTION -->
-
 
