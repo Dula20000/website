@@ -101,6 +101,7 @@ body, html {
   left: 0;
   width: 100%;
   height: 100%;
+  background: black;
   pointer-events: none; /* lets user interact with page below */
   z-index: 9999;
 }
@@ -184,9 +185,16 @@ function reveal() {
   window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
 }
 
+window.revealHomeContent = reveal;
 
-// Safety fallback (1 sec)
-setTimeout(reveal, 1000);
+const storedIntroCount = Number.parseInt(localStorage.getItem("animationPlayCount"), 10);
+const introWillPlay = Number.isNaN(storedIntroCount) || storedIntroCount < 5;
+
+if (window.homeIntroReadyToReveal) {
+  reveal();
+} else if (!introWillPlay) {
+  setTimeout(reveal, 1000);
+}
 </script>
 <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
 <script>
@@ -218,6 +226,14 @@ function showIntroNotice() {
   }, 3300);
 }
 
+function revealAfterIntro() {
+  window.homeIntroReadyToReveal = true;
+
+  if (window.revealHomeContent) {
+    window.revealHomeContent();
+  }
+}
+
 const introPlayCount = getIntroPlayCount();
 
 if (introPlayCount < maxIntroPlays) {
@@ -238,11 +254,13 @@ if (introPlayCount < maxIntroPlays) {
   
     setTimeout(() => {
       animDiv.remove();
+      revealAfterIntro();
     }, 800);
  });//hiding the animation and removing the layer after one loop
 
 } else {
   document.getElementById("animation").style.display = "none";
+  revealAfterIntro();
   showIntroNotice();
 }
 
