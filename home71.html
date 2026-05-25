@@ -39,18 +39,21 @@ body, html {
   position: relative;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 30s ease;
+  transition: opacity 0.7s ease;
+  isolation: isolate;
 }
 
 /* CANVAS BACKGROUND */
 #canvas {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
 }
 
 /* TEXT GROUP */
 .hero {
+  position: relative;
+  z-index: 1;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -199,7 +202,7 @@ if (window.homeIntroReadyToReveal) {
 <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
 <script>
 
-const maxIntroPlays = 5;
+const maxIntroPlays = 500;
 const introPlayCountKey = "animationPlayCount";
 
 function getIntroPlayCount() {
