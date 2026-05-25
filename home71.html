@@ -104,6 +104,31 @@ body, html {
   pointer-events: none; /* lets user interact with page below */
   z-index: 9999;
 }
+
+#introNotice {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  max-width: min(320px, calc(100vw - 36px));
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(8, 8, 10, 0.78);
+  color: rgba(255, 255, 255, 0.74);
+  font: 12px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+#introNotice.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 </style>
 </head>
 
@@ -166,24 +191,47 @@ setTimeout(reveal, 1000);
 <script src="https://unpkg.com/lottie-web@latest/build/player/lottie.min.js"></script>
 <script>
 
-//very important line
-localStorage.removeItem("animationPlayed"); // comment this line if you dont want to loop
-//VVIP line
+const maxIntroPlays = 5;
+const introPlayCountKey = "animationPlayCount";
 
-if (!localStorage.getItem("animationPlayed")) {
+function getIntroPlayCount() {
+  const storedCount = Number.parseInt(localStorage.getItem(introPlayCountKey), 10);
+  return Number.isNaN(storedCount) ? 0 : storedCount;
+}
+
+function showIntroNotice() {
+  const notice = document.createElement("div");
+  notice.id = "introNotice";
+  notice.textContent = "Intro Animation No Longer Played. Maximum Replays (5) Reached";
+  document.body.appendChild(notice);
+
+  requestAnimationFrame(() => {
+    notice.classList.add("visible");
+  });
+
+  setTimeout(() => {
+    notice.classList.remove("visible");
+  }, 2800);
+
+  setTimeout(() => {
+    notice.remove();
+  }, 3300);
+}
+
+const introPlayCount = getIntroPlayCount();
+
+if (introPlayCount < maxIntroPlays) {
+  localStorage.setItem(introPlayCountKey, String(introPlayCount + 1));
 
   const animation = lottie.loadAnimation({
     container: document.getElementById("animation"),
     renderer: "svg",
-    loop: true,//play only once for false, multiple for true
+    loop: false,//play only once for false, multiple for true
     autoplay: true,
     path: "https://dulran.com/Logo-5-remixver2.json"// path to the json file for the animation
   });
 
   animation.addEventListener("complete", () => {
-    localStorage.setItem("animationPlayed", "false");// this should be true if I want the loading screen to show up only once for the same computer but
-    //but I set it equal to flase for now so i can see the logo showing up
-    
     const animDiv = document.getElementById("animation");
     animDiv.style.transition = "opacity 0.8s ease";
     animDiv.style.opacity = "0";
@@ -195,6 +243,7 @@ if (!localStorage.getItem("animationPlayed")) {
 
 } else {
   document.getElementById("animation").style.display = "none";
+  showIntroNotice();
 }
 
 </script>
@@ -214,6 +263,3 @@ if (!localStorage.getItem("animationPlayed")) {
 </style>
 
 <!-- MAIN CONTENT SECTION -->
-
-
-
