@@ -153,6 +153,31 @@
     color: var(--cream);
   }
   .brand b { color: var(--gold); font-weight: 700; }
+
+  /* centered "Home" link — absolutely centered so it stays on the page's
+     midline regardless of how wide the brand / status are */
+  .home-wrap {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+  .home {
+    position: relative; display: inline-block;
+    font-family: var(--font-sans);
+    font-weight: 600; font-size: 0.72rem;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--cream); text-decoration: none;
+    padding: 6px 2px;
+    transition: color .4s ease;
+  }
+  .home::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+    height: 1px; transform: scaleX(0); transform-origin: center;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transition: transform .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .home:hover, .home:focus-visible { color: var(--gold-bright); }
+  .home:hover::after, .home:focus-visible::after { transform: scaleX(1); }
   .status {
     display: inline-flex; align-items: center; gap: 9px;
     font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
@@ -360,6 +385,7 @@
     <!-- top bar -->
     <header class="topbar">
       <div class="brand reveal" style="--d:80ms">CHINA <b>·</b> 2026</div>
+      <nav class="home-wrap"><a class="home reveal" style="--d:120ms" href="https://dulran.com/home72.html">Home</a></nav>
       <div class="status reveal" style="--d:160ms">
         <span class="dot"></span><span class="t">In progress</span>
       </div>
@@ -373,10 +399,10 @@
         <h1 class="headline reveal" style="--d:320ms">Still <em>developing.</em></h1>
 
         <p class="subtext reveal" style="--d:520ms">
-          I haven't made it yet gng.&nbsp; come back later.
+          I still haven't made it yet, gng&nbsp;— come back later.
         </p>
         <p class="micro reveal" style="--d:640ms">
-          The photos &amp; the full China & Taiwan story drop June&nbsp;25.
+          The photos &amp; the full China story drop June&nbsp;25.
         </p>
 
         <!-- live countdown -->
@@ -394,6 +420,11 @@
       </div>
     </main>
 
+    <!-- footer -->
+    <footer class="footer">
+      <span class="sig reveal" style="--d:1040ms">— Made between flights</span>
+      <span class="reveal" style="--d:1100ms">Crafted in sapphire &amp; gold</span>
+    </footer>
   </div>
 
 <script>
@@ -434,9 +465,5 @@
     tick();
   })();
 </script>
-  <!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
-<script src="https://dulran.com/tracker.js"></script>
-<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
-
 </body>
 </html>
