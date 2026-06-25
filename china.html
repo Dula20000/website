@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>China · Coming June 25, 2026</title>
+<meta name="description" content="A China travel journal — still developing. Photos and the full story arrive June 25, 2026." />
+<meta name="theme-color" content="#07111f" />
+
+<!-- Fonts: preconnect for a snappy first paint, display=swap so text never blocks render -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* ============================================================
+     PALETTE — Chase Sapphire Reserve inspired
+     Deep sapphire navy + metallic gold, warm cream text
+     ============================================================ */
+  :root {
+    --navy-900: #07111f;   /* deepest sapphire, near black */
+    --navy-800: #0a1a2e;
+    --navy-700: #0e2540;   /* signature sapphire */
+    --navy-600: #143256;
+    --ink:      #04090f;    /* vignette edges */
+
+    --gold:        #c6a15b; /* primary metallic accent */
+    --gold-bright: #e7cd8e; /* highlight / shimmer */
+    --gold-deep:   #9a7b3f;
+
+    --cream: #f4efe6;       /* warm off-white, headline */
+    --text:  #e8edf4;       /* cool near-white body */
+    --muted: #93a2b8;       /* cool gray-blue, secondary */
+    --line:  rgba(198, 161, 91, 0.26); /* gold hairline */
+
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-sans: "Inter", "Open Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+
+    /* ============================================================
+       HEADER PHOTO  →  paste your China photo URL between the quotes.
+       Works with a web link OR a local file dropped in this folder,
+       e.g.  url("great-wall.jpg")
+       Leave as none and the gold line-art placeholder stands in.
+       ============================================================ */
+    --hero-photo: url("https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/1280px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg");
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--navy-900);
+    min-height: 100svh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---------- Stage / background layers -------------------------------- */
+  .stage {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  /* Sapphire gradient — instant, no network, "stone catching light" */
+  .bg-gradient {
+    position: absolute; inset: 0; z-index: -5;
+    background:
+      radial-gradient(120% 90% at 78% 8%, rgba(198,161,91,0.16), rgba(198,161,91,0) 46%),
+      radial-gradient(110% 80% at 14% 100%, rgba(20,50,86,0.55), rgba(20,50,86,0) 55%),
+      linear-gradient(155deg, #0c2140 0%, #0a1a2e 42%, #07111f 100%);
+  }
+
+  /* Swappable user photo — only appears when --hero-photo is set */
+  .bg-photo {
+    position: absolute; inset: 0; z-index: -4;
+    background-image: var(--hero-photo);
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+    animation: photoDrift 38s ease-in-out infinite alternate;
+  }
+  /* photo is the full backdrop, edge to edge */
+  body.has-photo .bg-photo { opacity: 1; }
+  /* soft scrim: vivid photo, but a dark halo keeps centered text readable */
+  body.has-photo .bg-photo::after {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(100% 78% at 50% 48%, rgba(5,11,20,0.50), rgba(5,11,20,0) 72%),
+      linear-gradient(180deg, rgba(5,11,20,0.34) 0%, rgba(5,11,20,0.28) 42%, rgba(5,11,20,0.66) 100%);
+  }
+  /* when a photo is present, retire the placeholder line-art + watermark
+     so nothing competes with it (they return automatically if you remove the photo) */
+  body.has-photo .bg-art,
+  body.has-photo .watermark { display: none; }
+  /* extra insurance that text stays crisp over any photo */
+  body.has-photo .kicker,
+  body.has-photo .headline,
+  body.has-photo .subtext,
+  body.has-photo .micro,
+  body.has-photo .footer,
+  body.has-photo .topbar { text-shadow: 0 2px 18px rgba(3,7,14,0.55); }
+
+  /* Gold line-art horizon: mountains + pagoda (decorative placeholder) */
+  .bg-art {
+    position: absolute; left: 50%; bottom: -2%;
+    width: min(1500px, 150%); transform: translateX(-50%);
+    z-index: -3; opacity: 0.5; pointer-events: none;
+    animation: drift 46s ease-in-out infinite alternate;
+  }
+  .bg-art path, .bg-art line { vector-effect: non-scaling-stroke; }
+
+  /* Faint 旅 ("journey") watermark — editorial detail */
+  .watermark {
+    position: absolute; z-index: -3; right: 3vw; top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-display);
+    font-size: min(54vh, 40vw);
+    line-height: 1; font-weight: 500;
+    color: rgba(198,161,91,0.055);
+    user-select: none; pointer-events: none;
+  }
+
+  /* Film grain + vignette for depth */
+  .grain {
+    position: absolute; inset: 0; z-index: -2; pointer-events: none;
+    opacity: 0.5; mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .vignette {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(125% 120% at 50% 36%, transparent 52%, rgba(4,9,15,0.72) 100%);
+  }
+
+  /* ---------- Top bar -------------------------------------------------- */
+  .topbar {
+    position: relative;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: clamp(20px, 4vw, 40px) clamp(22px, 6vw, 72px);
+  }
+  .brand {
+    font-family: var(--font-sans);
+    font-weight: 600; font-size: 0.82rem;
+    letter-spacing: 0.34em; text-transform: uppercase;
+    color: var(--cream);
+  }
+  .brand b { color: var(--gold); font-weight: 700; }
+
+  /* centered "Home" link — absolutely centered so it stays on the page's
+     midline regardless of how wide the brand / status are */
+  .home-wrap {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+  .home {
+    position: relative; display: inline-block;
+    font-family: var(--font-sans);
+    font-weight: 600; font-size: 0.72rem;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--cream); text-decoration: none;
+    padding: 6px 2px;
+    transition: color .4s ease;
+  }
+  .home::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+    height: 1px; transform: scaleX(0); transform-origin: center;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transition: transform .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .home:hover, .home:focus-visible { color: var(--gold-bright); }
+  .home:hover::after, .home:focus-visible::after { transform: scaleX(1); }
+  .status {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .status .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gold-bright);
+    box-shadow: 0 0 0 0 rgba(231,205,142,0.6);
+    animation: pulse 2.6s ease-out infinite;
+  }
+
+  /* ---------- Hero ----------------------------------------------------- */
+  .hero {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: center; text-align: center;
+    padding: 4vh clamp(22px, 6vw, 72px) 2vh;
+  }
+  .inner { width: 100%; max-width: 880px; }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 16px;
+    font-size: clamp(0.62rem, 1.6vw, 0.76rem);
+    letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--gold); font-weight: 500;
+    margin-bottom: clamp(22px, 4vh, 38px);
+  }
+  .kicker::before, .kicker::after {
+    content: ""; width: clamp(26px, 7vw, 64px); height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .headline {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(3.4rem, 13vw, 8.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.015em;
+    color: var(--cream);
+  }
+  .headline em {
+    font-style: italic;
+    font-weight: 500;
+    background: linear-gradient(92deg, var(--gold-deep), var(--gold-bright) 45%, var(--gold) 70%, var(--gold-bright));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    background-size: 220% auto;
+    animation: shimmer 6.5s linear infinite;
+  }
+
+  .subtext {
+    margin: clamp(22px, 4vh, 34px) auto 0;
+    max-width: 30ch;
+    font-size: clamp(1.05rem, 2.6vw, 1.4rem);
+    line-height: 1.5; color: var(--text);
+    font-weight: 400;
+  }
+  .micro {
+    margin-top: 14px;
+    font-size: clamp(0.78rem, 2vw, 0.9rem);
+    letter-spacing: 0.02em; color: var(--muted);
+  }
+
+  /* ---------- Countdown ------------------------------------------------ */
+  .countdown {
+    display: flex; justify-content: center; flex-wrap: wrap;
+    gap: clamp(10px, 2.4vw, 20px);
+    margin-top: clamp(32px, 6vh, 52px);
+  }
+  .unit {
+    position: relative;
+    min-width: clamp(66px, 16vw, 104px);
+    padding: clamp(14px, 2.4vh, 22px) clamp(10px, 2.5vw, 18px);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(20,50,86,0.30), rgba(7,17,31,0.30));
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    overflow: hidden;
+  }
+  .unit::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(231,205,142,0.55), transparent);
+  }
+  .unit .num {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2rem, 6.5vw, 3.2rem);
+    line-height: 1; color: var(--cream);
+    font-variant-numeric: tabular-nums; font-feature-settings: "tnum";
+  }
+  .unit .lab {
+    margin-top: 9px;
+    font-size: clamp(0.56rem, 1.5vw, 0.66rem);
+    letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  /* ---------- Return pill ---------------------------------------------- */
+  .return {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin-top: clamp(34px, 6vh, 52px);
+    padding: 13px 26px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-size: clamp(0.74rem, 1.9vw, 0.86rem);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--cream); font-weight: 500;
+    background: rgba(198,161,91,0.05);
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), border-color .5s, background .5s, box-shadow .5s;
+  }
+  .return:hover {
+    transform: translateY(-3px);
+    border-color: rgba(198,161,91,0.6);
+    background: rgba(198,161,91,0.12);
+    box-shadow: 0 14px 40px -18px rgba(198,161,91,0.6);
+  }
+  .return svg { color: var(--gold); flex: none; }
+
+  /* ---------- Footer --------------------------------------------------- */
+  .footer {
+    position: relative;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    padding: clamp(18px, 3vw, 30px) clamp(22px, 6vw, 72px);
+    font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted);
+    border-top: 1px solid rgba(198,161,91,0.12);
+  }
+  .footer .sig { color: var(--cream); }
+
+  /* ============================================================
+     ENTRANCE ANIMATIONS — staggered fade-up on load
+     ============================================================ */
+  .reveal { opacity: 0; transform: translateY(22px); }
+  .in .reveal {
+    animation: fadeUp 1s cubic-bezier(.2,.75,.2,1) forwards;
+    animation-delay: var(--d, 0ms);
+  }
+
+  @keyframes fadeUp { to { opacity: 1; transform: none; } }
+  @keyframes shimmer { to { background-position: 220% center; } }
+  @keyframes drift {
+    from { transform: translateX(-50%) scale(1.02); }
+    to   { transform: translateX(-50%) scale(1.1) translateY(-1.4%); }
+  }
+  /* full-bleed photo ken-burns — no centering offset, stays edge to edge */
+  @keyframes photoDrift {
+    from { transform: scale(1.04); }
+    to   { transform: scale(1.12) translate(-1.2%, -1.4%); }
+  }
+  .bg-photo { transform-origin: center; }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(231,205,142,0.55); }
+    70%  { box-shadow: 0 0 0 9px rgba(231,205,142,0); }
+    100% { box-shadow: 0 0 0 0 rgba(231,205,142,0); }
+  }
+
+  /* Respect users who prefer less motion */
+  @media (prefers-reduced-motion: reduce) {
+    .in .reveal { animation: none; opacity: 1; transform: none; }
+    .bg-photo, .bg-art, .headline em, .status .dot { animation: none !important; }
+    .return { transition: none; }
+  }
+
+  @media (max-width: 480px) {
+    .status span.t { display: none; }
+    .unit:nth-child(4) { display: none; } /* drop seconds on tiny screens */
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <!-- background layers -->
+    <div class="bg-gradient"></div>
+    <div class="bg-photo"></div>
+
+    <!-- gold horizon line-art (placeholder visual) -->
+    <svg class="bg-art" viewBox="0 0 1500 360" fill="none" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <g stroke="url(#g)" stroke-width="1.4" opacity="0.9">
+        <path d="M0 300 L210 175 L330 250 L470 120 L590 235 L760 95 L905 235 L1060 150 L1220 250 L1360 165 L1500 280" />
+        <path d="M0 340 L260 235 L430 300 L640 200 L860 305 L1080 215 L1300 300 L1500 235" opacity="0.6" />
+      </g>
+      <!-- little pagoda -->
+      <g stroke="url(#g)" stroke-width="1.4" opacity="0.85" transform="translate(742 70)">
+        <path d="M0 14 L18 0 L36 14" />
+        <path d="M-6 14 L42 14" />
+        <path d="M2 14 L2 30 L34 30 L34 14" />
+        <path d="M-4 30 L40 30" />
+        <path d="M4 30 L4 50 L32 50 L32 30" />
+        <path d="M-2 50 L38 50" />
+        <path d="M8 50 L8 72 L28 72 L28 50" />
+      </g>
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1500" y2="0" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#9a7b3f" /><stop offset="0.5" stop-color="#e7cd8e" /><stop offset="1" stop-color="#9a7b3f" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="watermark" aria-hidden="true">旅</div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <!-- top bar -->
+    <header class="topbar">
+      <div class="brand reveal" style="--d:80ms">CHINA <b>·</b> 2026</div>
+      <nav class="home-wrap"><a class="home reveal" style="--d:120ms" href="https://dulran.com/home72.html">Home</a></nav>
+      <div class="status reveal" style="--d:160ms">
+        <span class="dot"></span><span class="t">In progress</span>
+      </div>
+    </header>
+
+    <!-- hero -->
+    <main class="hero">
+      <div class="inner">
+        <div class="kicker reveal" style="--d:220ms">A Travel Journal</div>
+
+        <h1 class="headline reveal" style="--d:320ms">Still <em>developing.</em></h1>
+
+        <p class="subtext reveal" style="--d:520ms">
+          I haven't made it yet gng.&nbsp; come back later.
+        </p>
+        <p class="micro reveal" style="--d:640ms">
+          The photos &amp; the full China & Taiwan story drop June&nbsp;25.
+        </p>
+
+        <!-- live countdown -->
+        <div class="countdown reveal" style="--d:760ms" id="cd" aria-label="Time until June 25, 2026">
+          <div class="unit"><div class="num" id="d">--</div><div class="lab">Days</div></div>
+          <div class="unit"><div class="num" id="h">--</div><div class="lab">Hours</div></div>
+          <div class="unit"><div class="num" id="m">--</div><div class="lab">Minutes</div></div>
+          <div class="unit"><div class="num" id="s">--</div><div class="lab">Seconds</div></div>
+        </div>
+
+        <div class="return reveal" style="--d:900ms" id="returnPill">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Returns · June 25, 2026
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+<script>
+  // Reveal entrance animations once the document is ready
+  requestAnimationFrame(function () { document.body.classList.add("in"); });
+
+  // If a header photo URL was set, flag the body so it fades in
+  (function () {
+    var v = getComputedStyle(document.documentElement).getPropertyValue("--hero-photo").trim();
+    if (v && v !== "none") document.body.classList.add("has-photo");
+  })();
+
+  // ---- Live countdown to June 25, 2026 (local midnight) ----------------
+  (function () {
+    var target = new Date(2026, 5, 25, 0, 0, 0).getTime(); // month is 0-indexed: 5 = June
+    var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
+    var el = { d: document.getElementById("d"), h: document.getElementById("h"),
+               m: document.getElementById("m"), s: document.getElementById("s") };
+
+    function set(id, val) { if (el[id].textContent !== val) el[id].textContent = val; }
+
+    function tick() {
+      var diff = target - Date.now();
+      if (diff <= 0) {
+        document.getElementById("cd").innerHTML =
+          '<div class="unit" style="min-width:auto;padding:18px 30px">' +
+          '<div class="num" style="font-size:1.6rem">It’s live ✨</div>' +
+          '<div class="lab">Refresh the page</div></div>';
+        return; // stop ticking
+      }
+      var sec = Math.floor(diff / 1000);
+      set("d", String(Math.floor(sec / 86400)));
+      set("h", pad(Math.floor(sec % 86400 / 3600)));
+      set("m", pad(Math.floor(sec % 3600 / 60)));
+      set("s", pad(sec % 60));
+      setTimeout(tick, 1000 - (Date.now() % 1000));
+    }
+    tick();
+  })();
+</script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+
+  
+</body>
+</html>

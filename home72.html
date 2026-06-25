@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DULRAN — Aerospace · GNC · Avionics</title>
+<meta name="description" content="Dulran Kariyawasam — aerospace engineering student at UT Austin, passionate about GNC and avionics." />
+<link rel="icon" type="image/png" href="logofiles/crestlogosmall.png" />
+<link rel="stylesheet" href="assets/theme.css" />
+<style>
+/* ── page-unique: deep-space launch sequence ── */
+#stars {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+.aurora {
+  position: fixed; inset: -20%;
+  z-index: 0;
+  background:
+    radial-gradient(38% 32% at 18% 22%, rgba(204, 85, 0, 0.16), transparent 70%),
+    radial-gradient(34% 30% at 82% 16%, rgba(156, 43, 48, 0.14), transparent 70%),
+    radial-gradient(40% 36% at 60% 88%, rgba(232, 176, 75, 0.07), transparent 70%);
+  filter: blur(50px);
+  animation: aurora-drift 22s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes aurora-drift {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { transform: translate(3%, -4%) rotate(4deg) scale(1.08); }
+}
+
+main { position: relative; z-index: 1; }
+
+/* ── intro ceremony overlay (ported from home70) ──
+   The crest flies in from deep space in 3D, the wordmark fades up,
+   then the whole overlay fades away to reveal the page beneath. */
+#intro {
+  position: fixed; inset: 0;
+  z-index: 5000;
+  background: #050507;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 30px;
+  perspective: 1100px;
+  cursor: pointer;
+  transition: opacity 0.9s ease;
+}
+#intro.done { opacity: 0; pointer-events: none; }
+#intro .ceremony-crest {
+  width: clamp(160px, 26vh, 260px);
+  transform-style: preserve-3d;
+  animation: ceremony 3.1s var(--ease-out) forwards;
+  filter: drop-shadow(0 24px 70px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 44px rgba(232, 176, 75, 0.35));
+}
+@keyframes ceremony {
+  0%   { opacity: 0; transform: translateZ(-700px) rotateY(140deg) rotateX(20deg); }
+  45%  { opacity: 1; transform: translateZ(60px) rotateY(-14deg) rotateX(-4deg); }
+  70%  { transform: translateZ(0) rotateY(6deg); }
+  100% { opacity: 1; transform: translateZ(0) rotateY(0) rotateX(0); }
+}
+#intro .ceremony-title {
+  font-family: var(--font-display);
+  font-weight: 600; font-size: clamp(18px, 3vw, 28px);
+  letter-spacing: 0.5em; text-transform: uppercase;
+  padding-left: 0.5em; /* optical centering vs tracking */
+  opacity: 0;
+  animation: title-in 1s ease 1.9s forwards;
+}
+@keyframes title-in { to { opacity: 1; } }
+#intro .skip {
+  position: absolute; bottom: 26px;
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0;
+  animation: title-in 1s ease 1.2s forwards;
+}
+
+/* ── hero ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 26px;
+  padding: 90px 24px 60px;
+  perspective: 900px;
+}
+
+/* (The persistent hero crest from index.html was removed — the logo is
+   already shown in the intro ceremony above, so it is redundant here.) */
+
+.hero h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(56px, 12vw, 158px);
+  line-height: 0.95;
+  letter-spacing: 0.06em;
+  display: flex;
+}
+.hero h1 .ltr {
+  display: inline-block;
+  background: linear-gradient(175deg, #fff 28%, rgba(232, 176, 75, 0.85) 75%, rgba(204, 85, 0, 0.9));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  transform: translateY(60px) rotateX(70deg);
+  transition: transform 0.35s var(--ease-out), filter 0.35s;
+  will-change: transform;
+}
+/* Hero entrance is held until the intro finishes, so the letters fly in
+   as the ceremony fades away (not hidden behind it). The body.intro-complete
+   class is added by the intro script — or immediately when the intro is
+   skipped / has already played its max count. */
+body.intro-complete .hero h1 .ltr {
+  animation: ltr-in 1.1s var(--ease-out) forwards;
+  animation-delay: calc(var(--i) * 90ms + 250ms);
+}
+.hero h1 .ltr:hover {
+  transform: translateY(-10px) scale(1.06);
+  filter: drop-shadow(0 0 28px rgba(255, 140, 60, 0.65));
+}
+@keyframes ltr-in {
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+.hero .tag {
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.5vw, 14px);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+}
+body.intro-complete .hero .tag {
+  animation: fade-up 1.2s var(--ease-out) 1.25s forwards;
+}
+.hero .tag b { color: var(--accent); font-weight: 500; }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.scroll-cue {
+  position: absolute; bottom: 30px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.34em; text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0;
+}
+/* Optical centering: letter-spacing adds trailing space after the last
+   glyph; compensating the word by one letter-space keeps the text and the
+   cue line aligned under the same centre. (Same trick as .ceremony-title.) */
+.scroll-cue span { padding-left: 0.34em; }
+/* The cue is centred with translateX(-50%). Its entrance animation MUST
+   preserve that translate — a plain fade-up (translateY only) overwrites
+   the transform and shoves the whole cue ~half its width to the right,
+   which is what knocked it off-centre from the title/tag in index.html. */
+body.intro-complete .scroll-cue {
+  animation: cue-in 1s ease 2.1s forwards;
+}
+@keyframes cue-in {
+  from { opacity: 0; transform: translate(-50%, 18px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.scroll-cue::after {
+  content: '';
+  width: 1px; height: 44px;
+  background: linear-gradient(var(--accent), transparent);
+  animation: cue-drop 1.8s ease-in-out infinite;
+}
+@keyframes cue-drop {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  55%  { transform: scaleY(1); transform-origin: top; }
+  56%  { transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ── destination cards ── */
+.dests {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 11vh 26px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.dest {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 34px 30px 30px;
+  min-height: 230px;
+}
+.dest .num {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.3em;
+  color: var(--dim);
+}
+.dest h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.dest p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.dest .go {
+  margin-top: auto;
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent);
+  display: flex; align-items: center; gap: 8px;
+}
+.dest .go::after {
+  content: '→';
+  transition: transform 0.3s var(--ease-out);
+}
+.dest:hover .go::after { transform: translateX(7px); }
+.dest::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent 70%);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.5s var(--ease-out);
+}
+.dest:hover::before { transform: scaleX(1); }
+
+/* ── about strip ── */
+.about {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 12vh 26px 14vh;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 26px;
+}
+.about .big {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(22px, 3.4vw, 40px);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+.about .big em {
+  font-style: normal;
+  background: linear-gradient(120deg, var(--gold), var(--accent));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+.wordmark {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  opacity: 0.9;
+}
+.wordmark img {
+  filter: invert(0.88) sepia(0.35) saturate(2.2) hue-rotate(-18deg) brightness(1.15);
+}
+.wordmark img.dul { height: 64px; }
+.wordmark img.kari { height: 26px; opacity: 0.75; }
+</style>
+<noscript>
+  <!-- If JS is unavailable the intro can't dismiss itself, so hide it and
+       show the hero content statically. -->
+  <style>
+    #intro { display: none !important; }
+    .hero h1 .ltr { opacity: 1 !important; transform: none !important; animation: none !important; }
+    .hero .tag, .scroll-cue { opacity: 1 !important; animation: none !important; }
+  </style>
+</noscript>
+</head>
+
+<body data-accent="ember">
+<div class="dk-progress"></div>
+<canvas id="stars"></canvas>
+<div class="aurora" data-depth="0.015"></div>
+<div class="dk-grain"></div>
+
+<!-- CEREMONY INTRO (ported from home70.html) -->
+<div id="intro">
+  <img class="ceremony-crest" src="logofiles/crestlogomedium.png" alt="Coat of arms of Karis" />
+  <div class="ceremony-title">DULRAN</div>
+  <div class="skip">Click anywhere to skip</div>
+</div>
+
+<nav class="dk-nav">
+  <a class="dk-brand" href="index.html">
+    <img src="logofiles/crestlogosmall.png" alt="Dulran crest" />
+    <span>DULRAN</span>
+  </a>
+  <a class="dk-link active" href="index.html">Home</a>
+  <a class="dk-link" href="resumesburntorange.html">Resume</a>
+  <a class="dk-link" href="projects/index.html">Projects</a>
+  <a class="dk-link" href="https://www.instagram.com/dul.is.running" target="_blank" rel="noopener">Gallery</a>
+</nav>
+
+<main>
+  <!-- HERO (persistent crest removed — the logo now appears only in the intro ceremony) -->
+  <section class="hero">
+    <h1 aria-label="DULRAN">
+      <span class="ltr" style="--i:0">D</span><span class="ltr" style="--i:1">U</span><span class="ltr" style="--i:2">L</span><span class="ltr" style="--i:3">R</span><span class="ltr" style="--i:4">A</span><span class="ltr" style="--i:5">N</span>
+    </h1>
+
+    <div class="tag">Aerospace · <b>UT Austin</b> · GNC &amp; Avionics</div>
+    <div class="scroll-cue"><span>Scroll</span></div>
+  </section>
+
+  <!-- DESTINATIONS -->
+  <section class="dests">
+    <a class="dest dk-card reveal" data-tilt="8" href="resumesburntorange.html">
+      <span class="num">01</span>
+      <h2>Resume</h2>
+      <p>Concise or detailed — pick the version that fits. Built for recruiters in a hurry and the curious alike.</p>
+      <span class="go">Open</span>
+    </a>
+    <a class="dest dk-card reveal" data-tilt="8" data-delay="1" href="projects/index.html">
+      <span class="num">02</span>
+      <h2>About / Projects</h2>
+      <p>Flight controllers, nozzle CFD, sensor fusion, registration bots — an explorer of everything I've built.</p>
+      <span class="go">Explore</span>
+    </a>
+    <a class="dest dk-card reveal" data-tilt="8" data-delay="2" href="https://www.instagram.com/dul.is.running" target="_blank" rel="noopener">
+      <span class="num">03</span>
+      <h2>Gallery</h2>
+      <p>Life outside the lab — running, travel, and the occasional questionable meme. Hosted on Instagram.</p>
+      <span class="go">Visit</span>
+    </a>
+  </section>
+
+  <!-- ABOUT STRIP -->
+  <section class="about">
+    <span class="dk-kicker reveal">Who</span>
+    <p class="big reveal" data-delay="1">
+      Aerospace engineering student at <em>UT Austin</em>, building toward a career in
+      <em>guidance, navigation &amp; control</em>.
+    </p>
+    <div class="wordmark reveal" data-delay="2" data-depth="0.03">
+      <img class="dul" src="logofiles/dulransplit2.png" alt="Dulran wordmark" />
+      <img class="kari" src="logofiles/namesmall.png" alt="Kariyawasam" />
+    </div>
+    <a class="dk-btn reveal" data-delay="3" data-magnetic="0.35" href="https://www.linkedin.com/in/dulran/" target="_blank" rel="noopener">Connect on LinkedIn</a>
+  </section>
+</main>
+
+<footer class="dk-footer">
+  <span>Dulran Kariyawasam © 2026</span>
+  <span>
+    <a href="home67.html">v67</a> ·
+    <a href="home68.html">v68</a> ·
+    <a href="home70.html">v70</a> ·
+    <a href="home71.html">v71</a>
+  </span>
+  <a href="https://www.linkedin.com/in/dulran/" target="_blank" rel="noopener">LinkedIn</a>
+</footer>
+
+<script src="assets/fx.js"></script>
+<script>
+  DK.stars(document.getElementById('stars'), { count: 240 });
+
+  // Ceremony intro (ported from home70.html): plays up to 5× per browser,
+  // always skippable by click, then fades to reveal the page. When it
+  // finishes we flag <body> so the hero entrance animations play on the
+  // reveal. Respects reduced-motion (skips straight to the content).
+  (function () {
+    const intro = document.getElementById('intro');
+    const body = document.body;
+    const KEY = 'dkIntroPlays';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const plays = parseInt(localStorage.getItem(KEY), 10) || 0;
+
+    function reveal() { body.classList.add('intro-complete'); }
+
+    function dismiss() {
+      intro.classList.add('done');
+      body.style.overflow = '';          // re-enable scrolling
+      reveal();
+      setTimeout(() => intro.remove(), 1000);
+    }
+
+    // Skip the ceremony for reduced-motion users or after 5 plays.
+    if (!intro || reduced || plays >= 5) {
+      if (intro) intro.remove();
+      reveal();
+      return;
+    }
+
+    localStorage.setItem(KEY, String(plays + 1));
+    body.style.overflow = 'hidden';      // lock scroll while the ceremony plays
+    intro.addEventListener('click', dismiss);
+    setTimeout(dismiss, 3600);
+  })();
+</script>
+
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+</body>
+</html>
