@@ -1,74 +1,634 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Simple Music Player</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Music Player</title>
+<link rel="icon" href="../logofiles/crestlogosmall.png" />
 <style>
+/* ── reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── root / tokens ── */
+:root {
+  --bg: #0a0a0f;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-hover: rgba(255,255,255,0.10);
+  --text: #f0f0f0;
+  --text-dim: rgba(255,255,255,0.45);
+  --accent: #e8b04b;
+  --accent-glow: rgba(232,176,75,0.25);
+  --playing: rgba(232,176,75,0.12);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
 body {
-    background-color: #f9f9f9;
-    font: normal 1em / 1.5em BlinkMacSystemFont, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 16px;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1 {
-    font-size: 1.5em;
-    color: #555;
-    text-align: center;
+/* ── backdrop blobs ── */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+body::before {
+  width: 500px; height: 500px;
+  top: -10%; left: -8%;
+  background: radial-gradient(circle, rgba(232,176,75,0.18), transparent 70%);
+}
+body::after {
+  width: 400px; height: 400px;
+  bottom: -10%; right: -5%;
+  background: radial-gradient(circle, rgba(156,43,48,0.15), transparent 70%);
 }
 
-ul {
-    list-style: none;
-    padding: 0;
-    text-align: center;
+/* ── player shell ── */
+.player {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  box-shadow:
+    0 24px 80px rgba(0,0,0,0.45),
+    0 0 0 0.5px rgba(255,255,255,0.07) inset;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-li {
-    margin: 10px 0;
-    cursor: pointer;
-    color: #0077cc;
+/* ── now playing header ── */
+.now-playing {
+  padding: 28px 24px 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--glass-border);
+}
+.now-playing .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.now-playing .title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  min-height: 28px;
+  color: var(--text);
+  transition: color 0.3s;
+}
+.now-playing .title.has-song { color: var(--accent); }
+
+/* ── visualiser bar ── */
+.visualiser {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  height: 32px;
+  padding: 0 24px;
+  margin-top: 6px;
+}
+.visualiser .bar {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.35;
+  height: 4px;
+  transition: height 0.12s ease;
+}
+.player.is-playing .visualiser .bar {
+  animation: bounce 0.8s ease-in-out infinite alternate;
+  opacity: 0.7;
+}
+@keyframes bounce {
+  0%   { height: 4px; }
+  100% { height: var(--h); }
 }
 
-li:hover {
-    text-decoration: underline;
+/* ── progress ── */
+.progress-wrap {
+  padding: 14px 24px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progress-bar {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  cursor: pointer;
+  overflow: visible;
+}
+.progress-bar .fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  position: relative;
+  transition: width 0.1s linear;
+}
+.progress-bar .fill::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  transition: transform 0.15s ease;
+}
+.progress-bar:hover .fill::after { transform: translateY(-50%) scale(1); }
+.progress-times {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
 }
 
-audio {
-    display: block;
-    margin: 20px auto;
+/* ── controls ── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 16px 24px 22px;
 }
+.ctrl {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ctrl:hover { color: var(--accent); }
+.ctrl:active { transform: scale(0.9); }
+.ctrl svg { display: block; }
+
+.ctrl.play-btn {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #0a0a0f;
+  box-shadow: 0 4px 24px var(--accent-glow);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.ctrl.play-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 32px rgba(232,176,75,0.4);
+  color: #0a0a0f;
+}
+.ctrl.play-btn:active { transform: scale(0.95); }
+
+.ctrl.small { opacity: 0.55; }
+.ctrl.small:hover { opacity: 1; }
+
+/* ── volume ── */
+.volume-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px 18px;
+  justify-content: center;
+}
+.volume-wrap .ctrl { opacity: 0.5; }
+.volume-wrap .ctrl:hover { opacity: 1; }
+.vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.1);
+  outline: none;
+  cursor: pointer;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+
+/* ── track list ── */
+.tracklist {
+  border-top: 1px solid var(--glass-border);
+  max-height: 310px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+}
+.tracklist::-webkit-scrollbar { width: 5px; }
+.tracklist::-webkit-scrollbar-track { background: transparent; }
+.tracklist::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+.track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.track:last-child { border-bottom: none; }
+.track:hover { background: var(--glass-hover); }
+.track.active { background: var(--playing); }
+
+.track .idx {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 22px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.track.active .idx { color: var(--accent); }
+
+.track .eq-icon {
+  display: none;
+  width: 22px;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.track.active .idx { display: none; }
+.track.active .eq-icon { display: flex; }
+.eq-icon span {
+  display: block;
+  width: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  animation: eq 0.6s ease-in-out infinite alternate;
+}
+.eq-icon span:nth-child(1) { height: 6px; animation-delay: 0s; }
+.eq-icon span:nth-child(2) { height: 10px; animation-delay: 0.15s; }
+.eq-icon span:nth-child(3) { height: 4px; animation-delay: 0.3s; }
+@keyframes eq {
+  0%   { height: 3px; }
+  100% { height: 14px; }
+}
+
+.track .name {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track.active .name { color: var(--accent); }
+
+/* ── loading state ── */
+.loading {
+  padding: 40px 24px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+.loading .spinner {
+  width: 24px; height: 24px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── shuffle / repeat toggles ── */
+.ctrl.active-toggle { color: var(--accent); opacity: 1 !important; }
 </style>
 </head>
-
 <body>
 
-<h1>Song List</h1>
+<div class="player" id="player">
+  <!-- Now Playing -->
+  <div class="now-playing">
+    <div class="label">Now Playing</div>
+    <div class="title" id="np-title">Select a track</div>
+    <div class="visualiser" id="visualiser"></div>
+  </div>
 
-<ul>
-  <li onclick="playSong('https://www.dulran.com/songs/bellaciao.mp3')">Bella Ciao</li>
-  <li onclick="playSong('https://www.dulran.com/songs/box.mp3')">Box</li>
-  <li onclick="playSong('https://www.dulran.com/songs/cerealkilla.mp3')">Cereal Killa</li>
-  <li onclick="playSong('https://www.dulran.com/songs/eyesclosed.mp3')">Eyes Closed</li>
-  <li onclick="playSong('https://www.dulran.com/songs/fukumean.mp3')">Fukumean</li>
-  <li onclick="playSong('https://www.dulran.com/songs/keke.mp3')">Keke</li>
-  <li onclick="playSong('https://www.dulran.com/songs/kekedoyoloveme.mp3')">Keke Do You Love Me</li>
-  <li onclick="playSong('https://www.dulran.com/songs/maya.mp3')">Maya</li>
-  <li onclick="playSong('https://www.dulran.com/songs/somebodysme.mp3')">Somebody's Me</li>
-  <li onclick="playSong('https://www.dulran.com/songs/whatspopping.mp3')">What's Popping</li>
-</ul>
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar">
+      <div class="fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-times">
+      <span id="time-current">0:00</span>
+      <span id="time-total">0:00</span>
+    </div>
+  </div>
 
-<audio id="player" controls>
-    <source id="audio-source" src="" type="audio/mpeg">
-</audio>
+  <!-- Controls -->
+  <div class="controls">
+    <button class="ctrl small" id="btn-shuffle" title="Shuffle">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+    </button>
+    <button class="ctrl" id="btn-prev" title="Previous">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+    </button>
+    <button class="ctrl play-btn" id="btn-play" title="Play">
+      <svg id="icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+      <svg id="icon-pause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+    </button>
+    <button class="ctrl" id="btn-next" title="Next">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-10 6 8.5 6V6z" transform="scale(-1,1) translate(-24,0)"/></svg>
+    </button>
+    <button class="ctrl small" id="btn-repeat" title="Repeat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
+  </div>
+
+  <!-- Volume -->
+  <div class="volume-wrap">
+    <button class="ctrl" id="btn-mute" title="Mute">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path id="vol-wave" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+    </button>
+    <input class="vol-slider" id="vol-slider" type="range" min="0" max="1" step="0.01" value="0.7" />
+  </div>
+
+  <!-- Track list -->
+  <div class="tracklist" id="tracklist">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      Loading tracks…
+    </div>
+  </div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
 
 <script>
-function playSong(src) {
-    const player = document.getElementById("player");
-    const source = document.getElementById("audio-source");
+(function () {
+  // ── elements ──
+  const audio     = document.getElementById('audio');
+  const npTitle   = document.getElementById('np-title');
+  const playBtn   = document.getElementById('btn-play');
+  const prevBtn   = document.getElementById('btn-prev');
+  const nextBtn   = document.getElementById('btn-next');
+  const shuffBtn  = document.getElementById('btn-shuffle');
+  const repBtn    = document.getElementById('btn-repeat');
+  const muteBtn   = document.getElementById('btn-mute');
+  const volSlider = document.getElementById('vol-slider');
+  const progBar   = document.getElementById('progress-bar');
+  const progFill  = document.getElementById('progress-fill');
+  const timeCur   = document.getElementById('time-current');
+  const timeTotal = document.getElementById('time-total');
+  const listEl    = document.getElementById('tracklist');
+  const loadingEl = document.getElementById('loading');
+  const playerEl  = document.getElementById('player');
+  const iconPlay  = document.getElementById('icon-play');
+  const iconPause = document.getElementById('icon-pause');
+  const visEl     = document.getElementById('visualiser');
+  const volWave   = document.getElementById('vol-wave');
 
-    source.src = src;
-    player.load();
-    player.play();
-}
+  let tracks = [];
+  let currentIdx = -1;
+  let shuffle = false;
+  let repeat = false;       // repeat-all
+  let shuffleOrder = [];
+
+  // ── build visualiser bars ──
+  for (let i = 0; i < 24; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.setProperty('--h', (6 + Math.random() * 22) + 'px');
+    bar.style.animationDelay = (Math.random() * 0.6) + 's';
+    visEl.appendChild(bar);
+  }
+
+  // ── pretty name from filename ──
+  function prettify(filename) {
+    return filename
+      .replace(/\.mp3$/i, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')   // camelCase
+      .replace(/[-_]+/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── format seconds ──
+  function fmt(s) {
+    if (!s || isNaN(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  // ── load tracks ──
+  // Try GitHub API first for dynamic listing, fall back to hardcoded list
+  const GITHUB_API = 'https://api.github.com/repos/Dula20000/website/contents/songs';
+  const BASE_URL   = 'https://www.dulran.com/songs/';
+
+  const FALLBACK = [
+    'bellaciao.mp3','box.mp3','cerealkilla.mp3','eyesclosed.mp3',
+    'fukumean.mp3','keke.mp3','kekedoyoloveme.mp3','maya.mp3',
+    'somebodysme.mp3','whatspopping.mp3'
+  ];
+
+  async function loadTracks() {
+    let files = [];
+    try {
+      const resp = await fetch(GITHUB_API);
+      if (!resp.ok) throw new Error(resp.status);
+      const data = await resp.json();
+      files = data
+        .filter(f => f.name.endsWith('.mp3'))
+        .map(f => f.name);
+    } catch (e) {
+      files = FALLBACK;
+    }
+
+    tracks = files.map(f => ({ file: f, name: prettify(f), url: BASE_URL + f }));
+    renderList();
+  }
+
+  function renderList() {
+    loadingEl.remove();
+    tracks.forEach((t, i) => {
+      const row = document.createElement('div');
+      row.className = 'track';
+      row.dataset.idx = i;
+      row.innerHTML =
+        `<span class="idx">${String(i + 1).padStart(2, '0')}</span>` +
+        `<span class="eq-icon"><span></span><span></span><span></span></span>` +
+        `<span class="name">${t.name}</span>`;
+      row.addEventListener('click', () => play(i));
+      listEl.appendChild(row);
+    });
+  }
+
+  // ── playback ──
+  function play(idx) {
+    if (idx < 0 || idx >= tracks.length) return;
+    currentIdx = idx;
+    audio.src = tracks[idx].url;
+    audio.play();
+    npTitle.textContent = tracks[idx].name;
+    npTitle.classList.add('has-song');
+    updateActive();
+    setPlayIcon(true);
+    playerEl.classList.add('is-playing');
+  }
+
+  function updateActive() {
+    listEl.querySelectorAll('.track').forEach((el, i) => {
+      el.classList.toggle('active', i === currentIdx);
+    });
+    // scroll active into view
+    const active = listEl.querySelector('.track.active');
+    if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function setPlayIcon(playing) {
+    iconPlay.style.display  = playing ? 'none'  : 'block';
+    iconPause.style.display = playing ? 'block' : 'none';
+  }
+
+  function togglePlay() {
+    if (currentIdx < 0) { play(0); return; }
+    if (audio.paused) {
+      audio.play();
+      setPlayIcon(true);
+      playerEl.classList.add('is-playing');
+    } else {
+      audio.pause();
+      setPlayIcon(false);
+      playerEl.classList.remove('is-playing');
+    }
+  }
+
+  function nextTrack() {
+    if (tracks.length === 0) return;
+    if (shuffle) {
+      if (!shuffleOrder.length) buildShuffleOrder();
+      const si = shuffleOrder.indexOf(currentIdx);
+      const next = si < shuffleOrder.length - 1 ? shuffleOrder[si + 1] : shuffleOrder[0];
+      play(next);
+    } else {
+      play((currentIdx + 1) % tracks.length);
+    }
+  }
+
+  function prevTrack() {
+    if (tracks.length === 0) return;
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    if (shuffle) {
+      if (!shuffleOrder.length) buildShuffleOrder();
+      const si = shuffleOrder.indexOf(currentIdx);
+      const prev = si > 0 ? shuffleOrder[si - 1] : shuffleOrder[shuffleOrder.length - 1];
+      play(prev);
+    } else {
+      play((currentIdx - 1 + tracks.length) % tracks.length);
+    }
+  }
+
+  function buildShuffleOrder() {
+    shuffleOrder = tracks.map((_, i) => i);
+    for (let i = shuffleOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffleOrder[i], shuffleOrder[j]] = [shuffleOrder[j], shuffleOrder[i]];
+    }
+  }
+
+  // ── audio events ──
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    progFill.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    timeCur.textContent  = fmt(audio.currentTime);
+  });
+  audio.addEventListener('loadedmetadata', () => {
+    timeTotal.textContent = fmt(audio.duration);
+  });
+  audio.addEventListener('ended', () => {
+    if (repeat) { nextTrack(); }
+    else if (currentIdx < tracks.length - 1 || shuffle) { nextTrack(); }
+    else { setPlayIcon(false); playerEl.classList.remove('is-playing'); }
+  });
+
+  // ── progress seek ──
+  progBar.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const rect = progBar.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  });
+
+  // ── controls ──
+  playBtn.addEventListener('click', togglePlay);
+  nextBtn.addEventListener('click', nextTrack);
+  prevBtn.addEventListener('click', prevTrack);
+
+  shuffBtn.addEventListener('click', () => {
+    shuffle = !shuffle;
+    shuffBtn.classList.toggle('active-toggle', shuffle);
+    if (shuffle) buildShuffleOrder();
+  });
+  repBtn.addEventListener('click', () => {
+    repeat = !repeat;
+    repBtn.classList.toggle('active-toggle', repeat);
+  });
+
+  // ── volume ──
+  audio.volume = 0.7;
+  volSlider.addEventListener('input', () => {
+    audio.volume = volSlider.value;
+    audio.muted = false;
+    volWave.style.display = volSlider.value == 0 ? 'none' : '';
+  });
+  muteBtn.addEventListener('click', () => {
+    audio.muted = !audio.muted;
+    volWave.style.display = audio.muted ? 'none' : '';
+  });
+
+  // ── keyboard ──
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
+    if (e.code === 'ArrowRight') { e.preventDefault(); nextTrack(); }
+    if (e.code === 'ArrowLeft')  { e.preventDefault(); prevTrack(); }
+  });
+
+  // ── init ──
+  loadTracks();
+})();
 </script>
 
 </body>
