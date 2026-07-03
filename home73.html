@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DULRAN — Aerospace · GNC · Avionics</title>
+<meta name="description" content="Dulran Kariyawasam — aerospace engineering student at UT Austin, passionate about GNC and avionics." />
+<link rel="icon" type="image/png" href="logofiles/crestlogosmall.png" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* new-frontier: registered custom property so the CTA gradient ANGLE itself animates */
+@property --grad-angle {
+  syntax: '<angle>';
+  initial-value: 120deg;
+  inherits: false;
+}
+
+:root {
+  --bg: #070503;
+  --ember: #cc5500;
+  --ember-hot: #ff8c3c;
+  --gold: #e8b04b;
+  --cream: #f2e9da;
+  --muted: #9a8f80;
+  --dim: #5e564a;
+  --font-display: 'Space Grotesk', Helvetica, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; }
+html, body { background: var(--bg); }
+
+body {
+  color: var(--cream);
+  font-family: var(--font-display);
+  overflow-x: hidden;
+}
+
+body.locked { overflow: hidden; }
+
+::selection { background: rgba(204, 85, 0, 0.55); color: #fff; }
+
+/* ---------- fixed 3D stage ---------- */
+#scene { position: fixed; inset: 0; z-index: 0; }
+
+.nebula {
+  position: fixed; inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 32% at 20% 24%, rgba(204, 85, 0, 0.15), transparent 70%),
+    radial-gradient(30% 28% at 82% 14%, rgba(156, 43, 48, 0.13), transparent 70%),
+    radial-gradient(42% 38% at 62% 86%, rgba(232, 176, 75, 0.08), transparent 70%);
+  filter: blur(55px);
+  animation: nebula-drift 26s ease-in-out infinite alternate;
+}
+@keyframes nebula-drift {
+  to { transform: translate(3%, -4%) rotate(4deg) scale(1.1); }
+}
+
+.grain {
+  position: fixed; inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0.45;
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.5) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- scroll progress (CSS scroll-driven animation, JS fallback) ---------- */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 90;
+  background: linear-gradient(90deg, var(--ember), var(--gold), var(--ember-hot));
+  transform-origin: left;
+  transform: scaleX(0);
+}
+@supports (animation-timeline: scroll()) {
+  .progress {
+    animation: progress-grow linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes progress-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- nav ---------- */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 80;
+  display: flex; align-items: center; gap: 26px;
+  padding: 16px 28px;
+  background: linear-gradient(rgba(7, 5, 3, 0.75), transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.brand {
+  display: flex; align-items: center; gap: 11px;
+  margin-right: auto;
+  text-decoration: none;
+  color: var(--cream);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  font-size: 14px;
+}
+.brand img { height: 34px; filter: drop-shadow(0 0 12px rgba(232, 176, 75, 0.35)); }
+.nav a.link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color 0.25s, text-shadow 0.25s;
+}
+.nav a.link:hover, .nav a.link.active {
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(232, 176, 75, 0.6);
+}
+
+/* ---------- intro ceremony ---------- */
+#intro {
+  position: fixed; inset: 0;
+  z-index: 500;
+  background: #050403;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 30px;
+  perspective: 1100px;
+  cursor: pointer;
+  transition: opacity 0.9s ease;
+}
+#intro.done { opacity: 0; pointer-events: none; }
+#intro .ceremony-crest {
+  width: clamp(160px, 26vh, 260px);
+  transform-style: preserve-3d;
+  animation: ceremony 3.1s var(--ease-out) forwards;
+  filter: drop-shadow(0 24px 70px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 44px rgba(232, 176, 75, 0.35));
+}
+@keyframes ceremony {
+  0%   { opacity: 0; transform: translateZ(-700px) rotateY(140deg) rotateX(20deg); }
+  45%  { opacity: 1; transform: translateZ(60px) rotateY(-14deg) rotateX(-4deg); }
+  70%  { transform: translateZ(0) rotateY(6deg); }
+  100% { opacity: 1; transform: translateZ(0) rotateY(0) rotateX(0); }
+}
+#intro .ceremony-title {
+  font-weight: 600;
+  font-size: clamp(18px, 3vw, 28px);
+  letter-spacing: 0.5em;
+  padding-left: 0.5em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: fade-in 1s ease 1.9s forwards;
+}
+#intro .skip {
+  position: absolute; bottom: 26px;
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0;
+  animation: fade-in 1s ease 1.2s forwards;
+}
+@keyframes fade-in { to { opacity: 1; } }
+
+/* ---------- sections ---------- */
+main { position: relative; z-index: 10; }
+
+section {
+  min-height: 100vh;
+  display: flex;
+  padding: 110px 6vw 80px;
+  position: relative;
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ember-hot);
+}
+
+h2.headline {
+  font-size: clamp(34px, 5.4vw, 68px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  margin: 18px 0 20px;
+}
+/* per-character reveal (chars are wrapped by JS) */
+h2.headline .ch {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.7em) rotateX(70deg);
+  transition: transform 0.7s var(--ease-out), opacity 0.7s var(--ease-out);
+  transition-delay: calc(var(--ci) * 28ms);
+}
+.in h2.headline .ch { opacity: 1; transform: translateY(0) rotateX(0); }
+
+[data-reveal] .reveal-item {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+  transition-delay: calc(var(--ri, 0) * 120ms);
+}
+[data-reveal].in .reveal-item { opacity: 1; transform: translateY(0); }
+
+/* ---------- hero ---------- */
+.hero {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  padding-bottom: 11vh;
+}
+.sr-hero {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+/* if WebGL never starts, the hidden h1 becomes the hero title */
+body.no-webgl .sr-hero {
+  position: static;
+  width: auto; height: auto;
+  clip-path: none;
+  font-size: clamp(56px, 13vw, 160px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  margin-bottom: 4vh;
+  background: linear-gradient(175deg, #fff 25%, var(--gold) 65%, var(--ember));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero .tag {
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.5vw, 14px);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+}
+.hero .tag b { color: var(--ember-hot); font-weight: 500; }
+body.intro-complete .hero .tag { animation: rise-up 1.2s var(--ease-out) 1.15s forwards; }
+@keyframes rise-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero .hint {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0;
+}
+body.intro-complete .hero .hint { animation: rise-up 1.2s var(--ease-out) 1.7s forwards; }
+.scroll-cue {
+  margin-top: 26px;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.34em; text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0;
+}
+.scroll-cue span { padding-left: 0.34em; }
+body.intro-complete .scroll-cue { animation: rise-up 1s ease 2.1s forwards; }
+.scroll-cue::after {
+  content: '';
+  width: 1px; height: 44px;
+  background: linear-gradient(var(--ember-hot), transparent);
+  animation: cue-drop 1.8s ease-in-out infinite;
+}
+@keyframes cue-drop {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  55%  { transform: scaleY(1); transform-origin: top; }
+  56%  { transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ---------- destinations (left column, rocket flies on the right) ---------- */
+.dests { align-items: center; }
+.dests .col { max-width: 560px; }
+.cards { display: flex; flex-direction: column; gap: 18px; margin-top: 12px; }
+
+.card {
+  --mx: 50%; --my: 50%;
+  position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 26px 28px 22px;
+  border-radius: 18px;
+  text-decoration: none;
+  color: var(--cream);
+  background: rgba(24, 16, 9, 0.42);
+  border: 1px solid rgba(232, 176, 75, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  overflow: hidden;
+}
+.card::after { /* pointer-tracked glare */
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(360px circle at var(--mx) var(--my), rgba(232, 176, 75, 0.13), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.card:hover::after { opacity: 1; }
+.card:hover {
+  border-color: rgba(232, 176, 75, 0.4);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(204, 85, 0, 0.12);
+}
+.card .num {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.3em;
+  color: var(--dim);
+}
+.card h3 {
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.card p { color: var(--muted); font-size: 14px; line-height: 1.65; }
+.card .go {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ember-hot);
+  display: flex; align-items: center; gap: 8px;
+}
+.card .go::after { content: '→'; transition: transform 0.3s var(--ease-out); }
+.card:hover .go::after { transform: translateX(7px); }
+
+/* ---------- about (right column, orbit system on the left) ---------- */
+.about { align-items: center; justify-content: flex-end; text-align: right; }
+.about .col { max-width: 620px; display: flex; flex-direction: column; align-items: flex-end; }
+.about .big {
+  font-size: clamp(24px, 3.6vw, 44px);
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 18px 0 26px;
+}
+.about .big em {
+  font-style: normal;
+  background: linear-gradient(120deg, var(--gold), var(--ember-hot));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 176, 75, 0.18);
+  background: rgba(24, 16, 9, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color 0.3s, border-color 0.3s, transform 0.3s var(--ease-out);
+}
+.chip:hover {
+  color: var(--gold);
+  border-color: rgba(232, 176, 75, 0.5);
+  transform: translateY(-3px);
+}
+
+/* ---------- connect ---------- */
+.connect {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  padding-bottom: 16vh;
+}
+.connect h2.headline {
+  --grad-angle: 120deg;
+  background: linear-gradient(var(--grad-angle), var(--gold), var(--ember-hot), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: angle-spin 7s linear infinite;
+}
+@keyframes angle-spin { to { --grad-angle: 480deg; } }
+.connect .sub { color: var(--muted); font-size: 15px; line-height: 1.7; max-width: 46ch; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-top: 34px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: #fff;
+  padding: 17px 40px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, var(--ember), #a33d00);
+  box-shadow: 0 10px 36px rgba(204, 85, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition: box-shadow 0.3s, transform 0.25s var(--ease-out);
+  will-change: transform;
+}
+.btn:hover { box-shadow: 0 16px 52px rgba(204, 85, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.28); }
+
+/* ---------- footer ---------- */
+footer {
+  position: relative; z-index: 10;
+  display: flex; flex-wrap: wrap; gap: 14px;
+  align-items: center; justify-content: space-between;
+  padding: 26px 6vw 30px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+  border-top: 1px solid rgba(232, 176, 75, 0.1);
+}
+footer a { color: var(--muted); text-decoration: none; transition: color 0.25s; }
+footer a:hover { color: var(--gold); }
+
+/* ---------- custom cursor ---------- */
+.cursor-dot, .cursor-ring {
+  position: fixed; top: 0; left: 0;
+  z-index: 200;
+  pointer-events: none;
+  border-radius: 50%;
+  display: none;
+}
+.cursor-dot {
+  width: 6px; height: 6px;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--gold);
+}
+.cursor-ring {
+  width: 34px; height: 34px;
+  border: 1px solid rgba(232, 176, 75, 0.5);
+  transition: border-color 0.2s;
+}
+.cursor-ring.hot { border-color: var(--ember-hot); }
+@media (pointer: fine) {
+  .cursor-dot, .cursor-ring { display: block; }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 760px) {
+  .nav { gap: 16px; padding: 14px 18px; }
+  .brand span { display: none; }
+  section { padding: 96px 7vw 60px; }
+  .about { justify-content: center; text-align: left; }
+  .about .col { align-items: flex-start; }
+  .chips { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nebula, .scroll-cue::after, .connect h2.headline { animation: none; }
+  html { scroll-behavior: auto; }
+}
+</style>
+<noscript>
+  <style>
+    #intro { display: none !important; }
+    body.locked { overflow: visible !important; }
+    .hero .tag, .hero .hint, .scroll-cue { opacity: 1 !important; animation: none !important; }
+    .sr-hero {
+      position: static !important; width: auto !important; height: auto !important;
+      clip-path: none !important;
+      font-size: clamp(56px, 13vw, 160px); font-weight: 700; letter-spacing: 0.06em;
+      background: linear-gradient(175deg, #fff 25%, #e8b04b 65%, #cc5500);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    h2.headline .ch, [data-reveal] .reveal-item { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+</head>
+
+<body class="locked">
+
+<canvas id="scene"></canvas>
+<div class="nebula"></div>
+<div class="grain"></div>
+<div class="progress" id="progress"></div>
+
+<div class="cursor-dot" id="cdot"></div>
+<div class="cursor-ring" id="cring"></div>
+
+<!-- CEREMONY INTRO (lineage: home70 → home72, capped at 5 plays) -->
+<div id="intro">
+  <img class="ceremony-crest" src="logofiles/crestlogomedium.png" alt="Coat of arms of Karis" />
+  <div class="ceremony-title">DULRAN</div>
+  <div class="skip">Click anywhere to skip</div>
+</div>
+
+<nav class="nav">
+  <a class="brand" href="index.html">
+    <img src="logofiles/crestlogosmall.png" alt="Dulran crest" />
+    <span>DULRAN</span>
+  </a>
+  <a class="link active" href="index.html">Home</a>
+  <a class="link" href="resumesburntorange.html">Resume</a>
+  <a class="link" href="projects/index.html">Projects</a>
+  <a class="link" href="https://www.instagram.com/dul.is.running" target="_blank" rel="noopener">Gallery</a>
+</nav>
+
+<main>
+  <!-- HERO — the DULRAN wordmark is drawn by ~9k particles in the 3D stage -->
+  <section class="hero">
+    <h1 class="sr-hero">DULRAN</h1>
+    <p class="tag">Aerospace · <b>UT Austin</b> · GNC &amp; Avionics</p>
+    <p class="hint">Click anywhere to shift the palette</p>
+    <div class="scroll-cue"><span>Scroll</span></div>
+  </section>
+
+  <!-- DESTINATIONS — particles morph into a rocket alongside -->
+  <section class="dests" data-reveal>
+    <div class="col">
+      <span class="kicker reveal-item">01 — Destinations</span>
+      <h2 class="headline" data-split>Where to next?</h2>
+      <div class="cards">
+        <a class="card reveal-item" style="--ri:1" href="resumesburntorange.html" data-hot>
+          <span class="num">01</span>
+          <h3>Resume</h3>
+          <p>Concise or detailed — pick the version that fits. Built for recruiters in a hurry and the curious alike.</p>
+          <span class="go">Open</span>
+        </a>
+        <a class="card reveal-item" style="--ri:2" href="projects/index.html" data-hot>
+          <span class="num">02</span>
+          <h3>About / Projects</h3>
+          <p>Flight controllers, nozzle CFD, sensor fusion, registration bots — an explorer of everything I've built.</p>
+          <span class="go">Explore</span>
+        </a>
+        <a class="card reveal-item" style="--ri:3" href="https://www.instagram.com/dul.is.running" target="_blank" rel="noopener" data-hot>
+          <span class="num">03</span>
+          <h3>Gallery</h3>
+          <p>Life outside the lab — running, travel, and the occasional questionable meme. Hosted on Instagram.</p>
+          <span class="go">Visit</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT — particles morph into a planet with orbital rings -->
+  <section class="about" data-reveal>
+    <div class="col">
+      <span class="kicker reveal-item">02 — Who</span>
+      <p class="big reveal-item" style="--ri:1">
+        Aerospace engineering student at <em>UT Austin</em>, building toward a career in
+        <em>guidance, navigation &amp; control</em>.
+      </p>
+      <div class="chips reveal-item" style="--ri:2">
+        <span class="chip">Flight controllers</span>
+        <span class="chip">Nozzle CFD</span>
+        <span class="chip">Sensor fusion</span>
+        <span class="chip">Registration bots</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONNECT — particles reassemble into the word CONNECT -->
+  <section class="connect" data-reveal>
+    <span class="kicker reveal-item">03 — Transmission</span>
+    <h2 class="headline" data-split>Let's build what flies.</h2>
+    <p class="sub reveal-item" style="--ri:1">
+      Dig into the projects, browse the gallery, and connect with me
+      on LinkedIn — always happy to talk aerospace, GNC, or anything in flight.
+    </p>
+    <a class="btn reveal-item" style="--ri:2" href="https://www.linkedin.com/in/dulran/" target="_blank" rel="noopener" data-magnetic data-hot>
+      Connect on LinkedIn ↗
+    </a>
+  </section>
+</main>
+
+<footer>
+  <span>Dulran Kariyawasam © 2026</span>
+  <span>
+    <a href="home67.html">v67</a> ·
+    <a href="home68.html">v68</a> ·
+    <a href="home70.html">v70</a> ·
+    <a href="home71.html">v71</a> ·
+    <a href="home72.html">v72</a>
+  </span>
+  <a href="https://www.linkedin.com/in/dulran/" target="_blank" rel="noopener">LinkedIn</a>
+</footer>
+
+<script>
+// ---- watchdog: reveal a CSS hero if WebGL / CDN never delivers a frame ----
+setTimeout(function () {
+  if (!window.__sceneReady) document.body.classList.add('no-webgl');
+}, 3500);
+
+// ---- intro ceremony: plays up to 5×, skippable, respects reduced motion ----
+(function () {
+  const intro = document.getElementById('intro');
+  const body = document.body;
+  const KEY = 'dk73IntroPlays';
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let plays = 0;
+  try { plays = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+
+  function reveal() {
+    body.classList.add('intro-complete');
+    body.classList.remove('locked');
+    if (window.__onIntroDone) window.__onIntroDone();
+    window.__introDone = true;
+  }
+  function dismiss() {
+    intro.classList.add('done');
+    reveal();
+    setTimeout(() => intro.remove(), 1000);
+  }
+
+  if (!intro || reduced || plays >= 5) {
+    if (intro) intro.remove();
+    reveal();
+    return;
+  }
+  try { localStorage.setItem(KEY, String(plays + 1)); } catch (e) {}
+  intro.addEventListener('click', dismiss);
+  setTimeout(dismiss, 3400);
+})();
+
+// ---- scroll progress fallback for browsers without scroll-driven animations ----
+if (!(window.CSS && CSS.supports('animation-timeline: scroll()'))) {
+  const bar = document.getElementById('progress');
+  const upd = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = 'scaleX(' + (max > 0 ? scrollY / max : 0) + ')';
+  };
+  addEventListener('scroll', upd, { passive: true });
+  upd();
+}
+
+// ---- split headlines into characters for staggered 3D reveals ----
+document.querySelectorAll('[data-split]').forEach(h => {
+  const text = h.textContent;
+  h.textContent = '';
+  h.setAttribute('aria-label', text);
+  let ci = 0;
+  for (const ch of text) {
+    if (ch === ' ') { h.appendChild(document.createTextNode(' ')); continue; }
+    const s = document.createElement('span');
+    s.className = 'ch';
+    s.style.setProperty('--ci', ci++);
+    s.setAttribute('aria-hidden', 'true');
+    s.textContent = ch;
+    h.appendChild(s);
+  }
+});
+
+// ---- reveal-on-scroll ----
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+}, { threshold: 0.22 });
+document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+
+// ---- 3D tilt cards with pointer-tracked glare ----
+// tilt is applied as an inline transform with a fast inline transition so it
+// always beats the slow reveal-on-scroll transition on the same element
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('pointerenter', () => {
+    card.style.transition = 'transform 0.15s ease-out, border-color 0.3s, box-shadow 0.3s';
+  });
+  card.addEventListener('pointermove', e => {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    card.style.transform = 'perspective(800px) rotateX(' + ((0.5 - py) * 8).toFixed(2) +
+      'deg) rotateY(' + ((px - 0.5) * 10).toFixed(2) + 'deg)';
+    card.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+    card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+  });
+  card.addEventListener('pointerleave', () => {
+    card.style.transform = 'perspective(800px)';
+    setTimeout(() => { card.style.transition = ''; card.style.transform = ''; }, 200);
+  });
+});
+
+// ---- magnetic button ----
+document.querySelectorAll('[data-magnetic]').forEach(btn => {
+  btn.addEventListener('pointerenter', () => {
+    btn.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s';
+  });
+  btn.addEventListener('pointermove', e => {
+    const r = btn.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width / 2);
+    const dy = e.clientY - (r.top + r.height / 2);
+    btn.style.transform = 'translate(' + dx * 0.3 + 'px,' + dy * 0.3 + 'px)';
+  });
+  btn.addEventListener('pointerleave', () => {
+    btn.style.transform = '';
+    setTimeout(() => { btn.style.transition = ''; }, 260);
+  });
+});
+
+// ---- custom cursor ----
+(function () {
+  if (!matchMedia('(pointer: fine)').matches) return;
+  const dot = document.getElementById('cdot');
+  const ring = document.getElementById('cring');
+  let mx = -100, my = -100, rx = -100, ry = -100, scale = 1, hot = false;
+  addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; });
+  document.querySelectorAll('a, [data-hot], .chip').forEach(el => {
+    el.addEventListener('pointerenter', () => { hot = true; ring.classList.add('hot'); });
+    el.addEventListener('pointerleave', () => { hot = false; ring.classList.remove('hot'); });
+  });
+  (function loop() {
+    rx += (mx - rx) * 0.16;
+    ry += (my - ry) * 0.16;
+    scale += ((hot ? 1.7 : 1) - scale) * 0.2;
+    dot.style.transform = 'translate(' + (mx - 3) + 'px,' + (my - 3) + 'px)';
+    ring.style.transform = 'translate(' + (rx - 17) + 'px,' + (ry - 17) + 'px) scale(' + scale.toFixed(3) + ')';
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// =====================================================================
+//  THE STAGE — one particle swarm that morphs, as you scroll, through:
+//  DULRAN wordmark → rocket in flight → planet + orbital rings → CONNECT
+// =====================================================================
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 1, 5000);
+camera.position.z = 560;
+
+const group = new THREE.Group();
+const stars = new THREE.Group();
+scene.add(group, stars);
+
+const isMobile = innerWidth < 700;
+const TAU = Math.PI * 2;
+
+// ---------- glyph sampler: rasterize text, harvest filled pixels ----------
+async function sampleText(str, fontPx, targetWorldWidth, step) {
+  try { await document.fonts.load('700 ' + fontPx + 'px "Space Grotesk"'); } catch (e) {}
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  let ctx = c.getContext('2d');
+  const font = '700 ' + fontPx + 'px "Space Grotesk", "Arial Black", sans-serif';
+  ctx.font = font;
+  const tw = ctx.measureText(str).width;
+  const W = Math.ceil(tw + 60), H = Math.ceil(fontPx * 1.4);
+  c.width = W; c.height = H;
+  ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.font = font;
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(str, W / 2, H / 2);
+  const data = ctx.getImageData(0, 0, W, H).data;
+  const S = targetWorldWidth / tw;
+  const pts = [];
+  for (let y = 0; y < H; y += step) {
+    for (let x = 0; x < W; x += step) {
+      if (data[(y * W + x) * 4 + 3] > 128) {
+        pts.push(
+          (x - W / 2 + (Math.random() - 0.5) * step) * S,
+          -(y - H / 2 + (Math.random() - 0.5) * step) * S,
+          (Math.random() - 0.5) * 24
+        );
+      }
+    }
+  }
+  return pts;
+}
+
+// ---------- procedural rocket: nose cone, body, three fins, exhaust plume ----------
+function rocketPoints(n) {
+  const a = new Float32Array(n * 3);
+  const R = 42;
+  for (let i = 0; i < n; i++) {
+    const pick = Math.random();
+    let x, y, z;
+    if (pick < 0.15) {                    // nose cone
+      const t = Math.random(), ang = Math.random() * TAU;
+      const rad = R * (1 - t);
+      y = 92 + t * 105; x = Math.cos(ang) * rad; z = Math.sin(ang) * rad;
+    } else if (pick < 0.56) {             // body
+      const ang = Math.random() * TAU;
+      y = -112 + Math.random() * 204; x = Math.cos(ang) * R; z = Math.sin(ang) * R;
+    } else if (pick < 0.77) {             // three fins, triangular, widest at the base
+      const ang = Math.floor(Math.random() * 3) * TAU / 3 + 0.5;
+      const v = Math.random();            // 0 at base → 1 at top of fin
+      const rad = R + Math.random() * 72 * (1 - v);
+      y = -112 + v * 92;
+      x = Math.cos(ang) * rad; z = Math.sin(ang) * rad;
+    } else {                              // exhaust plume, flaring downward
+      const t = Math.pow(Math.random(), 0.65), ang = Math.random() * TAU;
+      const rad = Math.sqrt(Math.random()) * 26 * (0.4 + t * 1.9);
+      y = -118 - t * 140; x = Math.cos(ang) * rad; z = Math.sin(ang) * rad;
+    }
+    a[i * 3] = x; a[i * 3 + 1] = y; a[i * 3 + 2] = z;
+  }
+  return a;
+}
+
+// ---------- procedural planet + two inclined orbital rings + a moon ----------
+function orbitPoints(n) {
+  const a = new Float32Array(n * 3);
+  const tilt = (x, y, z, ax) => {
+    const cy = y * Math.cos(ax) - z * Math.sin(ax);
+    const cz = y * Math.sin(ax) + z * Math.cos(ax);
+    return [x, cy, cz];
+  };
+  for (let i = 0; i < n; i++) {
+    const pick = Math.random();
+    let p;
+    if (pick < 0.52) {                    // planet
+      const u = 2 * Math.random() - 1, ang = Math.random() * TAU;
+      const s = Math.sqrt(1 - u * u), r = 112 + (Math.random() - 0.5) * 7;
+      p = [s * Math.cos(ang) * r, u * r, s * Math.sin(ang) * r];
+    } else if (pick < 0.80) {             // ring A
+      const ang = Math.random() * TAU, r = 212 + (Math.random() - 0.5) * 14;
+      p = tilt(Math.cos(ang) * r, (Math.random() - 0.5) * 6, Math.sin(ang) * r, 0.42);
+    } else if (pick < 0.95) {             // ring B, counter-inclined
+      const ang = Math.random() * TAU, r = 262 + (Math.random() - 0.5) * 12;
+      p = tilt(Math.cos(ang) * r, (Math.random() - 0.5) * 5, Math.sin(ang) * r, -0.62);
+    } else {                              // moon riding ring A
+      const u = 2 * Math.random() - 1, ang = Math.random() * TAU;
+      const s = Math.sqrt(1 - u * u), r = 17;
+      const c = tilt(212 * Math.cos(0.9), 0, 212 * Math.sin(0.9), 0.42);
+      p = [c[0] + s * Math.cos(ang) * r, c[1] + u * r, c[2] + s * Math.sin(ang) * r];
+    }
+    a[i * 3] = p[0]; a[i * 3 + 1] = p[1]; a[i * 3 + 2] = p[2];
+  }
+  return a;
+}
+
+// ---------- shared glow-particle shader with live hue rotation ----------
+const uniforms = { uHue: { value: 0 } };
+const particleMaterial = new THREE.ShaderMaterial({
+  uniforms,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  vertexShader: `
+    attribute float aSize;
+    attribute vec3 aColor;
+    varying vec3 vColor;
+    void main() {
+      vColor = aColor;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = aSize * (360.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: `
+    uniform float uHue;
+    varying vec3 vColor;
+    vec3 hueShift(vec3 c, float a) {
+      const vec3 k = vec3(0.57735);
+      float ca = cos(a);
+      return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca);
+    }
+    void main() {
+      float d = length(gl_PointCoord - 0.5);
+      float a = smoothstep(0.5, 0.05, d);
+      gl_FragColor = vec4(hueShift(vColor, uHue), a * a);
+    }`
+});
+
+// ---------- build the swarm ----------
+const gold = new THREE.Color('#e8b04b');
+const ember = new THREE.Color('#ff7a26');
+
+let N = 0, geometry, pos, start, off, delay, rnd, phase, amp;
+const targets = [];
+
+async function build() {
+  const step = isMobile ? 6 : 4;
+  const dulran = await sampleText('DULRAN', 250, isMobile ? 340 : 540, step);
+  const connect = await sampleText('CONNECT', 210, isMobile ? 320 : 470, step + 1);
+
+  N = dulran.length / 3;
+  targets[0] = new Float32Array(dulran);
+  targets[1] = rocketPoints(N);
+  targets[2] = orbitPoints(N);
+  targets[3] = new Float32Array(N * 3);
+  const K = connect.length / 3;
+  for (let i = 0; i < N; i++) {
+    const j = (i % K) * 3;
+    targets[3][i * 3]     = connect[j]     + (Math.random() - 0.5) * 2;
+    targets[3][i * 3 + 1] = connect[j + 1] + (Math.random() - 0.5) * 2;
+    targets[3][i * 3 + 2] = connect[j + 2];
+  }
+
+  pos = new Float32Array(N * 3);
+  start = new Float32Array(N * 3);
+  off = new Float32Array(N * 3);
+  delay = new Float32Array(N);
+  rnd = new Float32Array(N);
+  phase = new Float32Array(N);
+  amp = new Float32Array(N);
+  const col = new Float32Array(N * 3);
+  const size = new Float32Array(N);
+  const tmp = new THREE.Color();
+
+  for (let i = 0; i < N; i++) {
+    const i3 = i * 3;
+    // arrive from a huge sphere out in the dark
+    const r = 520 + Math.random() * 520;
+    const th = Math.random() * TAU;
+    const ph = Math.acos(2 * Math.random() - 1);
+    start[i3]     = r * Math.sin(ph) * Math.cos(th);
+    start[i3 + 1] = r * Math.sin(ph) * Math.sin(th);
+    start[i3 + 2] = r * Math.cos(ph) - 260;
+    pos[i3] = start[i3]; pos[i3 + 1] = start[i3 + 1]; pos[i3 + 2] = start[i3 + 2];
+
+    delay[i] = Math.random() * 0.8;
+    rnd[i] = Math.random();
+    phase[i] = Math.random() * TAU;
+    amp[i] = 1.1 + Math.random() * 2.4;
+
+    if (Math.random() < 0.03) {           // white-hot sparks
+      tmp.setRGB(1, 1, 1);
+      size[i] = 10 + Math.random() * 8;
+    } else {                              // gold → ember sweep across the wordmark
+      tmp.copy(gold).lerp(ember, THREE.MathUtils.clamp(
+        (targets[0][i3] + 270) / 540 + (Math.random() - 0.5) * 0.3, 0, 1));
+      size[i] = 4 + Math.random() * 6;
+    }
+    col[i3] = tmp.r; col[i3 + 1] = tmp.g; col[i3 + 2] = tmp.b;
+  }
+
+  geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geometry.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+  group.add(new THREE.Points(geometry, particleMaterial));
+}
+
+function buildStars() {
+  const n = isMobile ? 260 : 620;
+  const p = new Float32Array(n * 3);
+  const c = new Float32Array(n * 3);
+  const s = new Float32Array(n);
+  const tmp = new THREE.Color();
+  for (let i = 0; i < n; i++) {
+    p[i * 3]     = (Math.random() - 0.5) * 2600;
+    p[i * 3 + 1] = (Math.random() - 0.5) * 1600;
+    p[i * 3 + 2] = -150 - Math.random() * 1100;
+    tmp.copy(Math.random() < 0.6 ? gold : ember).multiplyScalar(0.12 + Math.random() * 0.3);
+    c.set([tmp.r, tmp.g, tmp.b], i * 3);
+    s[i] = 2 + Math.random() * 4;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('aColor', new THREE.BufferAttribute(c, 3));
+  g.setAttribute('aSize', new THREE.BufferAttribute(s, 1));
+  stars.add(new THREE.Points(g, particleMaterial));
+}
+
+// ---------- interaction state ----------
+const mouse = new THREE.Vector2(0, 0);
+const mouseLocal = new THREE.Vector3();
+const unproject = new THREE.Vector3();
+let pointerActive = false;
+
+addEventListener('pointermove', e => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  pointerActive = true;
+});
+addEventListener('touchmove', e => {
+  if (e.touches.length) {
+    mouse.x = (e.touches[0].clientX / innerWidth) * 2 - 1;
+    mouse.y = -(e.touches[0].clientY / innerHeight) * 2 + 1;
+    pointerActive = true;
+  }
+}, { passive: true });
+
+// click anywhere (not on links/cards) shifts the palette — the soul of home67's tubes
+let hue = 0, hueTarget = 0;
+document.addEventListener('click', e => {
+  if (e.target.closest('a, button, .card, nav')) return;
+  hueTarget += 0.9 + Math.random() * 1.1;
+});
+
+// ---------- scroll → morph state ----------
+let sTarget = 0, sSmooth = 0;
+function readScroll() {
+  const max = document.documentElement.scrollHeight - innerHeight;
+  sTarget = max > 0 ? (scrollY / max) * 3 : 0;
+}
+addEventListener('scroll', readScroll, { passive: true });
+
+// ---------- responsive fit ----------
+let k = 1, viewW = 800, sideShift = 1;
+function resize() {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  viewW = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+  k = THREE.MathUtils.clamp((viewW * 0.78) / 580, 0.3, 1.2);
+  group.scale.setScalar(k);
+  // on narrow screens keep every formation centered instead of off to one side
+  sideShift = THREE.MathUtils.clamp((camera.aspect - 0.85) / 0.55, 0, 1);
+  readScroll();
+}
+addEventListener('resize', resize);
+
+// x/y drift of the formation per state: hero center, rocket right, orbit left, connect center
+const stateX = [0, 0.23, -0.21, 0];
+const stateY = [26, -4, 0, 40];
+
+// ---------- animation ----------
+const clock = new THREE.Clock();
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let revealT = -1;
+window.__onIntroDone = () => { revealT = clock.getElapsedTime(); };
+if (window.__introDone) revealT = 0;
+
+let nextWave = 3.2, waveT = -100;
+
+function animate() {
+  const t = clock.getElapsedTime();
+  sSmooth += (sTarget - sSmooth) * 0.055;
+
+  const a = Math.min(2, Math.floor(sSmooth));
+  const f = THREE.MathUtils.clamp(sSmooth - a, 0, 1);
+  const A = targets[a], B = targets[a + 1];
+
+  // periodic energy pulse
+  if (t > nextWave) { waveT = t; nextWave = t + 5 + Math.random() * 3; }
+  const waveR = (t - waveT) * 300;
+  const waveOn = !reduceMotion && waveR < 900;
+
+  // cursor projected onto the formation plane, in group-local space
+  if (pointerActive) {
+    unproject.set(mouse.x, mouse.y, 0.5).unproject(camera);
+    const dir = unproject.sub(camera.position).normalize();
+    const dist = -camera.position.z / dir.z;
+    mouseLocal.copy(camera.position).addScaledVector(dir, dist)
+      .sub(group.position).divideScalar(k);
+  }
+
+  const R = 85;
+  for (let i = 0; i < N; i++) {
+    const i3 = i * 3;
+
+    // staggered per-particle morph: a streaming flock, not a uniform blend
+    let fi = THREE.MathUtils.clamp(f * 1.35 - rnd[i] * 0.35, 0, 1);
+    fi = fi * fi * (3 - 2 * fi);
+    const hx = A[i3]     + (B[i3]     - A[i3])     * fi;
+    const hy = A[i3 + 1] + (B[i3 + 1] - A[i3 + 1]) * fi;
+    const hz = A[i3 + 2] + (B[i3 + 2] - A[i3 + 2]) * fi;
+
+    // entrance fly-in, held until the ceremony ends
+    let p = revealT < 0 ? 0 : (t - revealT - 0.1 - delay[i]) / 1.7;
+    p = p < 0 ? 0 : p > 1 ? 1 : p;
+    const e = 1 - Math.pow(1 - p, 4);
+
+    const bx = start[i3]     + (hx - start[i3])     * e;
+    const by = start[i3 + 1] + (hy - start[i3 + 1]) * e;
+    const bz = start[i3 + 2] + (hz - start[i3 + 2]) * e;
+
+    // breathing, amplified mid-morph so transitions feel alive
+    const turb = 1 + fi * (1 - fi) * 6;
+    const wob = reduceMotion ? 0 : e * turb;
+    const wx = Math.sin(t * 1.1 + phase[i]) * amp[i] * wob;
+    const wy = Math.cos(t * 0.9 + phase[i] * 1.7) * amp[i] * wob;
+    const wz = Math.sin(t * 0.7 + phase[i]) * amp[i] * 1.5 * wob;
+
+    // cursor repulsion
+    if (pointerActive && !reduceMotion && e > 0.9) {
+      const dx = hx - mouseLocal.x, dy = hy - mouseLocal.y;
+      const d = Math.hypot(dx, dy);
+      if (d < R && d > 0.001) {
+        const fo = (1 - d / R) * (1 - d / R) * 5.5;
+        off[i3] += (dx / d) * fo;
+        off[i3 + 1] += (dy / d) * fo;
+        off[i3 + 2] += fo * 0.6;
+      }
+    }
+
+    // expanding pulse
+    if (waveOn && e > 0.9) {
+      const hd = Math.hypot(hx, hy);
+      if (hd > 0.001) {
+        const dw = hd - waveR;
+        const g = Math.exp(-(dw * dw) / 1200) * 2.2;
+        off[i3] += (hx / hd) * g;
+        off[i3 + 1] += (hy / hd) * g;
+      }
+    }
+
+    off[i3] *= 0.88; off[i3 + 1] *= 0.88; off[i3 + 2] *= 0.88;
+
+    pos[i3]     = bx + wx + off[i3];
+    pos[i3 + 1] = by + wy + off[i3 + 1];
+    pos[i3 + 2] = bz + wz + off[i3 + 2];
+  }
+  geometry.attributes.position.needsUpdate = true;
+
+  // formation drifts to the free side of each section
+  const fe = f * f * (3 - 2 * f);
+  const gx = (stateX[a] + (stateX[a + 1] - stateX[a]) * fe) * viewW * sideShift;
+  const gy = stateY[a] + (stateY[a + 1] - stateY[a]) * fe;
+  group.position.x += (gx - group.position.x) * 0.06;
+  group.position.y += (gy + (reduceMotion ? 0 : Math.sin(t * 0.5) * 5) - group.position.y) * 0.06;
+
+  // 3D sway: strongest for the sculptural states (rocket, orbit), zero for the wordmarks
+  const w3d = THREE.MathUtils.clamp(Math.min(sSmooth, 3 - sSmooth), 0, 1);
+  const swayY = reduceMotion ? 0 : w3d * Math.sin(t * 0.32) * 0.85;
+  const swayX = reduceMotion ? 0 : w3d * Math.sin(t * 0.21) * 0.22;
+  group.rotation.y += (mouse.x * 0.2 + swayY - group.rotation.y) * 0.05;
+  group.rotation.x += (-mouse.y * 0.13 + swayX - group.rotation.x) * 0.05;
+
+  stars.rotation.y += 0.0003;
+  stars.rotation.x = group.rotation.x * 0.35;
+
+  hue += (hueTarget - hue) * 0.04;
+  uniforms.uHue.value = hue;
+
+  renderer.render(scene, camera);
+  if (!window.__sceneReady) {
+    window.__sceneReady = true;
+    document.body.classList.remove('no-webgl'); // in case the watchdog fired during a slow load
+  }
+  requestAnimationFrame(animate);
+}
+
+build().then(() => {
+  buildStars();
+  resize();
+  if (window.__introDone && revealT < 0) revealT = 0;
+  animate();
+}).catch(() => document.body.classList.add('no-webgl'));
+</script>
+
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+
+</body>
+</html>
