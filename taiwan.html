@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Taiwan · A Month on the Island</title>
+<meta name="description" content="A scroll-driven travel journal of my month in Taiwan: universities, temples, mountains, TSMC, tea, and a very good metro system." />
+<meta name="theme-color" content="#04120f" />
+
+<!-- Fonts: same pairing as the rest of the site (see china.html) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet" />
+
+<!-- Three.js (WebGL) loaded as an ES module via import map -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<!-- GSAP + ScrollTrigger: scroll-driven animation engine -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<!-- Lenis: momentum smooth-scrolling -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+
+<style>
+  /* ============================================================
+     TAIWAN PALETTE — humid jade night, lantern gold, neon accents
+     (deliberately distinct from china.html's sapphire/gold)
+     ============================================================ */
+  :root {
+    --tw-bg-0:   #04120f;               /* deep jade-black */
+    --tw-bg-1:   #07211b;
+    --tw-ink:    #020a08;
+    --tw-jade:   #35c99b;               /* living jade */
+    --tw-jade-d: #1a7a5e;
+    --tw-gold:   #e8c476;               /* lantern gold */
+    --tw-red:    #e4573f;               /* temple vermilion */
+    --tw-cream:  #f5f1e6;
+    --tw-text:   #e6eeea;
+    --tw-muted:  #93aca3;
+    --tw-line:   rgba(53, 201, 155, 0.25);
+    --tw-accent: var(--tw-jade);        /* re-tinted per chapter by JS */
+
+    --font-display: "Fraunces", Georgia, serif;
+    --font-tc: "Noto Serif TC", "Fraunces", serif;
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--tw-text);
+    background: var(--tw-bg-0);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection { background: rgba(53,201,155,.35); color: #fff; }
+
+  /* ---------- WebGL canvas sits fixed behind everything ---------- */
+  #tw-gl {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0; display: block;
+    pointer-events: none;
+  }
+  /* If WebGL/modules fail we still get a rich gradient backdrop */
+  html.tw-no-gl #tw-gl { display: none; }
+  html.tw-no-gl body {
+    background:
+      radial-gradient(120% 90% at 80% -10%, #0c3a2d 0%, transparent 60%),
+      radial-gradient(100% 80% at 10% 110%, #123047 0%, transparent 55%),
+      var(--tw-bg-0);
+  }
+
+  /* subtle film grain over the whole page */
+  .tw-grain {
+    position: fixed; inset: -50%;
+    z-index: 3; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: tw-grain-shift 1.4s steps(4) infinite;
+  }
+  @keyframes tw-grain-shift {
+    0% { transform: translate(0,0); } 25% { transform: translate(-2%,3%); }
+    50% { transform: translate(3%,-2%); } 75% { transform: translate(-3%,-3%); }
+    100% { transform: translate(0,0); }
+  }
+
+  /* dimming veil: sits between the WebGL scene (z0) and the content (z2).
+     Off over the hero, fades in once you reach the journey so the orb's
+     glare doesn't fight the text. Tune the alpha here to taste. */
+  .tw-veil {
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+    background: rgba(2, 10, 8, 0.48);
+    opacity: 0;
+    transition: opacity .65s ease;
+  }
+  .tw-veil.on { opacity: 1; }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .tw-hero {
+    position: relative; z-index: 2;
+    min-height: 100svh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+  }
+  .tw-hero-cjk {
+    font-family: var(--font-tc);
+    font-size: clamp(64px, 16vw, 200px);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(232,196,118,.5);
+    letter-spacing: .08em;
+    user-select: none;
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -78%);
+    opacity: .55; pointer-events: none;
+  }
+  .tw-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(52px, 11vw, 150px);
+    letter-spacing: .04em;
+    line-height: .95;
+    background: linear-gradient(160deg, var(--tw-cream) 20%, var(--tw-gold) 55%, var(--tw-jade) 95%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    position: relative;
+  }
+  .tw-hero .tw-kicker {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: .42em; text-transform: uppercase;
+    color: var(--tw-muted); margin-bottom: 22px;
+  }
+  .tw-hero .tw-sub {
+    margin-top: 26px; max-width: 560px;
+    color: var(--tw-muted); font-size: 15px; line-height: 1.7;
+  }
+  .tw-hero .tw-sub em { color: var(--tw-gold); font-style: normal; }
+  .tw-scrollcue {
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    color: var(--tw-muted); font-size: 10px; letter-spacing: .34em; text-transform: uppercase;
+  }
+  .tw-scrollcue .tw-cue-line {
+    width: 1px; height: 54px; overflow: hidden;
+    background: rgba(255,255,255,.08); position: relative;
+  }
+  .tw-scrollcue .tw-cue-line::after {
+    content: ""; position: absolute; left: 0; top: -40%;
+    width: 100%; height: 40%;
+    background: linear-gradient(180deg, transparent, var(--tw-accent));
+    animation: tw-cue 2s cubic-bezier(.7,0,.3,1) infinite;
+  }
+  @keyframes tw-cue { to { top: 110%; } }
+
+  /* ============================================================
+     PROGRESS RAIL (the travelling dot) — left side on desktop
+     ============================================================ */
+  .tw-rail {
+    position: fixed; left: 26px; top: 50%;
+    transform: translateY(-50%);
+    height: 62vh; width: 2px; z-index: 5;
+    background: rgba(255,255,255,.07);
+    border-radius: 2px;
+  }
+  .tw-rail-fill {
+    position: absolute; left: 0; top: 0; width: 100%; height: 0%;
+    background: linear-gradient(180deg, var(--tw-jade), var(--tw-accent));
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(53,201,155,.55);
+  }
+  .tw-rail-dot {
+    position: absolute; left: 50%; top: 0%;
+    width: 13px; height: 13px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--tw-cream);
+    box-shadow:
+      0 0 0 4px rgba(53,201,155,.22),
+      0 0 18px 4px var(--tw-accent);
+    transition: box-shadow .5s ease;
+  }
+  .tw-rail-tick {
+    position: absolute; left: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--tw-bg-1);
+    border: 1px solid rgba(255,255,255,.28);
+    cursor: pointer; padding: 0;
+    transition: background .3s, border-color .3s, transform .2s;
+  }
+  .tw-rail-tick:hover { transform: translate(-50%,-50%) scale(1.5); border-color: var(--tw-gold); }
+  .tw-rail-tick.done { background: var(--tw-jade-d); border-color: var(--tw-jade); }
+  .tw-rail-tick .tw-tick-label {
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    white-space: nowrap; font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--tw-cream);
+    background: rgba(4,18,15,.85); border: 1px solid var(--tw-line);
+    padding: 5px 10px; border-radius: 6px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .tw-rail-tick:hover .tw-tick-label { opacity: 1; }
+  @media (max-width: 880px) {
+    .tw-rail { left: 0; top: 0; transform: none; height: 3px; width: 100%; border-radius: 0; }
+    .tw-rail-fill { height: 100% !important; width: 0%; background: linear-gradient(90deg, var(--tw-jade), var(--tw-accent)); }
+    .tw-rail-dot, .tw-rail-tick { display: none; }
+  }
+
+  /* ============================================================
+     JOURNEY LAYOUT
+     ============================================================ */
+  .tw-journey { position: relative; z-index: 2; }
+
+  .tw-chapter {
+    padding: clamp(90px, 16vh, 170px) 6vw clamp(20px, 4vh, 50px);
+    max-width: 1180px; margin: 0 auto;
+  }
+  .tw-chapter-head {
+    display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--tw-line);
+    padding-bottom: 18px;
+  }
+  .tw-chapter-num {
+    font-family: var(--font-display);
+    font-size: 15px; color: var(--tw-gold); letter-spacing: .3em;
+  }
+  .tw-chapter-head h2 {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(30px, 5vw, 58px);
+    color: var(--tw-cream); line-height: 1.05;
+  }
+
+  .tw-slide {
+    position: relative;
+    max-width: 1180px; margin: 0 auto;
+    padding: clamp(48px, 9vh, 110px) 6vw;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: clamp(28px, 5vw, 70px);
+    align-items: center;
+  }
+  .tw-slide.flip .tw-media { order: 2; }
+  .tw-slide.flip .tw-copy  { order: 1; }
+  @media (max-width: 880px) {
+    .tw-slide { grid-template-columns: 1fr; gap: 26px; }
+    .tw-slide.flip .tw-media { order: 0; }
+  }
+
+  .tw-copy p {
+    font-size: clamp(15.5px, 1.35vw, 18px);
+    line-height: 1.85; color: var(--tw-text);
+  }
+  .tw-copy p + p { margin-top: 1em; }
+  .tw-copy .tw-aside {
+    margin-top: 16px; font-size: 13px; color: var(--tw-muted);
+    border-left: 2px solid var(--tw-line); padding-left: 12px;
+  }
+
+  /* ---------- media frames ---------- */
+  .tw-media { display: grid; gap: 16px; }
+  .tw-media.n2 { grid-template-columns: 1fr 1fr; }
+  .tw-media.n3 { grid-template-columns: 1fr 1fr; }
+  .tw-media.n3 figure:first-child { grid-column: 1 / -1; }
+  .tw-media.n4 { grid-template-columns: 1fr 1fr; }
+  .tw-media figure {
+    position: relative; overflow: hidden;
+    border-radius: 14px;
+    background: var(--tw-bg-1);
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,.8);
+    aspect-ratio: 4 / 3;
+  }
+  .tw-media.n2 figure:nth-child(2) { transform: translateY(26px); }
+  @media (max-width: 880px) { .tw-media.n2 figure:nth-child(2) { transform: none; } }
+  .tw-media img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transform: scale(1.12);            /* headroom for scroll parallax */
+    filter: saturate(.92) contrast(1.04);
+  }
+  .tw-media figcaption {
+    position: absolute; left: 10px; bottom: 10px;
+    font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: rgba(245,241,230,.75);
+    background: rgba(2,10,8,.62); backdrop-filter: blur(6px);
+    padding: 4px 9px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.1);
+  }
+
+  /* video placeholder frame */
+  .tw-video { position: relative; cursor: pointer; }
+  .tw-video::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(2,10,8,.66));
+  }
+  .tw-video .tw-play {
+    position: absolute; inset: 0; margin: auto; z-index: 2;
+    width: 74px; height: 74px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(2,10,8,.55); backdrop-filter: blur(8px);
+    border: 1px solid rgba(232,196,118,.55);
+    transition: transform .3s ease, background .3s ease;
+  }
+  .tw-video:hover .tw-play { transform: scale(1.1); background: rgba(228,87,63,.35); }
+  .tw-play svg { width: 24px; height: 24px; fill: var(--tw-cream); margin-left: 4px; }
+  .tw-video .tw-video-tag {
+    position: absolute; z-index: 2; left: 12px; top: 12px;
+    font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--tw-gold); background: rgba(2,10,8,.7);
+    border: 1px solid rgba(232,196,118,.4);
+    padding: 5px 10px; border-radius: 20px;
+  }
+
+  /* ---------- pure text slides ---------- */
+  .tw-slide.textonly { grid-template-columns: 1fr; text-align: center; }
+  .tw-slide.textonly .tw-copy { max-width: 760px; margin: 0 auto; }
+  .tw-slide.textonly .tw-copy p {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.6vw, 30px);
+    line-height: 1.62; font-weight: 400;
+    color: var(--tw-cream);
+  }
+  .tw-slide.textonly .tw-copy p + p { margin-top: 1.2em; }
+  .tw-slide.textonly .tw-ornament {
+    font-family: var(--font-tc); color: var(--tw-red);
+    font-size: 22px; margin-bottom: 26px; letter-spacing: .5em;
+  }
+
+  /* ---------- side-trip portals (Vietnam / China) ---------- */
+  .tw-portal-wrap { max-width: 900px; margin: 0 auto; padding: clamp(48px, 9vh, 110px) 6vw; }
+  .tw-portal {
+    position: relative; display: block; overflow: hidden;
+    border-radius: 20px; text-decoration: none;
+    border: 1px solid rgba(232,196,118,.35);
+    aspect-ratio: 21 / 9; min-height: 260px;
+    transform-style: preserve-3d;
+  }
+  .tw-portal img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transform: scale(1.08);
+    transition: transform 1.2s cubic-bezier(.2,.6,.2,1);
+    filter: saturate(.9);
+  }
+  .tw-portal:hover img { transform: scale(1.16); }
+  .tw-portal .tw-portal-scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(100deg, rgba(2,10,8,.88) 25%, rgba(2,10,8,.25) 70%, transparent);
+  }
+  .tw-portal .tw-portal-copy {
+    position: absolute; inset: 0; padding: clamp(22px, 4vw, 44px);
+    display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  }
+  .tw-portal .tw-portal-tag {
+    font-size: 10px; letter-spacing: .38em; text-transform: uppercase;
+    color: var(--tw-gold);
+  }
+  .tw-portal h3 {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(28px, 4.6vw, 52px); color: var(--tw-cream); line-height: 1;
+  }
+  .tw-portal .tw-portal-cta {
+    margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--tw-jade);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tw-portal .tw-portal-cta .arr { transition: transform .3s ease; }
+  .tw-portal:hover .tw-portal-cta .arr { transform: translateX(6px); }
+  .tw-portal .tw-portal-note {
+    font-size: 11.5px; color: var(--tw-muted);
+  }
+
+  /* ============================================================
+     INLINE LINKS ({curly} points) + hover preview card
+     ============================================================ */
+  .tlink {
+    color: var(--tw-gold); text-decoration: none;
+    background-image: linear-gradient(90deg, rgba(232,196,118,.65), rgba(53,201,155,.65));
+    background-size: 100% 1px; background-repeat: no-repeat; background-position: 0 100%;
+    padding-bottom: 1px;
+    transition: color .25s ease;
+  }
+  .tlink:hover { color: var(--tw-cream); }
+
+  #tw-preview {
+    position: fixed; z-index: 60; width: 250px;
+    background: rgba(4,18,15,.92); backdrop-filter: blur(14px);
+    border: 1px solid var(--tw-line); border-radius: 14px;
+    overflow: hidden; pointer-events: none;
+    opacity: 0; transform: translateY(8px) scale(.97);
+    transition: opacity .22s ease, transform .22s ease;
+    box-shadow: 0 24px 60px -12px rgba(0,0,0,.85);
+  }
+  #tw-preview.show { opacity: 1; transform: translateY(0) scale(1); }
+  #tw-preview img { width: 100%; height: 130px; object-fit: cover; display: block; }
+  #tw-preview .pv-body { padding: 11px 13px 13px; }
+  #tw-preview .pv-title { font-size: 12.5px; font-weight: 700; color: var(--tw-cream); }
+  #tw-preview .pv-text { font-size: 11.5px; line-height: 1.55; color: var(--tw-muted); margin-top: 3px; }
+  @media (hover: none) { #tw-preview { display: none; } }
+
+  /* ============================================================
+     PERSISTENT META DOCK — "how I made this" + markdown version
+     ============================================================ */
+  .tw-dock {
+    position: fixed; right: 18px; bottom: 18px; z-index: 50;
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  }
+  .tw-dock a {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    color: var(--tw-cream); text-decoration: none;
+    background: rgba(4,18,15,.78); backdrop-filter: blur(12px);
+    border: 1px solid var(--tw-line);
+    padding: 9px 14px; border-radius: 30px;
+    transition: border-color .3s, transform .3s, background .3s;
+  }
+  .tw-dock a:hover { border-color: var(--tw-gold); transform: translateY(-2px); background: rgba(7,33,27,.9); }
+  .tw-dock .dock-ico { color: var(--tw-gold); font-size: 12px; }
+  @media (max-width: 880px) {
+    .tw-dock { right: 10px; bottom: 10px; }
+    .tw-dock a { padding: 8px 11px; font-size: 10px; }
+  }
+
+  /* ============================================================
+     FOOTER / END CARD
+     ============================================================ */
+  .tw-end {
+    position: relative; z-index: 2; text-align: center;
+    padding: 24vh 6vw 18vh;
+  }
+  .tw-end .tw-end-cjk {
+    font-family: var(--font-tc); font-size: clamp(40px, 8vw, 92px);
+    color: var(--tw-cream); letter-spacing: .2em;
+  }
+  .tw-end p { color: var(--tw-muted); margin-top: 18px; font-size: 14px; }
+  .tw-end .tw-end-links { margin-top: 34px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .tw-end .tw-end-links a {
+    color: var(--tw-gold); text-decoration: none; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--tw-line); padding: 10px 18px; border-radius: 30px;
+    transition: border-color .3s, color .3s;
+  }
+  .tw-end .tw-end-links a:hover { border-color: var(--tw-gold); color: var(--tw-cream); }
+  .tw-credit { margin-top: 46px; font-size: 10.5px; color: rgba(147,172,163,.55); letter-spacing: .04em; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+
+  /* reveal states (JS adds .in) — also acts as no-JS-anim fallback */
+  .tw-reveal { opacity: 0; transform: translateY(46px); }
+  .tw-reveal.in { opacity: 1; transform: none; transition: opacity .9s ease, transform .9s cubic-bezier(.16,.84,.3,1); }
+  @media (prefers-reduced-motion: reduce) {
+    .tw-reveal { opacity: 1; transform: none; }
+    .tw-grain, .tw-scrollcue .tw-cue-line::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="tw-gl" aria-hidden="true"></canvas>
+<div class="tw-veil" id="tw-veil" aria-hidden="true"></div>
+<div class="tw-grain" aria-hidden="true"></div>
+
+<!-- travelling-dot progress rail (built by JS) -->
+<nav class="tw-rail" id="tw-rail" aria-label="Trip progress">
+  <div class="tw-rail-fill" id="tw-rail-fill"></div>
+  <div class="tw-rail-dot" id="tw-rail-dot"></div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="tw-hero">
+  <div class="tw-hero-cjk" aria-hidden="true">台灣</div>
+  <div class="tw-kicker">A travel journal</div>
+  <h1>TAIWAN</h1>
+  <p class="tw-sub">One month on the island: universities and nuclear reactors, temples and
+    night markets, <em>TSMC</em> and winter melon tea. Scroll to travel the line.</p>
+  <div class="tw-scrollcue"><span>Scroll</span><span class="tw-cue-line"></span></div>
+</header>
+
+<!-- ================= JOURNEY (rendered by JS from TRIP data) ================= -->
+<main class="tw-journey" id="tw-journey"></main>
+
+<!-- ================= END CARD ================= -->
+<footer class="tw-end">
+  <div class="tw-end-cjk">謝謝台灣</div>
+  <p>· the end of the line, for now ·</p>
+  <div class="tw-end-links">
+    <!-- TODO(dulran): point this at the making-of page once it exists -->
+    <a href="taiwan-making-of.html">How I made this site →</a>
+    <!-- TODO(dulran): point this at the hosted markdown file once uploaded -->
+    <a href="taiwan-trip.md">Read the markdown version →</a>
+    <a href="vietnam.html">Vietnam side-trip →</a>
+    <a href="china.html">China chapter →</a>
+  </div>
+  <p class="tw-credit">All photos on this page are temporary placeholders (via Wikimedia Commons)
+    while I swap in my own shots and clips. Links marked with a glow open external sites.</p>
+</footer>
+
+<!-- persistent meta dock -->
+<div class="tw-dock">
+  <!-- TODO(dulran): update these two hrefs when the pages/files exist -->
+  <a href="taiwan-making-of.html"><span class="dock-ico">✦</span> How I made this site</a>
+  <a href="taiwan-trip.md"><span class="dock-ico">↓</span> Markdown version</a>
+</div>
+
+<!-- hover preview card for inline links -->
+<div id="tw-preview" role="tooltip" aria-hidden="true">
+  <img alt="" id="tw-pv-img" />
+  <div class="pv-body">
+    <div class="pv-title" id="tw-pv-title"></div>
+    <div class="pv-text" id="tw-pv-text"></div>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   TRIP DATA — one entry per bracketed block in taiwan_trip_cleaned2.md
+   ----------------------------------------------------------------------
+   EDIT ME LATER:
+   · swap `twWm("File.jpg")` / picsum URLs for your own hosted photos
+   · videos: replace the {video:...} slots with real <video> sources
+   · every inline link carries data-pv-* attrs for the hover preview
+   ====================================================================== */
+
+// NOTE: all helpers are tw-prefixed — a CDN lib already declares a global `L`,
+// and a top-level const collision silently kills the whole script.
+// Wikimedia Commons placeholder helper (verified filenames)
+const twWm = (name, w = 1100) =>
+  "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(name) + "?width=" + w;
+// guaranteed-to-load fallback for subjects with no good stock image yet
+const twPh = (seed) => "https://picsum.photos/seed/tw-" + seed + "/1000/750";
+
+// inline curly-brace link builder → gold underlined anchor + hover preview
+const twL = (text, href, pvTitle, pvText, pvImg) =>
+  `<a class="tlink" href="${href}" target="_blank" rel="noopener"` +
+  ` data-pv-title="${pvTitle || text}" data-pv-text="${pvText || ""}"` +
+  (pvImg ? ` data-pv-img="${pvImg}"` : "") + `>${text}</a>`;
+
+const TW_TRIP = [
+
+{ chapter: "Touchdown", slides: [
+  { kind: "video", poster: twWm("Taiwan 2009 HuaLien Rice Paddy at Foot of Mountain FRD 6130 Book Back Cover.jpg"),
+    videoLabel: "Landing footage (placeholder)",
+    text: `<p>As we were landing, I noticed (though I only understood this later) that the
+    airport was a bit far from the main city, Taipei, and closer to a rural area. So I expected
+    the whole country to look like paddy fields and rice fields, and I landed with that
+    expectation.</p>` },
+
+  { kind: "text", ornament: "初到",
+    text: `<p>Once we landed, I met up with all my mates from my cohort, and we went through
+    customs and security. The professor was waiting right outside, and we went with him to a
+    restaurant in the airport, then caught a bus into the city.</p>
+    <p>As we got closer, buildings started to appear, and the transition happened gradually
+    over about 40 minutes. Within that time everything changed. Having landed among the
+    fields, I'd been half expecting that rural feel to carry on the whole way in; instead the
+    scenery grew more and more urban as we went. The city wasn't what I'd first pictured, but
+    I'd have been happy either way. It was just a matter of managing expectations.</p>` },
+]},
+
+{ chapter: "First Days", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("Taipei street scene.jpg"), cap: "placeholder · Taipei streets" }],
+    text: `<p>The first thing we noticed right out of the gate was the <strong>humidity</strong>.
+    Honestly, looking back, the first few days weren't much fun. The temperature itself was
+    about average, but the humidity made it miserable; I'd sweat profusely from a bit of light
+    cardio or even just walking.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("National Taiwan University main gate 20041128.jpg"), cap: "placeholder · NTU main gate" }],
+    text: `<p>On the first day we went to check out the university: our professor's alma mater,
+    ${twL("National Taiwan University", "https://www.ntu.edu.tw/english/", "National Taiwan University",
+        "Taiwan's top-ranked university, founded 1928. Known for electrical engineering.",
+        twWm("National Taiwan University main gate 20041128.jpg", 500))}. He was genuinely upbeat
+    about it, since it had been about 35 years since he'd last been back.</p>
+    <p>It was probably more exciting for him than for us, but we enjoyed it too. It's one of the
+    top-ranked universities in the country, and one of its specialties is electrical
+    engineering, so we visited those buildings.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Dalongdong Baoan Temple.jpg"), cap: "placeholder · a Taipei temple" }],
+    text: `<p>The next day we visited one of the old traditional temples. Interestingly, temples
+    in Taiwan tend to blend <strong>three religious traditions</strong>: some Buddhist elements,
+    some Taoist elements, and a third one I can't quite recall.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Man climbing in bouldering gym.jpg"), cap: "placeholder · bouldering" },
+      { src: twPh("driving-range"), cap: "placeholder · driving range" }],
+    text: `<p>Whenever I had free time, I went to a bouldering place to do some rock climbing,
+    and there was also a nice driving range we visited. Most of the time, though, we stayed
+    together as a group; we went almost everywhere together, which was actually a nice
+    thing.</p>` },
+]},
+
+{ chapter: "Taipei 101 & the Google Office", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("Taipei101.portrait.altonthompson.jpg"), cap: "placeholder · Taipei 101" },
+      { src: twWm("View of skyscrapers from Taipei 101 Observatory 20250518.jpg"), cap: "placeholder · view from up top" }],
+    text: `<p>A few days in, we hit one of the highlights of the trip: a visit to
+    ${twL("Taipei 101", "https://www.taipei-101.com.tw/en/", "Taipei 101",
+        "509 m supertall skyscraper, the world's tallest building from 2004 to 2010.",
+        twWm("Taipei101.portrait.altonthompson.jpg", 500))}, including exclusive access to the
+    Google office located very high up in the building. From there I could see Taipei's
+    airport.</p>
+    <p>An interesting fact about that office: the American rock climber
+    ${twL("Alex Honnold", "https://en.wikipedia.org/wiki/Alex_Honnold", "Alex Honnold",
+        "The free-solo climber from the Oscar-winning film Free Solo, and the first to free-solo Taipei 101.",
+        twWm("Alex Honnold 01.jpg", 500))} made history as the first person to free-solo
+    Taipei 101, with no ropes and no safety equipment. He climbed past the Google office during the
+    ascent, and the office posted footage from their own perspective online, which made it
+    semi-famous within the building. We sat in on seminars about AI and its relevance to
+    nanotechnology, as well as ${twL("TPUs", "https://cloud.google.com/tpu", "Tensor Processing Units",
+        "Google's custom AI accelerator chips, their bet against Nvidia's GPUs.")}
+    (Tensor Processing Units), the direction Google is betting on instead of Nvidia's GPUs.</p>` },
+]},
+
+{ chapter: "Elephant Mountain & Lungshan Temple", slides: [
+  { kind: "video", poster: twWm("Taipei skyline from Elephant Mountain.jpg"),
+    videoLabel: "Drone footage (maybe someday)",
+    text: `<p>After that we went to ${twL("Elephant Mountain", "https://en.wikipedia.org/wiki/Xiangshan_(Taipei)",
+        "Elephant Mountain (象山)", "Short, steep hike with the classic postcard view over Taipei 101.",
+        twWm("Taipei skyline from Elephant Mountain.jpg", 500))}, which has a great viewpoint over
+    Taipei 101.</p>
+    <p>Some things happened while I was flying my drone there, and without going into detail,
+    I ended up <strong>losing it</strong>.</p>
+    <p class="tw-aside">I might post the footage at some point.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Longshan Temple, Taipei 01.jpg"), cap: "placeholder · Lungshan Temple" },
+      { src: twPh("moon-blocks"), cap: "placeholder · jiaobei moon blocks" },
+      { src: twPh("red-string"), cap: "placeholder · the elusive red string" }],
+    text: `<p>We also visited ${twL("Lungshan Temple (龍山寺)", "https://en.wikipedia.org/wiki/Bangka_Lungshan_Temple",
+        "Bangka Lungshan Temple", "Founded 1738. Taipei's most famous temple, historically a refuge for the vulnerable.",
+        twWm("Longshan Temple, Taipei 01.jpg", 500))}, located in an area historically associated
+    with underrepresented and vulnerable people, who would go there for refuge.</p>
+    <p>At the temple there's a tradition involving two half-moon-shaped wooden blocks you drop
+    on the ground. The result works almost like a <strong>binary read</strong>: two "smiley"
+    (convex) faces or two "sad" (flat) faces are not what you want, but one of each means you're
+    in luck. I dropped mine and got the lucky result. Not scientific, obviously, just a bit of
+    fun local tradition.</p>
+    <p>One guy in our group was unlucky the entire trip. He kept trying for the lucky combination
+    so he could receive a red string, but every single time got double smiley faces instead.
+    It became a running joke.</p>` },
+]},
+
+{ chapter: "Academia Sinica & Yangmingshan", slides: [
+  { kind: "text", ornament: "研究",
+    text: `<p>We then went to Academia Sinica, a large campus with an ecosystem built around
+    biomedical research and startups, something like a YC-style incubator, except
+    government-run. Still a solid VC-style setup overall.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("9025 Yangmingshan National Park Xiaoyoukeng Jim X 2953.jpg"), cap: "placeholder · Yangmingshan fumaroles" },
+      { src: twWm("Xiaoyoukeng in Yangmingshan (5384181388).jpg"), cap: "placeholder · the fog up top" },
+      { src: twPh("the-bench"), cap: "placeholder · that bench" }],
+    text: `<p>The rural areas we passed through were dense, foggy, and pleasant. We went hiking
+    in the Yangmingshan area.</p>
+    <p>There was a funny incident there: we noticed news reporters filming near a bench and
+    wondered what was going on. It turned out to be something a bit salacious, and we may have
+    ended up in the background of that coverage. If you're curious, search for the
+    <em>"Yangmingshan bench incident."</em></p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Queen's Head, Yehliu 20060405.jpg"), cap: "placeholder · the Queen's Head" },
+      { src: twWm("Queens Head Rock Yeliu North Coast Taiwan.jpg"), cap: "placeholder · Yehliu coast" },
+      { src: twWm("Queen's head, Yehliu Geopark, Taiwan - 野柳地質公園, 台湾 (11353535854).jpg"), cap: "placeholder · hoodoo rocks" }],
+    text: `<p>After that we visited the <strong>Yehliu Geopark</strong>, which was genuinely
+    beautiful; I really liked the natural scenery there.</p>` },
+]},
+
+{ chapter: "Infrastructure", slides: [
+  { kind: "mixed", poster: twWm("Taoyuan Metro Commuter Train at Platform 4, Taipei Main Station 20170318.jpg"),
+    videoLabel: "Metro clip or photo (TBD)",
+    imgs: [{ src: twWm("YouBike bicycle parking in Taipei 20120916.jpg"), cap: "placeholder · YouBikes outside a station" }],
+    text: `<p>I loved the infrastructure: well thought out, robust, and genuinely deep. It wasn't
+    just the metro system; there was supporting infrastructure around it, like rentable bikes
+    right outside metro stations.</p>
+    <p>Good, easy mobility like that tends to make an economy move faster and more efficiently,
+    so it's a great sign for a country. The metro frequency was also excellent, about every
+    <strong>four minutes</strong>, so even if you missed one, the wait wasn't bad.</p>` },
+]},
+
+{ chapter: "NTHU & the Nuclear Reactor", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("National Tsing Hua University West Gate 2020-11-30.jpg"), cap: "placeholder · NTHU gate" },
+      { src: twWm("Advanced Test Reactor.jpg"), cap: "placeholder · a reactor pool (not the one we saw)" },
+      { src: twPh("bnct-lab"), cap: "placeholder · BNCT facility" }],
+    text: `<p>We visited National Tsing Hua University in Taiwan, not to be confused with
+    China's top-tier Tsinghua University. There's some history around the two institutions and
+    how the Taiwanese one has, at times, positioned itself as connected to a broader "China"
+    identity, though I don't know the full details.</p>
+    <p>At this campus we visited a <strong>nuclear reactor facility</strong>, one of the leading
+    centers for boron neutron capture therapy (BNCT), used to treat certain medical conditions.
+    We got to go inside the reactor building and see the pool that housed the nuclear rods.</p>` },
+]},
+
+{ chapter: "Evergreen & the Chiang Kai-shek Memorial", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("Ever Ace C Hamburg 08-09-2021 (14).jpg"), cap: "placeholder · an Evergreen ship" }],
+    text: `<p>Something you may not know: those green shipping containers you see everywhere,
+    <strong>Evergreen</strong>, are from a Taiwanese company. It was founded by someone who, I
+    believe, once lived in Hong Kong, and I later found out he was also the founder of EVA Air.
+    We visited a ship museum related to this.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Chiang Kai-shek memorial amk.jpg"), cap: "placeholder · CKS Memorial Hall" },
+      { src: twWm("CKS Memorial Hall.jpg"), cap: "placeholder · the hall" },
+      { src: twPh("cks-exhibit"), cap: "placeholder · exhibits inside" }],
+    text: `<p>After that, we went to the Chiang Kai-shek Memorial Hall. Chiang Kai-shek is the
+    infamous figure who fled to Taiwan and established what became the Republic of China (ROC)
+    government there. The current ruling party tends to be less favorable toward him, so the
+    memorial displays some of the more dictatorial aspects of his rule that the opposing party,
+    when in power, chose not to highlight.</p>
+    <p>It's worth being honest about it: he was a dictator. I was surprised to learn that
+    Taiwan only became a real democracy after 2000 (when the KMT lost), given that I'd been
+    under the impression it had long been a beacon of democracy in the region. There's also
+    the issue of the coercion (potentially amounting to genocide, by some accounts) of the
+    island's earlier Indigenous populations when the ROC government moved in.</p>
+    <p>I've heard criticizing Chiang Kai-shek is treated as something close to sacrilege by the
+    older generation, but younger people are generally more willing to be critical of him, and
+    since we belong to that younger group, it's fair for us to be critical too.</p>` },
+]},
+
+{ chapter: "Central Taiwan", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("Sun Moon Lake.jpg"), cap: "placeholder · Sun Moon Lake" },
+      { src: twWm("日月潭文武廟 Sun Moon Lake Wen-Wu Temple - panoramio.jpg"), cap: "placeholder · Wenwu Temple" },
+      { src: twWm("Taiwan 2009 HuaTung Valley Decommissioned Railway Tracks by Rice Paddy FRD 8154.jpg"), cap: "placeholder · old rail lines" },
+      { src: twPh("handmade-paper"), cap: "placeholder · making paper by hand" }],
+    text: `<p>We then traveled to central Taiwan, which had a lot to see. It used to be a
+    resource-extraction hub, so there's old rail infrastructure still around. We visited
+    <strong>Sun Moon Lake</strong>, which was beautiful, and took a boat ride on it. We also
+    visited a well-known Taoist temple nearby.</p>
+    <p>The food throughout was consistently great. We also visited a paper factory and made our
+    own paper by hand.</p>` },
+
+  { kind: "text", ornament: "苦讀",
+    text: `<p>The academics leading up to this point had been intense. We were cramming roughly
+    four months' worth of material into a single month, which was never going to be fun, but it
+    was the trade-off for being on the study abroad, and honestly a fair one.</p>
+    <p>If you didn't like that arrangement, there wasn't much room to complain; that was simply
+    the deal.</p>` },
+]},
+
+{ chapter: "TSMC", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("TSMC AP2 building May 2025.jpg"), cap: "placeholder · TSMC" },
+      { src: twWm("TSMC logo on Taichung factory building.jpg"), cap: "placeholder · the logo everywhere" }],
+    text: `<p>One of the highlights was visiting <strong>TSMC</strong>. We toured the museum and
+    learned about the history of nanotechnology and chip manufacturing, and how Taiwan became
+    the dominant player in the chip industry.</p>
+    <p>Part of the strategy was staying a <em>neutral manufacturing party</em> rather than
+    producing devices that competed with its own customers, unlike Samsung, which both
+    manufactured chips and was accused of copying designs from companies like Apple, creating a
+    trust issue. TSMC's founder reportedly hit a "glass ceiling" in the US industry and returned
+    to Taiwan to start the company instead. A great visit overall.</p>` },
+]},
+
+{ chapter: "Vietnam Break", slides: [
+  { kind: "portal", href: "vietnam.html", tag: "Side quest · 3–4 day break",
+    title: "Vietnam", img: twWm("My Khe Beach, Da Nang, Vietnam.jpg"),
+    cta: "Click here for the Da Nang write-up",
+    note: "Same kind of journey, different country; page coming soon. (Da Nang was a genuinely nice beach town, for reference.)" },
+]},
+
+{ chapter: "Tea Village & Taiwan's Tea Culture", slides: [
+  { kind: "text", ornament: "茶",
+    text: `<p>As the academic side wound down, we had more free time. We took a roughly
+    20-minute cable car ride to a remote tea village, where we drank tea, talked, and took in
+    the view from a distance. The tea was excellent.</p>
+    <p>In my opinion, the best tea in the world is
+    ${twL("Ceylon tea", "https://en.wikipedia.org/wiki/Tea_production_in_Sri_Lanka", "Ceylon tea",
+        "Sri Lankan high-grown black tea, among the most prized in the world.",
+        twWm("Tea plantation Haputale.jpg", 500))}, Sri Lankan tea, and Taiwanese tea comes right
+    after it (I may be a little biased here 😁).</p>
+    <p>As a shameless plug: if you're looking for Ceylon tea,
+    ${twL("Dilmah", "https://www.dilmahtea.com/", "Dilmah",
+        "Family-owned Sri Lankan tea company founded by Merrill J. Fernando; single-origin Ceylon tea.")}
+    is a well-known Sri Lankan brand, reportedly a favorite of
+    ${twL("Margot Robbie's", "https://en.wikipedia.org/wiki/Margot_Robbie", "Margot Robbie",
+        "Australian actress and, reportedly, a Dilmah tea enthusiast.")}, for what that's
+    worth.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Winter Melon Tea (Taiwan).jpg"), cap: "placeholder · winter melon tea" },
+      { src: twWm("Pearl Milk Tea in Chun Shui Tang.jpg"), cap: "placeholder · pearl milk tea" }],
+    text: `<p>More broadly, the food and drink profile of the country is very tea-heavy. The
+    most prevalent variety by far is <strong>winter melon tea</strong>: a bit sweet, takes some
+    getting used to, but grows on you.</p>
+    <p>What struck me is just how much variety there is around it. In a lot of countries, say
+    Turkey, there's essentially one default tea and that's what you get. In Taiwan it's the
+    opposite: many different types and flavors of tea in circulation. Winter melon tea has the
+    highest prevalence, but it's not overwhelmingly dominant.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Mala Stinky Tofu bought from Nan Ji Chang Night Market 20040818.jpg"), cap: "placeholder · stinky tofu" }],
+    text: `<p>On the protein side: tofu, pork, beef, and chicken are all common, though chicken
+    specifically was hardest to find; Protein Box (more on that below) was really the only
+    reliable source I found for it.</p>
+    <p>There's also <strong>stinky tofu</strong>, which lives up to its name; the smell is
+    strong if you're near it. It's a bit like durian: an acquired taste I personally didn't
+    enjoy, but plenty of people love it.</p>` },
+]},
+
+{ chapter: "NTU Semiconductor Lab", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("Wafer 2 Zoll bis 8 Zoll 2.jpg"), cap: "placeholder · silicon wafers" },
+      { src: twPh("cleanroom"), cap: "placeholder · the fab lab" }],
+    text: `<p>One more place worth mentioning: before the tea village, we visited a
+    semiconductor fabrication lab at National Taiwan University, a research center tied to a
+    consortium focused on key technologies, working on electromechanical systems (NEMS-related
+    research).</p>
+    <p>There, we <strong>etched our own wafers</strong> using a custom design we made ourselves.
+    A simplified process, obviously nothing close to TSMC's precision, but genuinely interesting
+    to go through.</p>` },
+
+  { kind: "portal", href: "china.html", tag: "Next stop · after Taiwan",
+    title: "China", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/1280px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
+    cta: "Click here for the China chapter",
+    note: "After Taiwan, I went on to China. That journal is brewing on its own page." },
+]},
+
+{ chapter: "Free Time · Ximending", slides: [
+  { kind: "photos", imgs: [
+      { src: twWm("Ximending at night.jpg"), cap: "placeholder · Ximending at night" },
+      { src: twWm("Taipei Taiwan Ximending-Night-Market-03.jpg"), cap: "placeholder · night market" }],
+    text: `<p>In my free time, both early on and later during the central Taiwan stretch, I'd
+    often go to ${twL("Ximending (西門町)", "https://en.wikipedia.org/wiki/Ximending", "Ximending",
+        "Taipei's youth-culture and shopping district, 'the Harajuku of Taipei.'",
+        twWm("Ximending at night.jpg", 500))}. "Xi Men" means "West Gate" and "Ding" refers to the
+    surrounding area, so essentially <em>the area around the West Gate</em>. It's a nice place
+    with a decent night market where you can browse clothing and other shops.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Karaoke-Box.jpg"), cap: "placeholder · KTV" }],
+    text: `<p><strong>KTV is a must-do</strong> too; I'd recommend the one near Jingmei
+    Station; it's a solid spot. The other place I'd default to was the area right around
+    Taipei 101, since there's a mall there I could just wander around.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: twWm("Skewered food at Shida Night Market in Taipei.jpg"), cap: "placeholder · fuel" }],
+    text: `<p>On the food side, the first few days were tough for finding good protein sources
+    and generally nutritious food. Eventually I found a place on the NTU campus called
+    <strong>Protein Box</strong>, which I'd recommend: about 99 NTD for a bowl with rice,
+    decent quality, and reliable enough that if you're a creature of habit you can just buy a
+    few at once and take them home. That made meal planning a lot easier.</p>` },
+]},
+
+{ chapter: "The Transportation System", slides: [
+  { kind: "text", ornament: "捷運",
+    text: `<p>Worth going into more detail here. The metro is the backbone of the whole city, a
+    wide network that doesn't go extremely deep in any one area, but reaches broadly enough to
+    touch all the main points of the city. Buses form a second layer, running from each station
+    out to wherever you need to go. The U-Bike rental system is arguably a third.</p>
+    <p>Between these layers, getting from A to B anywhere in the city is easy. All you need is
+    an ${twL("EasyCard", "https://www.easycard.com.tw/en/", "EasyCard 悠遊卡",
+        "Taipei's tap-everything transit card: metro, buses, bikes, convenience stores.",
+        twWm("EasyCard add-value machines in MRT Taipei Main Station 20130424.jpg", 500))}. It's loosely
+    tied to your identity via phone number, but not a hard ID; you can hold several. Top up at
+    convenience stores (FamilyMart, 7-Eleven) or metro stations, and pay for both bikes and the
+    metro. We had unlimited passes, but for a regular user that's how it works.</p>
+    <p>${twL("U-Bikes", "https://en.youbike.com.tw/region/main/", "YouBike",
+        "Taipei's shared bike system, with docks outside nearly every metro station.",
+        twWm("YouBike kiosk at Taipei Bus Station 20170728.jpg", 500))} are free for the first
+    30 minutes, and given how the network is laid out, most rides end up being 10–15 minutes at
+    most. On top of these three layers, high-speed rail connects the cities. There's no need for it
+    within one city, since Taiwan's cities are compact enough that it wouldn't make financial or
+    practical sense.</p>` },
+
+  { kind: "mixed", poster: twWm("Platform 2, Taoyuan Metro Taipei Main Station 20170225.jpg"),
+    videoLabel: "The jingle (clip TBD)",
+    imgs: [{ src: twWm("EasyCard add-value machines in MRT Taipei Main Station 20130424.jpg"), cap: "placeholder · EasyCard machines" }],
+    text: `<p>The metro system itself is top-notch. There's also a well-known <strong>jingle</strong>
+    that plays when a train arrives, at least on the green line.</p>
+    <p class="tw-aside">I'll add the name of the jingle later.</p>` },
+]},
+
+];
+
+/* ======================================================================
+   RENDER — build chapters & slides into #tw-journey
+   ====================================================================== */
+(function render() {
+  const root = document.getElementById("tw-journey");
+  let chNum = 0, flip = false;
+
+  const figure = (img) =>
+    `<figure><img loading="lazy" src="${img.src}" alt="${img.cap || "trip photo"}"
+       onerror="this.onerror=null;this.src='${twPh("fallback-" + Math.random().toString(36).slice(2, 7))}';" />
+      <figcaption>${img.cap || "placeholder"}</figcaption></figure>`;
+
+  const videoFrame = (poster, label) =>
+    `<figure class="tw-video" title="Video placeholder, real clip coming soon">
+       <img loading="lazy" src="${poster}" alt="video placeholder" />
+       <span class="tw-video-tag">${label || "Video · placeholder"}</span>
+       <span class="tw-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+     </figure>`;
+
+  for (const ch of TW_TRIP) {
+    chNum++;
+    const chEl = document.createElement("section");
+    chEl.className = "tw-chapter tw-reveal";
+    chEl.id = "ch-" + chNum;
+    chEl.dataset.title = ch.chapter;
+    chEl.innerHTML = `<div class="tw-chapter-head">
+        <span class="tw-chapter-num">${String(chNum).padStart(2, "0")}</span>
+        <h2>${ch.chapter}</h2></div>`;
+    root.appendChild(chEl);
+
+    for (const s of ch.slides) {
+      if (s.kind === "portal") {
+        const wrap = document.createElement("div");
+        wrap.className = "tw-portal-wrap tw-reveal";
+        wrap.innerHTML = `<a class="tw-portal" href="${s.href}">
+            <img loading="lazy" src="${s.img}" alt="${s.title} preview"
+                 onerror="this.onerror=null;this.src='${twPh(s.title.toLowerCase())}';" />
+            <span class="tw-portal-scrim"></span>
+            <span class="tw-portal-copy">
+              <span class="tw-portal-tag">${s.tag}</span>
+              <h3>${s.title}</h3>
+              <span class="tw-portal-cta">${s.cta} <span class="arr">→</span></span>
+              <span class="tw-portal-note">${s.note}</span>
+            </span></a>`;
+        root.appendChild(wrap);
+        continue;
+      }
+
+      const el = document.createElement("section");
+
+      if (s.kind === "text") {
+        el.className = "tw-slide textonly tw-reveal";
+        el.innerHTML = `<div class="tw-copy">
+            ${s.ornament ? `<div class="tw-ornament">${s.ornament}</div>` : ""}${s.text}</div>`;
+      } else {
+        flip = !flip;
+        el.className = "tw-slide tw-reveal" + (flip ? " flip" : "");
+        let media = "";
+        if (s.kind === "video") {
+          media = `<div class="tw-media n1">${videoFrame(s.poster, s.videoLabel)}</div>`;
+        } else if (s.kind === "mixed") {
+          media = `<div class="tw-media n2">${videoFrame(s.poster, s.videoLabel)}${s.imgs.map(figure).join("")}</div>`;
+        } else {
+          const n = s.imgs.length;
+          media = `<div class="tw-media n${n}">${s.imgs.map(figure).join("")}</div>`;
+        }
+        el.innerHTML = `${media}<div class="tw-copy">${s.text}</div>`;
+      }
+      root.appendChild(el);
+    }
+  }
+})();
+
+/* ======================================================================
+   MOTION — Lenis smooth scroll + GSAP ScrollTrigger + progress rail
+   ====================================================================== */
+window.__tw = { p: 0, dim: 0 };  // scroll progress [0..1] + veil state, read by the WebGL scene
+
+(function motion() {
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ---- smooth scrolling (skipped for reduced-motion users)
+  let lenis = null;
+  if (!RM && window.Lenis) {
+    lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1.0 });
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add((t) => lenis.raf(t * 1000));
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  // ---- per-chapter accent colors (rail glow, links) — matches WebGL palette
+  const ACCENTS = ["#35c99b","#8fd7c0","#e8c476","#e4573f","#7fb6a2","#43d1c0",
+                   "#6fb7ff","#c6a15b","#4fd08a","#b78bff","#ffb37f","#a4d977",
+                   "#c0b3ff","#ff8fa5","#ffd166","#35c99b"];
+
+  // ---- slide reveals
+  const reveal = (el) => {
+    if (RM) { el.classList.add("in"); return; }
+    ScrollTrigger.create({
+      trigger: el, start: "top 82%", once: true,
+      onEnter: () => el.classList.add("in"),
+    });
+  };
+  document.querySelectorAll(".tw-reveal").forEach(reveal);
+
+  // ---- image parallax inside frames
+  if (!RM) {
+    document.querySelectorAll(".tw-media img").forEach((img) => {
+      gsap.fromTo(img, { yPercent: -6 }, {
+        yPercent: 6, ease: "none",
+        scrollTrigger: { trigger: img.closest("figure"), start: "top bottom", end: "bottom top", scrub: true },
+      });
+    });
+    // gentle drift on chapter headings
+    document.querySelectorAll(".tw-chapter-head h2").forEach((h) => {
+      gsap.fromTo(h, { x: 40, opacity: 0.4 }, {
+        x: 0, opacity: 1, ease: "none",
+        scrollTrigger: { trigger: h, start: "top 95%", end: "top 55%", scrub: true },
+      });
+    });
+  }
+
+  // ---- progress rail: travelling dot + chapter ticks
+  const rail = document.getElementById("tw-rail");
+  const fill = document.getElementById("tw-rail-fill");
+  const dot = document.getElementById("tw-rail-dot");
+  const veil = document.getElementById("tw-veil");
+  const chapters = [...document.querySelectorAll(".tw-chapter")];
+  const mobile = () => innerWidth <= 880;
+  let ticks = [];
+
+  function layoutTicks() {
+    ticks.forEach((t) => t.remove()); ticks = [];
+    if (mobile()) return;
+    const docH = document.documentElement.scrollHeight - innerHeight;
+    chapters.forEach((ch, i) => {
+      const f = Math.min(1, Math.max(0, (ch.offsetTop - innerHeight * 0.4) / docH));
+      const b = document.createElement("button");
+      b.className = "tw-rail-tick"; b.style.top = (f * 100) + "%";
+      b.dataset.f = f;
+      b.innerHTML = `<span class="tw-tick-label">${String(i + 1).padStart(2, "0")} · ${ch.dataset.title}</span>`;
+      b.addEventListener("click", () => {
+        if (lenis) lenis.scrollTo(ch, { offset: -20 });
+        else ch.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+      });
+      rail.appendChild(b); ticks.push(b);
+    });
+  }
+  layoutTicks();
+  addEventListener("resize", layoutTicks);
+  ScrollTrigger.addEventListener("refreshInit", layoutTicks);
+
+  // ---- master progress tracker
+  let lastAccent = -1;
+  ScrollTrigger.create({
+    trigger: document.body, start: 0, end: "max",
+    onUpdate: (st) => {
+      const p = st.progress;
+      window.__tw.p = p;
+      // dim the scene once the journey starts (past ~half the hero)
+      const dimOn = window.scrollY > innerHeight * 0.55;
+      veil.classList.toggle("on", dimOn);
+      window.__tw.dim = dimOn ? 1 : 0;
+      if (mobile()) { fill.style.width = (p * 100) + "%"; }
+      else {
+        fill.style.height = (p * 100) + "%";
+        dot.style.top = (p * 100) + "%";
+        ticks.forEach((t) => t.classList.toggle("done", p >= +t.dataset.f));
+      }
+      const ai = Math.min(ACCENTS.length - 1, Math.floor(p * ACCENTS.length));
+      if (ai !== lastAccent) {
+        lastAccent = ai;
+        document.documentElement.style.setProperty("--tw-accent", ACCENTS[ai]);
+      }
+    },
+  });
+
+  // ---- hover preview card for inline {curly} links
+  const pv = document.getElementById("tw-preview");
+  const pvImg = document.getElementById("tw-pv-img");
+  const pvTitle = document.getElementById("tw-pv-title");
+  const pvText = document.getElementById("tw-pv-text");
+
+  document.addEventListener("mouseover", (e) => {
+    const a = e.target.closest(".tlink");
+    if (!a) return;
+    pvTitle.textContent = a.dataset.pvTitle || a.textContent;
+    pvText.textContent = a.dataset.pvText || "";
+    if (a.dataset.pvImg) { pvImg.src = a.dataset.pvImg; pvImg.style.display = "block"; }
+    else { pvImg.style.display = "none"; }
+    const r = a.getBoundingClientRect();
+    const x = Math.min(innerWidth - 266, Math.max(10, r.left));
+    const above = r.top > innerHeight * 0.55;
+    pv.style.left = x + "px";
+    pv.style.top = above ? "" : (r.bottom + 12) + "px";
+    pv.style.bottom = above ? (innerHeight - r.top + 12) + "px" : "";
+    pv.classList.add("show");
+  });
+  document.addEventListener("mouseout", (e) => {
+    if (e.target.closest && e.target.closest(".tlink")) pv.classList.remove("show");
+  });
+  // hide on real user scrolling (not Lenis's trailing momentum ticks)
+  addEventListener("wheel", () => pv.classList.remove("show"), { passive: true });
+  addEventListener("touchmove", () => pv.classList.remove("show"), { passive: true });
+})();
+</script>
+
+<!-- ======================================================================
+     WEBGL SCENE (Three.js) — the journey line in 3D
+     A glowing path winds down through fog & fireflies; a bright orb rides
+     it, driven by scroll progress. Camera follows just behind the orb.
+     ====================================================================== -->
+<script type="module">
+try {
+  const THREE = await import("three");
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canvas = document.getElementById("tw-gl");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  if (!renderer.getContext()) throw new Error("no webgl");
+  window.__twGL = true;
+
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(DPR);
+  renderer.setSize(innerWidth, innerHeight);
+
+  const scene = new THREE.Scene();
+
+  // ---- chapter palettes: [background/fog, path accent] — mirrors ACCENTS above
+  const PAL = [
+    ["#04120f", "#35c99b"], ["#071e18", "#8fd7c0"], ["#0a1a10", "#e8c476"],
+    ["#140c0e", "#e4573f"], ["#0a1a1c", "#7fb6a2"], ["#06181f", "#43d1c0"],
+    ["#0a1220", "#6fb7ff"], ["#120f0a", "#c6a15b"], ["#07200f", "#4fd08a"],
+    ["#0e0a1c", "#b78bff"], ["#1c0f08", "#ffb37f"], ["#0d1a06", "#a4d977"],
+    ["#0b0a1e", "#c0b3ff"], ["#1c0a12", "#ff8fa5"], ["#1c1506", "#ffd166"],
+    ["#04120f", "#35c99b"],
+  ].map(([a, b]) => [new THREE.Color(a), new THREE.Color(b)]);
+
+  scene.background = PAL[0][0].clone();
+  scene.fog = new THREE.FogExp2(PAL[0][0].clone(), 0.028);
+
+  const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 400);
+
+  // ---- the journey path: a meandering downhill curve
+  const pts = [];
+  const SEGS = 22;
+  for (let i = 0; i <= SEGS; i++) {
+    pts.push(new THREE.Vector3(
+      Math.sin(i * 0.9) * 13 + Math.sin(i * 2.3) * 3,
+      -i * 9,
+      Math.cos(i * 0.7) * 11 + Math.cos(i * 1.7) * 4
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.6);
+
+  // tube with vertex colors graded across the chapter palette
+  const TUBULAR = 700, RADIAL = 10;
+  const tubeGeo = new THREE.TubeGeometry(curve, TUBULAR, 0.16, RADIAL, false);
+  const colors = new Float32Array(tubeGeo.attributes.position.count * 3);
+  const tmpC = new THREE.Color();
+  for (let i = 0; i < tubeGeo.attributes.position.count; i++) {
+    const seg = Math.floor(i / (RADIAL + 1));          // ring index along the tube
+    const t = Math.min(1, seg / TUBULAR);
+    const fi = Math.min(PAL.length - 2, Math.floor(t * (PAL.length - 1)));
+    tmpC.copy(PAL[fi][1]).lerp(PAL[fi + 1][1], t * (PAL.length - 1) - fi);
+    colors[i * 3] = tmpC.r; colors[i * 3 + 1] = tmpC.g; colors[i * 3 + 2] = tmpC.b;
+  }
+  tubeGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  const tube = new THREE.Mesh(tubeGeo, new THREE.MeshBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  scene.add(tube);
+  // soft outer halo around the line
+  const halo = new THREE.Mesh(new THREE.TubeGeometry(curve, 300, 0.55, 8, false),
+    new THREE.MeshBasicMaterial({ color: 0x35c99b, transparent: true, opacity: 0.05,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  scene.add(halo);
+
+  // ---- glow sprite texture (shared)
+  const glowTex = (() => {
+    const c = document.createElement("canvas"); c.width = c.height = 128;
+    const g = c.getContext("2d");
+    const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, "rgba(255,255,255,1)");
+    grd.addColorStop(0.25, "rgba(255,255,255,.6)");
+    grd.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  })();
+
+  // ---- the travelling orb (the "you are here" dot)
+  const orb = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color: 0xf5f1e6, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  orb.scale.setScalar(3.6);
+  scene.add(orb);
+  const orbCore = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  scene.add(orbCore);
+
+  // ---- chapter marker rings along the path
+  const chapterCount = document.querySelectorAll(".tw-chapter").length || 16;
+  const rings = [];
+  for (let i = 0; i < chapterCount; i++) {
+    const t = chapterCount === 1 ? 0 : i / (chapterCount - 1);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.045, 8, 40),
+      new THREE.MeshBasicMaterial({ color: PAL[Math.min(i, PAL.length - 1)][1],
+        transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending, depthWrite: false }));
+    ring.position.copy(curve.getPointAt(t));
+    ring.userData.t = t;
+    scene.add(ring); rings.push(ring);
+  }
+
+  // ---- firefly particles filling the corridor around the path
+  const P_COUNT = innerWidth < 880 ? 700 : 1500;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(P_COUNT * 3);
+  for (let i = 0; i < P_COUNT; i++) {
+    const t = Math.random();
+    const base = curve.getPointAt(t);
+    pPos[i * 3]     = base.x + (Math.random() - 0.5) * 46;
+    pPos[i * 3 + 1] = base.y + (Math.random() - 0.5) * 30;
+    pPos[i * 3 + 2] = base.z + (Math.random() - 0.5) * 46;
+  }
+  pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+  const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    map: glowTex, color: 0xbfe8d8, size: 0.65, sizeAttenuation: true,
+    transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  scene.add(particles);
+
+  // ---- mouse parallax
+  let mx = 0, my = 0;
+  addEventListener("pointermove", (e) => {
+    mx = (e.clientX / innerWidth - 0.5) * 2;
+    my = (e.clientY / innerHeight - 0.5) * 2;
+  }, { passive: true });
+
+  addEventListener("resize", () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  // ---- render loop
+  const bgA = new THREE.Color(), accA = new THREE.Color();
+  let smoothP = 0, orbGlow = 1, raf = null;
+
+  function frame(time) {
+    raf = requestAnimationFrame(frame);
+    const target = window.__tw ? window.__tw.p : 0;
+    smoothP += (target - smoothP) * (RM ? 1 : 0.06);
+    const t = Math.min(0.999, Math.max(0.0005, smoothP));
+
+    // orb rides the curve
+    const p = curve.getPointAt(t);
+    orb.position.copy(p);
+    orbCore.position.copy(p);
+    const pulse = 1 + Math.sin(time * 0.004) * 0.12;
+    // damp the orb's glare while the veil is up (text content on screen)
+    orbGlow += (((window.__tw && window.__tw.dim) ? 0.45 : 1) - orbGlow) * 0.06;
+    orb.material.opacity = orbGlow;
+    orb.scale.setScalar((2.1 + 1.5 * orbGlow) * pulse);
+
+    // camera trails behind, looking ahead
+    const back = curve.getPointAt(Math.max(0, t - 0.028));
+    const ahead = curve.getPointAt(Math.min(1, t + 0.04));
+    camera.position.lerp(new THREE.Vector3(
+      back.x + mx * 2.2, back.y + 2.6 - my * 1.4, back.z + 10.5), RM ? 1 : 0.08);
+    camera.lookAt(ahead.x, ahead.y - 0.5, ahead.z);
+
+    // chapter rings: face camera, pulse when the orb is near
+    for (const r of rings) {
+      r.lookAt(camera.position);
+      const d = Math.abs(r.userData.t - t);
+      const near = Math.max(0, 1 - d * 26);
+      r.scale.setScalar(1 + near * 0.55 + Math.sin(time * 0.003 + r.userData.t * 40) * 0.04);
+      r.material.opacity = 0.35 + near * 0.6;
+    }
+
+    // palette crossfade with scroll
+    const fi = Math.min(PAL.length - 2, Math.floor(t * (PAL.length - 1)));
+    const ft = t * (PAL.length - 1) - fi;
+    bgA.copy(PAL[fi][0]).lerp(PAL[fi + 1][0], ft);
+    accA.copy(PAL[fi][1]).lerp(PAL[fi + 1][1], ft);
+    scene.background.lerp(bgA, 0.05);
+    scene.fog.color.lerp(bgA, 0.05);
+    halo.material.color.lerp(accA, 0.05);
+    orb.material.color.lerp(accA.clone().lerp(new THREE.Color(0xffffff), 0.55), 0.08);
+
+    particles.rotation.y = time * 0.000018;
+    renderer.render(scene, camera);
+  }
+  frame(0);
+
+  // pause rendering when tab hidden
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { cancelAnimationFrame(raf); raf = null; }
+    else if (!raf) frame(performance.now());
+  });
+} catch (err) {
+  // WebGL / module / network failure → CSS gradient fallback
+  document.documentElement.classList.add("tw-no-gl");
+  console.warn("Taiwan page: WebGL scene disabled —", err);
+}
+</script>
+
+<!-- module-support fallback: if the scene never boots, show gradient bg -->
+<script>
+setTimeout(() => { if (!window.__twGL) document.documentElement.classList.add("tw-no-gl"); }, 4000);
+</script>
+
+</body>
+</html>
+
