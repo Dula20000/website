@@ -1200,12 +1200,17 @@ try {
                   current chapter's accent color (0 = off)
   ----------------------------------------------------------------- */
   const JET_LENGTH = 3.4;
-  const JET_FIX_DEG = { x: -90, y: 0, z: 0 };
+  // the GLB's root node already bakes a Z-up -> Y-up matrix, so in world
+  // space the model is Y-up with the nose on +Z: no extra fix needed
+  const JET_FIX_DEG = { x: 0, y: 0, z: 0 };
   const JET_TINT = null;
   const JET_ACCENT_EMISSIVE = 0.22;
+  const NOSE_TRAIL = 0.012;  // how far behind the nose (in path t) the
+                             // fuselage direction is sampled; ~1 body length
 
   const jet = new THREE.Group();       // aimed along the path each frame
   const jetInner = new THREE.Group();  // holds the centered, axis-fixed model
+  const jetDir = new THREE.Vector3();  // scratch: current fuselage direction
   jet.add(jetInner);
   jet.visible = false;
   scene.add(jet);
@@ -1324,17 +1329,24 @@ try {
     orb.scale.setScalar(((jet.visible ? 1.6 : 2.1) + 1.5 * orbGlow) * pulse);
 
     if (jet.visible) {
-      jet.position.copy(p);
-      // nose along the direction of travel (pitch follows the descent)
-      const tan = curve.getTangentAt(t);
-      jet.lookAt(p.x + tan.x, p.y + tan.y, p.z + tan.z);
-      // bank into turns: compare heading now vs a moment ahead
-      const tan2 = curve.getTangentAt(Math.min(1, t + 0.015));
-      const turn = tan.z * tan2.x - tan.x * tan2.z;
-      jetBank += (THREE.MathUtils.clamp(turn * 60, -0.65, 0.65) - jetBank) * 0.05;
-      jet.rotateZ(jetBank);
+      // the travelling point is the NOSE; the fuselage trails behind it,
+      // laid along the chord of the path just behind the nose so the body
+      // follows the path's shape through bends
+      const pBack = curve.getPointAt(Math.max(0, t - NOSE_TRAIL));
+      jetDir.copy(p).sub(pBack).normalize();
+      // group origin is the model's center: pull back half a length so
+      // the nose tip sits on the point
+      jet.position.copy(p).addScaledVector(jetDir, -JET_LENGTH / 2);
       // gentle bob so it feels airborne
       jet.position.y += Math.sin(time * 0.0016) * 0.1;
+      jet.lookAt(jet.position.x + jetDir.x,
+                 jet.position.y + jetDir.y,
+                 jet.position.z + jetDir.z);
+      // bank into turns: fuselage heading vs the path a moment ahead
+      const tan2 = curve.getTangentAt(Math.min(1, t + 0.015));
+      const turn = jetDir.z * tan2.x - jetDir.x * tan2.z;
+      jetBank += (THREE.MathUtils.clamp(turn * 60, -0.65, 0.65) - jetBank) * 0.05;
+      jet.rotateZ(jetBank);
       orb.position.copy(jet.position);
     }
 
