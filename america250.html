@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>America 250 — Animated Post</title>
+<style>
+  :root{ color-scheme: dark; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:#07090f;
+    font-family:'Segoe UI',Helvetica,Arial,sans-serif;
+    color:#cfd6e6;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding:14px; overflow:hidden;
+  }
+  #stage{ display:flex; align-items:center; justify-content:center; flex:1; min-height:0; }
+  canvas#gl{
+    height:100%; max-height:calc(100vh - 96px); width:auto; max-width:96vw;
+    border-radius:10px;
+    box-shadow:0 20px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06);
+    background:#04050a;
+  }
+  #panel{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center;
+    background:rgba(16,20,34,.72); backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.08); border-radius:12px;
+    padding:10px 14px; font-size:13px;
+  }
+  button{
+    font:600 13px 'Segoe UI',sans-serif; color:#e8ecf7;
+    background:linear-gradient(180deg,#26304d,#1a2138);
+    border:1px solid rgba(255,255,255,.12); border-radius:8px;
+    padding:8px 14px; cursor:pointer; transition:filter .15s;
+  }
+  button:hover{ filter:brightness(1.2); }
+  button:disabled{ opacity:.45; cursor:default; }
+  button.active{ background:linear-gradient(180deg,#8a5f1d,#6e4a12); border-color:rgba(255,214,140,.45); }
+  button.rec{ background:linear-gradient(180deg,#7d1f2c,#5c1520); border-color:rgba(255,120,130,.4); }
+  #status{ min-width:180px; opacity:.85; }
+  .dim{ opacity:.5; font-size:12px; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="gl" width="1080" height="1350"></canvas></div>
+<div id="panel">
+  <span class="dim">Format</span>
+  <button id="fmt45" class="active">Post 4:5 · 1080×1350</button>
+  <button id="fmt916">Reel 9:16 · 1080×1920</button>
+  <button id="btnRec" class="rec">⏺ Record 12s loop</button>
+  <button id="btnPng">Save PNG frame</button>
+  <span id="status">ready</span>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   AMERICA 250 — semiquincentennial animated post
+   WebGL2 · HDR (RGBA16F) pipeline · GPU vertex-shader particle
+   sim (stateless closed-form ballistics w/ linear drag, fully
+   seekable + seamless 12s loop) · procedural sky / skyline /
+   water reflections · ACES tonemap · bloom · grain · CA
+   ============================================================ */
+const LOOP = 12.0;
+let W = 1080, H = 1350;
+
+const canvas = document.getElementById('gl');
+const gl = canvas.getContext('webgl2', { preserveDrawingBuffer:true, antialias:false, alpha:false });
+if(!gl){ document.body.innerHTML = '<p style="padding:40px">WebGL2 not available in this browser.</p>'; throw new Error('no webgl2'); }
+const hasFloat = !!gl.getExtension('EXT_color_buffer_float');
+
+/* ---------- shader helpers ---------- */
+function sh(type, src, name){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error('SHADER FAIL ['+name+']:', gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+function prog(vs, fs, name){
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs, name+'.vs'));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs, name+'.fs'));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS)){
+    console.error('LINK FAIL ['+name+']:', gl.getProgramInfoLog(p));
+  }
+  return p;
+}
+function uni(p){ // uniform location cache
+  const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), m = {};
+  for(let i=0;i<n;i++){ const info = gl.getActiveUniform(p,i); m[info.name] = gl.getUniformLocation(p, info.name); }
+  return m;
+}
+
+/* ---------- fullscreen triangle ---------- */
+const FSVS = `#version 300 es
+layout(location=0) in vec2 aPos;
+out vec2 vUv;
+void main(){ vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.,1.); }`;
+
+/* ---------- background: sky, stars, silk ribbons, skyline, water ---------- */
+const BG_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 outColor;
+uniform float uTime, uLoop;
+uniform vec2 uRes;
+#define TAU 6.28318530718
+const float WATER = -0.36;
+
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+float noise(vec2 p){
+  vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y);
+}
+float fbm(vec2 p){ float a=.5,s=0.; for(int i=0;i<4;i++){ s+=a*noise(p); p*=2.03; a*=.5; } return s; }
+
+vec3 scene(vec2 p){
+  // deep-navy sky with warm horizon glow
+  float horizon = smoothstep(.6, WATER, p.y);
+  vec3 col = mix(vec3(.012,.018,.060), vec3(.050,.070,.190), horizon);
+  col += vec3(.10,.05,.02) * smoothstep(.15, WATER, p.y) * .55;
+  // static nebula wash
+  float neb = fbm(p*2.6 + vec2(3.1, 7.7));
+  col += vec3(.05,.06,.14) * neb * smoothstep(-.3,.4,p.y) * .8;
+  // silk ribbons — red & blue aurora bands (integer cycles/loop => seamless)
+  float w1 = p.y - .30 - .045*sin(p.x*4.0 + TAU*uTime/uLoop) - .06*fbm(p*2.0+11.0);
+  col += vec3(.35,.05,.10) * exp(-abs(w1)*22.0) * .32;
+  float w2 = p.y - .10 + .050*sin(p.x*3.2 - TAU*uTime*2.0/uLoop + 1.7) + .05*fbm(p*1.8+4.0);
+  col += vec3(.05,.10,.35) * exp(-abs(w2)*20.0) * .32;
+  // twinkling stars, two depth layers
+  for(int i=0;i<2;i++){
+    float sc = i==0 ? 90.0 : 160.0;
+    vec2 g = p*sc; vec2 id = floor(g); vec2 f = fract(g)-.5;
+    float rn = h21(id + float(i)*17.0);
+    if(rn > .91){
+      vec2 off = vec2(h21(id+3.1), h21(id+7.7)) - .5;
+      float d = length(f - off*.8);
+      float kc = floor(5.0 + 8.0*fract(rn*13.7));
+      float tw = .5 + .5*sin(TAU*uTime*kc/uLoop + rn*50.0);
+      float s = exp(-d*d*(i==0?260.0:520.0)) * (.35+.65*tw);
+      col += vec3(.8,.85,1.) * s * (i==0?.8:.45) * smoothstep(-.15,.15,p.y);
+    }
+  }
+  // skyline — far haze layer + near silhouette with lit windows
+  float bx2 = p.x*23.0 + 7.0; float bi2 = floor(bx2);
+  float bh2 = WATER + .015 + .065*pow(h21(vec2(bi2,9.1)),1.6);
+  col = mix(col, vec3(.020,.026,.058), step(p.y, bh2));
+  float bx = p.x*10.0; float bi = floor(bx);
+  float bh = WATER + .02 + .10*pow(h21(vec2(bi,3.7)),1.4);
+  float sil = step(p.y, bh);
+  col = mix(col, vec3(.010,.014,.032), sil);
+  if(sil > .5){
+    vec2 wg = vec2(fract(bx)*6.0, (p.y-WATER)*140.0);
+    vec2 wid = floor(wg);
+    float lit = step(.82, h21(wid + bi*13.1));
+    vec2 wf = fract(wg)-.5;
+    float win = lit * smoothstep(.42,.20,abs(wf.x)) * smoothstep(.45,.25,abs(wf.y));
+    float kc = floor(1.0 + 3.0*h21(wid+2.2));
+    float flick = .75 + .25*sin(TAU*uTime*kc/uLoop + h21(wid)*40.0);
+    col += vec3(1.0,.65,.30) * win * .5 * flick;
+  }
+  return col;
+}
+
+void main(){
+  vec2 frag = vUv * uRes;
+  vec2 p = (frag - .5*uRes) / uRes.y;
+  vec3 col;
+  if(p.y > WATER){
+    col = scene(p);
+  }else{
+    float depth = WATER - p.y;
+    vec2 rp;
+    rp.x = p.x + .006*sin(p.y*70.0 + TAU*uTime*2.0/uLoop)
+               + .004*sin(p.y*133.0 - TAU*uTime*3.0/uLoop);
+    rp.y = WATER + (WATER - p.y)*0.92;
+    vec3 refl = scene(rp);
+    col = vec3(.008,.014,.045) + refl * .38 * exp(-depth*6.0);
+    float streak = max(0.0, sin(p.x*30.0 + TAU*uTime/uLoop) * sin(p.y*150.0 - TAU*uTime*2.0/uLoop));
+    col += vec3(.04,.06,.12) * pow(streak,3.0) * exp(-depth*4.0);
+  }
+  outColor = vec4(col, 1.0);
+}`;
+
+/* ---------- fireworks: GPU sim in the vertex shader ----------
+   Every particle position is a closed-form function of loop time:
+   ballistics with linear drag  p(t) = p0 + v0(1-e^-kt)/k + g(t-(1-e^-kt)/k)/k
+   => stateless, seekable, and perfectly loopable. */
+const FW_VS = `#version 300 es
+precision highp float;
+layout(location=0) in vec4 aSeed;   // 4 uniform randoms
+layout(location=1) in vec4 aData;   // burstIdx, kind(0 trail,1 spark,2 flash,3 dust), idx01, rnd
+uniform float uTime, uLoop, uAspect, uScale, uMirror;
+out vec3 vCol;
+#define TAU 6.28318530718
+const float WATER = -0.36;
+const float NB = 10.0;
+
+float h11(float n){ return fract(sin(n*127.1)*43758.5453); }
+vec3 palette(float id, float v){
+  vec3 c;
+  if(id < .5)      c = vec3(1.00,0.72,0.32);  // gold
+  else if(id <1.5) c = vec3(1.00,0.28,0.32);  // red
+  else if(id <2.5) c = vec3(0.40,0.62,1.00);  // blue
+  else             c = vec3(0.92,0.94,1.00);  // white
+  return mix(c, vec3(1.0), v*0.25);
+}
+
+void main(){
+  float b    = aData.x;
+  float kind = aData.y;
+  float idx  = aData.z;
+  vec3 col = vec3(0.0);
+  vec2 pos = vec2(0.0, -10.0);
+  float size = 0.0;
+
+  if(kind < 2.5){
+    // per-burst parameters
+    float hb1=h11(b*1.3+0.7), hb2=h11(b*2.1+1.3), hb3=h11(b*3.7+2.9), hb4=h11(b*4.9+0.2);
+    float t0    = (b + hb1*0.7)/NB * uLoop;
+    float dt    = mod(uTime - t0 + uLoop*8.0, uLoop);
+    float lx    = mix(-0.34, 0.34, hb2) * (uAspect/0.8);
+    float apexY = mix(0.06, 0.40, hb3);
+    float rise  = mix(0.95, 1.35, hb4);
+    float palId = floor(h11(b*7.3+5.1)*4.0);
+    float big   = mix(0.8, 1.3, h11(b*9.7+3.3));
+
+    if(kind < 0.5){
+      // ---- rocket trail ----
+      float lag = idx * 0.45;
+      float tr  = dt - lag;
+      float vis = step(0.0,tr) * step(tr,rise) * step(dt, rise+0.1);
+      float u   = clamp(tr/rise, 0.0, 1.0);
+      float ez  = 1.0 - pow(1.0-u, 2.2);
+      pos = vec2(lx + 0.015*sin(u*20.0 + b*7.0)*(1.0-u), mix(-0.42, apexY, ez));
+      pos += (aSeed.xy-0.5)*0.010; pos.y -= lag*0.02;
+      float flick = 0.55 + 0.45*sin(tr*45.0 + aSeed.z*90.0);
+      col  = vec3(1.0,0.75,0.45) * (1.0-idx) * vis * flick * 1.3;
+      size = mix(5.0, 1.5, idx) * vis;
+    } else if(kind < 1.5){
+      // ---- explosion spark ----
+      float te     = dt - rise;
+      float willow = step(palId, 0.5);                 // gold shells droop like willows
+      float life   = mix(mix(1.5,2.4,aSeed.w), 3.1, willow*0.65);
+      float alive  = step(0.0,te) * step(te,life);
+      float ang = aSeed.x * TAU;
+      float cz  = aSeed.y*2.0 - 1.0;
+      vec2 dir  = vec2(cos(ang), sin(ang)) * sqrt(max(0.0, 1.0-cz*cz));
+      float ring = step(1.5,palId)*step(palId,2.5);    // blue = chrysanthemum ring
+      float spd  = mix(mix(0.28,0.65,aSeed.z), 0.52, ring) * big;
+      float k = mix(1.9, 2.6, willow);
+      float ex = (1.0 - exp(-k*te)) / k;
+      pos = vec2(lx, apexY) + dir*spd*ex + vec2(0.0,-0.30)*(te-ex)/k;
+      float flash = exp(-te*5.0)*2.5;
+      float fade  = smoothstep(life, life*0.55, te);
+      float strobeAmt = smoothstep(life*0.35, life*0.75, te);
+      float strobe = step(0.5, h11(floor(te*24.0) + aSeed.w*100.0 + b));
+      float flick  = mix(1.0, strobe, strobeAmt*0.85);
+      vec3 base = palette(palId, aSeed.w);
+      base = mix(vec3(1.0,0.98,0.92), base, clamp(te*2.5, 0.0, 1.0));
+      col  = base * (0.55+flash) * fade * flick * alive * 1.4;
+      size = (2.0 + 10.0*exp(-te*3.0)) * fade * alive * big;
+    } else {
+      // ---- burst core flash ----
+      float te = dt - rise;
+      float alive = step(0.0,te) * step(te,1.0);
+      pos  = vec2(lx, apexY);
+      col  = mix(vec3(1.0), palette(palId,0.5), 0.6) * exp(-te*6.0) * 2.2 * alive;
+      size = (30.0 + 120.0*(1.0-exp(-te*8.0))) * exp(-te*2.5) * big * alive;
+    }
+  } else {
+    // ---- ambient gold dust, slow rise, integer cycles per loop ----
+    float cyc = 1.0 + floor(aSeed.x*2.0);
+    float yc  = fract(aSeed.w + uTime*cyc/uLoop);
+    pos = vec2((aSeed.y-0.5)*uAspect + 0.03*sin(TAU*uTime/uLoop + aSeed.x*40.0),
+               mix(-0.52, 0.55, yc));
+    float kc = floor(3.0 + 6.0*aSeed.z);
+    float twk = 0.5 + 0.5*sin(TAU*uTime*kc/uLoop + aSeed.y*60.0);
+    col  = vec3(1.0,0.85,0.55) * 0.10 * twk;
+    size = mix(1.5, 3.2, aSeed.z);
+  }
+
+  if(uMirror > 0.5){
+    if(pos.y < WATER) size = 0.0;
+    pos.x += 0.008*sin(pos.y*60.0 + TAU*uTime*3.0/uLoop);
+    pos.y  = WATER + (WATER - pos.y)*0.85;
+    col   *= 0.30;
+    size  *= 1.35;
+  } else {
+    col *= smoothstep(WATER-0.03, WATER, pos.y);   // fade rockets emerging from behind skyline
+  }
+
+  vCol = col;
+  gl_PointSize = max(size * uScale, 0.0);
+  gl_Position = vec4(pos.x*2.0/uAspect, pos.y*2.0, 0.0, 1.0);
+}`;
+
+const FW_FS = `#version 300 es
+precision highp float;
+in vec3 vCol; out vec4 o;
+void main(){
+  vec2 q = gl_PointCoord*2.0 - 1.0;
+  float d2 = dot(q,q);
+  float fall = exp(-d2*3.5) * smoothstep(1.0, 0.7, sqrt(d2));
+  o = vec4(vCol*fall, 0.0);
+}`;
+
+/* ---------- typography layer: glow, shine sweep, sparkles ---------- */
+const TXT_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uText;
+uniform float uTime, uLoop, uIntro;
+uniform vec2 uRes;
+#define TAU 6.28318530718
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+void main(){
+  float s = 1.0 + 0.006*sin(TAU*uTime*2.0/uLoop);   // gentle breathing
+  vec2 c = vec2(0.5, 0.52);
+  vec2 uv = c + (vUv - c)/s;
+  vec4 t = texture(uText, uv);
+  vec3 col = t.rgb;
+  // soft gold glow halo
+  float ga = 0.0;
+  for(int i=0;i<8;i++){
+    float a = float(i)*TAU/8.0;
+    ga += texture(uText, uv + vec2(cos(a),sin(a))*9.0/uRes).a;
+  }
+  ga /= 8.0;
+  vec3 glow = vec3(1.0,0.80,0.45) * ga * 0.30;
+  // diagonal shine sweep (2 sweeps / loop => seamless)
+  float sc = uv.x - uv.y*0.35;
+  float sp = mix(-0.9, 1.4, fract(uTime*2.0/uLoop));
+  float shine = exp(-pow((sc-sp)*16.0, 2.0));
+  col += vec3(1.0,0.95,0.80) * shine * t.a * 0.85;
+  // pixel sparkles on bright glyph areas
+  vec2 g = floor(vUv*uRes/3.0);
+  float rn = h21(g);
+  float kc = floor(3.0 + 6.0*fract(rn*7.3));
+  float twk = pow(0.5 + 0.5*sin(TAU*(uTime*kc/uLoop) + rn*44.0), 24.0);
+  col += vec3(1.0) * twk * step(0.9, rn) * t.a * dot(t.rgb, vec3(0.5)) * 1.3;
+  o = vec4((col + glow) * uIntro, min(t.a + ga*0.4, 1.0) * uIntro);
+}`;
+
+/* ---------- post: CA, bloom, ACES, vignette, grain ---------- */
+const POST_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uScene;
+uniform float uTime, uLoop;
+uniform vec2 uRes;
+#define TAU 6.28318530718
+vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
+void main(){
+  vec2 d = vUv - 0.5;
+  vec2 ca = d * 0.0022 * (0.5 + dot(d,d));
+  vec3 col;
+  col.r = texture(uScene, vUv+ca).r;
+  col.g = texture(uScene, vUv).g;
+  col.b = texture(uScene, vUv-ca).b;
+  // cheap wide-tap bloom
+  vec3 bl = vec3(0.0);
+  for(int i=0;i<8;i++){
+    float a = float(i)*TAU/8.0 + 0.4;
+    bl += texture(uScene, vUv + vec2(cos(a),sin(a))*0.016).rgb;
+  }
+  bl /= 8.0;
+  col += max(bl - 0.35, 0.0) * 0.55;
+  col = aces(col * 1.25);
+  col = pow(col, vec3(0.96, 0.98, 1.02));          // warm gold grade
+  col *= 1.0 - 0.38*smoothstep(0.35, 1.0, length(d)*1.5);
+  float gn = fract(sin(dot(vUv*uRes + vec2(uTime*137.0), vec2(12.9898,78.233)))*43758.5453);
+  col += (gn - 0.5) * 0.045;
+  o = vec4(col, 1.0);
+}`;
+
+/* ---------- programs ---------- */
+const pBg   = prog(FSVS, BG_FS,  'bg'),   uBg   = uni(pBg);
+const pFw   = prog(FW_VS, FW_FS, 'fw'),   uFw   = uni(pFw);
+const pTxt  = prog(FSVS, TXT_FS, 'txt'),  uTxt  = uni(pTxt);
+const pPost = prog(FSVS, POST_FS,'post'), uPost = uni(pPost);
+
+/* ---------- geometry ---------- */
+const vaoFS = gl.createVertexArray();
+gl.bindVertexArray(vaoFS);
+const bufFS = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, bufFS);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+/* particle buffer: NB bursts × (trail + sparks + flash) + dust */
+const NB=10, TRAIL=22, SPARKS=80, DUST=160;
+const NPTS = NB*(TRAIL+SPARKS+1) + DUST;
+{
+  const data = new Float32Array(NPTS*8);
+  let o = 0; const R = () => Math.random();
+  const put = (b,kind,idx) => { data[o++]=R();data[o++]=R();data[o++]=R();data[o++]=R();
+                                data[o++]=b;  data[o++]=kind; data[o++]=idx; data[o++]=R(); };
+  for(let b=0;b<NB;b++){
+    for(let i=0;i<TRAIL;i++)  put(b, 0, i/(TRAIL-1));
+    for(let i=0;i<SPARKS;i++) put(b, 1, i/SPARKS);
+    put(b, 2, 0);
+  }
+  for(let i=0;i<DUST;i++) put(0, 3, i/DUST);
+  var vaoPts = gl.createVertexArray();
+  gl.bindVertexArray(vaoPts);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 32, 0);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 32, 16);
+}
+gl.bindVertexArray(null);
+
+/* ---------- HDR scene framebuffer ---------- */
+let fbo=null, fboTex=null;
+function makeFBO(){
+  if(fboTex) gl.deleteTexture(fboTex);
+  if(fbo) gl.deleteFramebuffer(fbo);
+  fboTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, fboTex);
+  if(hasFloat) gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,W,H,0,gl.RGBA,gl.HALF_FLOAT,null);
+  else         gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,  W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fboTex, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+/* ---------- typography texture (2D canvas → GL) ---------- */
+const tcan = document.createElement('canvas');
+const txTex = gl.createTexture();
+function lsText(x, txt, cx, y, ls){
+  x.letterSpacing = ls+'px';
+  x.fillText(txt, cx + ls/2, y);
+  x.letterSpacing = '0px';
+}
+function drawTypography(){
+  tcan.width = W; tcan.height = H;
+  const x = tcan.getContext('2d');
+  const cx = W/2, h = H;
+  const serif = `'Playfair Display','Palatino Linotype','Times New Roman',serif`;
+  const sans  = `'Segoe UI',Helvetica,Arial,sans-serif`;
+  x.clearRect(0,0,W,H);
+  x.textAlign = 'center';
+
+  // warm halo behind the block
+  const hg = x.createRadialGradient(cx, h*0.47, 0, cx, h*0.47, h*0.30);
+  hg.addColorStop(0,'rgba(255,196,110,0.13)');
+  hg.addColorStop(1,'rgba(255,196,110,0)');
+  x.fillStyle = hg; x.fillRect(0,0,W,H);
+
+  // ★ ★ ★
+  x.fillStyle = '#f3cf7f';
+  x.font = `400 ${Math.round(h*0.024)}px ${serif}`;
+  x.shadowColor='rgba(0,0,20,.6)'; x.shadowBlur=h*0.006; x.shadowOffsetY=h*0.002;
+  x.fillText('★   ★   ★', cx, h*0.312);
+
+  // AMERICA
+  x.font = `600 ${Math.round(h*0.048)}px ${sans}`;
+  x.fillStyle = 'rgba(255,255,255,0.96)';
+  x.shadowBlur = h*0.008; x.shadowOffsetY = h*0.003;
+  lsText(x, 'AMERICA', cx, h*0.372, Math.round(h*0.020));
+
+  // 250 — gold gradient with a light catch on top
+  const sz = h*0.26, yb = h*0.55;
+  x.font = `700 ${Math.round(sz)}px ${serif}`;
+  const g = x.createLinearGradient(0, yb - sz*0.72, 0, yb + sz*0.02);
+  g.addColorStop(0.00,'#fff7dd'); g.addColorStop(0.25,'#ffe9a8');
+  g.addColorStop(0.52,'#f7c65d'); g.addColorStop(0.78,'#d99a2b');
+  g.addColorStop(1.00,'#8a5a12');
+  x.shadowColor='rgba(0,0,10,0.55)'; x.shadowBlur=h*0.020; x.shadowOffsetY=h*0.008;
+  x.fillStyle = g; x.fillText('250', cx, yb);
+  x.shadowColor='transparent'; x.shadowBlur=0; x.shadowOffsetY=0;
+  x.lineWidth = Math.max(1, h*0.0012);
+  x.strokeStyle = 'rgba(255,246,220,0.5)';
+  x.strokeText('250', cx, yb);
+
+  // flanking rules
+  const ry = h*0.598, rw = Math.max(1, h*0.0012);
+  let lg = x.createLinearGradient(W*0.14, 0, W*0.34, 0);
+  lg.addColorStop(0,'rgba(236,207,143,0)'); lg.addColorStop(1,'rgba(236,207,143,0.6)');
+  x.fillStyle = lg; x.fillRect(W*0.14, ry, W*0.20, rw);
+  lg = x.createLinearGradient(W*0.66, 0, W*0.86, 0);
+  lg.addColorStop(0,'rgba(236,207,143,0.6)'); lg.addColorStop(1,'rgba(236,207,143,0)');
+  x.fillStyle = lg; x.fillRect(W*0.66, ry, W*0.20, rw);
+
+  // 1776 ★ 2026
+  x.font = `500 ${Math.round(h*0.026)}px ${serif}`;
+  x.fillStyle = '#eccf8f';
+  x.shadowColor='rgba(0,0,20,.6)'; x.shadowBlur=h*0.005; x.shadowOffsetY=h*0.002;
+  lsText(x, '1776 ★ 2026', cx, h*0.607, Math.round(h*0.006));
+
+  // tagline
+  x.font = `500 ${Math.round(h*0.0145)}px ${sans}`;
+  x.fillStyle = 'rgba(214,226,255,0.85)';
+  lsText(x, 'THE SEMIQUINCENTENNIAL · JULY 4TH', cx, h*0.650, Math.round(h*0.006));
+
+  // footer hashtag + url
+  x.font = `600 ${Math.round(h*0.013)}px ${sans}`;
+  x.fillStyle = 'rgba(255,255,255,0.34)';
+  lsText(x, '#AMERICA250', cx, h*0.938, Math.round(h*0.004));
+  x.font = `500 ${Math.round(h*0.013)}px ${sans}`;
+  x.fillStyle = 'rgba(255,255,255,0.28)';
+  lsText(x, 'dulran.com/america250', cx, h*0.962, Math.round(h*0.003));
+
+  gl.bindTexture(gl.TEXTURE_2D, txTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tcan);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+/* ---------- render one frame at loop-time t ---------- */
+function render(t, intro){
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.viewport(0, 0, W, H);
+  gl.disable(gl.DEPTH_TEST);
+
+  // background
+  gl.disable(gl.BLEND);
+  gl.useProgram(pBg);
+  gl.uniform1f(uBg.uTime, t); gl.uniform1f(uBg.uLoop, LOOP);
+  gl.uniform2f(uBg.uRes, W, H);
+  gl.bindVertexArray(vaoFS);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  // fireworks (reflection pass, then direct) — additive
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE);
+  gl.useProgram(pFw);
+  gl.uniform1f(uFw.uTime, t); gl.uniform1f(uFw.uLoop, LOOP);
+  gl.uniform1f(uFw.uAspect, W/H); gl.uniform1f(uFw.uScale, H/1350);
+  gl.bindVertexArray(vaoPts);
+  gl.uniform1f(uFw.uMirror, 1); gl.drawArrays(gl.POINTS, 0, NPTS);
+  gl.uniform1f(uFw.uMirror, 0); gl.drawArrays(gl.POINTS, 0, NPTS);
+
+  // typography — premultiplied over
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(pTxt);
+  gl.uniform1f(uTxt.uTime, t); gl.uniform1f(uTxt.uLoop, LOOP);
+  gl.uniform1f(uTxt.uIntro, intro);
+  gl.uniform2f(uTxt.uRes, W, H);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, txTex);
+  gl.uniform1i(uTxt.uText, 0);
+  gl.bindVertexArray(vaoFS);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  // post to screen
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H);
+  gl.disable(gl.BLEND);
+  gl.useProgram(pPost);
+  gl.uniform1f(uPost.uTime, t); gl.uniform1f(uPost.uLoop, LOOP);
+  gl.uniform2f(uPost.uRes, W, H);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, fboTex);
+  gl.uniform1i(uPost.uScene, 0);
+  gl.bindVertexArray(vaoFS);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindVertexArray(null);
+}
+
+/* ---------- format switch ---------- */
+function setFormat(w, h){
+  W = w; H = h;
+  canvas.width = W; canvas.height = H;
+  makeFBO();
+  drawTypography();
+}
+
+/* ---------- recorder: exact one-loop capture at boundaries ---------- */
+const statusEl = document.getElementById('status');
+const btnRec = document.getElementById('btnRec');
+let recState = 'idle', recorder = null, chunks = [], recExt = 'mp4';
+function pickMime(){
+  const c = ['video/mp4;codecs=avc1.640028','video/mp4;codecs=avc1','video/mp4',
+             'video/webm;codecs=vp9','video/webm'];
+  for(const m of c) if(MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+function beginRecording(){
+  const mime = pickMime();
+  recExt = mime.includes('mp4') ? 'mp4' : 'webm';
+  const stream = canvas.captureStream(60);
+  recorder = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: 18_000_000 });
+  chunks = [];
+  recorder.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: recorder.mimeType });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `america-250-${W}x${H}.${recExt}`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+    statusEl.textContent = `saved .${recExt}` + (recExt==='webm' ? ' (convert to MP4 for IG)' : ' — ready for Instagram');
+    btnRec.disabled = false;
+  };
+  recorder.start();
+  recState = 'recording';
+}
+btnRec.addEventListener('click', () => {
+  if(recState !== 'idle') return;
+  recState = 'pending';
+  btnRec.disabled = true;
+  statusEl.textContent = 'waiting for loop start…';
+});
+
+document.getElementById('btnPng').addEventListener('click', () => {
+  canvas.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `america-250-${W}x${H}.png`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+  }, 'image/png');
+});
+
+const f45 = document.getElementById('fmt45'), f916 = document.getElementById('fmt916');
+function fmtClick(w,h,on,off){
+  if(recState !== 'idle') return;
+  setFormat(w,h); on.classList.add('active'); off.classList.remove('active');
+}
+f45 .addEventListener('click', ()=>fmtClick(1080,1350,f45,f916));
+f916.addEventListener('click', ()=>fmtClick(1080,1920,f916,f45));
+
+/* ---------- main loop ---------- */
+let t0 = performance.now(), prevLt = 0;
+function frame(now){
+  const t = (now - t0)/1000;
+  const lt = t % LOOP;
+  const intro = Math.min(1, t/1.2);
+  if(lt < prevLt){                       // loop boundary
+    if(recState === 'pending'){ beginRecording(); }
+    else if(recState === 'recording'){ recorder.stop(); recState = 'idle'; }
+  }
+  prevLt = lt;
+  render(lt, intro);
+  if(recState === 'recording') statusEl.textContent = `recording… ${lt.toFixed(1)} / ${LOOP}s`;
+  else if(recState === 'idle' && !statusEl.textContent.startsWith('saved')) statusEl.textContent = `loop ${lt.toFixed(1)}s / ${LOOP}s`;
+  requestAnimationFrame(frame);
+}
+
+/* deterministic single-frame hook (testing / headless) */
+window.__renderAt = (t) => { render(((t % LOOP)+LOOP)%LOOP, 1); return 'rendered t='+t; };
+
+setFormat(1080, 1350);
+render(0, 1);
+requestAnimationFrame(frame);
+console.log('america250 ready · float FBO:', hasFloat, '· points:', NPTS);
+</script>
+</body>
+</html>
