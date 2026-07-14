@@ -85,9 +85,29 @@
       pointer-events: none;
     }
 
-    /* The kit / jersey "image" */
-    .kit { position: relative; width: 84%; max-width: 132px; margin: 2px auto 4px; }
-    .kit-svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+    /* The player image frame: photo when it loads, gold kit as fallback */
+    .kit {
+      position: relative;
+      width: 84%;
+      max-width: 132px;
+      margin: 2px auto 4px;
+      aspect-ratio: 4 / 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 3px;
+    }
+    .kit-svg { display: block; width: 92%; height: auto; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+    .player-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* warm the photo so it sits behind the gold film naturally */
+      filter: sepia(0.3) saturate(0.85) contrast(1.03) brightness(0.92);
+    }
     .kit-num {
       position: absolute;
       top: 52%;
@@ -363,12 +383,16 @@
 
   <script>
     /* ---- Build the moving reel ---- */
+    // Photo URLs are placeholders — upload the real files to
+    // dulran.com/assets/players/ with these names and they appear
+    // automatically; until then the tile falls back to the gold kit.
+    const PHOTO_BASE = 'https://www.dulran.com/assets/players/';
     const players = [
-      { name: 'Mbappé',  first: 'Kylian',  pos: 'Attaquant · Capitaine', num: 10 },
-      { name: 'Dembélé', first: 'Ousmane', pos: 'Attaquant',             num: 11 },
-      { name: 'Olise',   first: 'Michael', pos: 'Ailier',                num: 17 },
-      { name: 'Doué',    first: 'Désiré',  pos: 'Ailier',                num: 20 },
-      { name: 'Barcola', first: 'Bradley', pos: 'Ailier',                num: 24 },
+      { name: 'Mbappé',  first: 'Kylian',  pos: 'Attaquant · Capitaine', num: 10, photo: 'mbappe.png'  },
+      { name: 'Dembélé', first: 'Ousmane', pos: 'Attaquant',             num: 11, photo: 'dembele.png' },
+      { name: 'Olise',   first: 'Michael', pos: 'Ailier',                num: 17, photo: 'olise.png'   },
+      { name: 'Doué',    first: 'Désiré',  pos: 'Ailier',                num: 20, photo: 'doue.png'    },
+      { name: 'Barcola', first: 'Bradley', pos: 'Ailier',                num: 24, photo: 'barcola.png' },
     ];
 
     function tileHTML(p) {
@@ -377,6 +401,7 @@
           '<div class="kit">' +
             '<svg class="kit-svg" viewBox="0 0 100 112"><use href="#jersey" xlink:href="#jersey"/></svg>' +
             '<span class="kit-num">' + p.num + '</span>' +
+            '<img class="player-photo" src="' + PHOTO_BASE + p.photo + '" alt="" loading="lazy" onerror="this.remove()">' +
           '</div>' +
           '<span class="tile-first">' + p.first + '</span>' +
           '<span class="tile-name">' + p.name + '</span>' +
