@@ -191,9 +191,10 @@
       0%        { background-position: 130% -30%; }
       50%, 100% { background-position: -30% 130%; }
     }
-<!--
     /* ===================================================================
-       LAYER 3  ·  Le Coq — the rooster watermark.
+       LAYER 3  ·  Le Coq — the rooster watermark image.
+       Drop your file at assets/rooster.png; until it exists the layer
+       hides itself automatically.
        =================================================================== */
     .coq {
       position: fixed;
@@ -205,10 +206,8 @@
       pointer-events: none;
       animation: coqIn 2.4s ease 0.6s forwards;
     }
-    .coq svg { width: 100%; height: auto; display: block; }
-    .coq-stroke { fill: none; stroke: rgba(240,224,160,0.30); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
-    .coq-fill   { fill: rgba(240,224,160,0.07); }
-    @keyframes coqIn { to { opacity: 1; } }
+    .coq img { width: 100%; height: auto; display: block; filter: drop-shadow(0 4px 18px rgba(0,0,0,0.35)); }
+    @keyframes coqIn { to { opacity: 0.5; } }
 
     /* Framing rules + corners (kept from original) */
     .rule-h-top, .rule-h-bottom {
@@ -227,7 +226,6 @@
     .corner.br { bottom: 24px; right: 24px; transform: scale(-1); }
 
     @keyframes fadeIn { to { opacity: 1; } }
--->
     /* ===================================================================
        LAYER 4  ·  The text (top). Full-screen darkened scrim keeps it
        legible while the reel shows through around it.
@@ -340,7 +338,7 @@
 
   <!-- LAYER 3 : le coq -->
   <div class="coq" aria-hidden="true">
-    <img viewBox="0 0 260 240" src="https://www.cleanpng.com/free/fff-logo.html">
+    <img src="assets/rooster.png" alt="" onerror="this.parentElement.style.display='none'">
   </div>
 
   <!-- Framing -->
@@ -363,10 +361,9 @@
 
   <script>
     /* ---- Build the moving reel ---- */
-    // Photo URLs are placeholders — upload the real files to
-    // dulran.com/assets/players/ with these names and they appear
-    // automatically; until then the tile falls back to the gold kit.
-    const PHOTO_BASE = 'https://www.dulran.com/assets/players/';
+    // Photos live in the repo's assets/ folder; if one is missing the
+    // tile falls back to the gold kit.
+    const PHOTO_BASE = 'assets/';
     const players = [
       { name: 'Mbappé',  first: 'Kylian',  pos: 'Attaquant · Capitaine', num: 10, photo: 'mbappe.png'  },
       { name: 'Dembélé', first: 'Ousmane', pos: 'Attaquant',             num: 11, photo: 'dembele.png' },
