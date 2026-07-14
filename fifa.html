@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Les Bleus — 2026</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+  <title>Au Revoir, Les Bleus — 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -15,6 +15,8 @@
     :root {
       --bg: #0c2752;
       --gold: #f0e0a0;
+      --gold-bright: #fff6d8;
+      --gold-deep: #a98e4d;
       --gold-soft: rgba(240, 224, 160, 0.75);
       --gold-dim: rgba(240, 224, 160, 0.18);
       --gold-glow: rgba(240, 224, 160, 0.06);
@@ -100,6 +102,197 @@
       to { opacity: 1; }
     }
 
+    /* ============================================================
+       Floating player tiles — behind the text, ~50% opacity,
+       drifting slowly with a periodic gold light-sweep across
+       each one (20th Century Fox molten-gold reflection feel).
+       ============================================================ */
+    .tile-field {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .player-tile {
+      position: absolute;
+      width: var(--w, 190px);
+      padding: 26px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      border: 1px solid rgba(240, 224, 160, 0.24);
+      background: linear-gradient(165deg,
+        rgba(240, 224, 160, 0.10) 0%,
+        rgba(240, 224, 160, 0.03) 45%,
+        rgba(240, 224, 160, 0.07) 100%);
+      box-shadow: 0 0 42px rgba(240, 224, 160, 0.05),
+                  inset 0 0 26px rgba(240, 224, 160, 0.04);
+      overflow: hidden;
+      opacity: 0;
+      animation-name: tileIn, tileDrift;
+      animation-duration: 2.2s, var(--driftDur, 16s);
+      animation-timing-function: ease, ease-in-out;
+      animation-delay: var(--inDelay, 1s), 0s;
+      animation-iteration-count: 1, infinite;
+      animation-direction: normal, alternate;
+      animation-fill-mode: forwards, none;
+    }
+
+    /* Inner hairline frame */
+    .player-tile::before {
+      content: '';
+      position: absolute;
+      inset: 7px;
+      border: 1px solid rgba(240, 224, 160, 0.14);
+      pointer-events: none;
+    }
+
+    /* Gold light sweep across the tile */
+    .player-tile::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(115deg,
+        transparent 35%,
+        rgba(255, 248, 222, 0.35) 47%,
+        rgba(240, 224, 160, 0.14) 53%,
+        transparent 65%);
+      background-size: 300% 100%;
+      background-position: 160% 0;
+      mix-blend-mode: screen;
+      animation: sheen var(--sheenDur, 6.5s) ease-in-out infinite;
+      animation-delay: var(--sheenDelay, 0s);
+    }
+
+    @keyframes tileIn {
+      from { opacity: 0; }
+      to   { opacity: var(--tileOp, 0.5); }
+    }
+
+    @keyframes tileDrift {
+      from { transform: translate3d(0, 0, 0) rotate(var(--r0, -1.1deg)); }
+      to   { transform: translate3d(var(--dx, 16px), var(--dy, -22px), 0) rotate(var(--r1, 1.1deg)); }
+    }
+
+    @keyframes sheen {
+      0%        { background-position: 160% 0; }
+      45%, 100% { background-position: -160% 0; }
+    }
+
+    .tile-pos {
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      font-weight: 300;
+    }
+
+    .tile-first {
+      font-size: 12px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      font-weight: 400;
+      margin-top: 6px;
+    }
+
+    .tile-name {
+      font-size: 29px;
+      font-style: italic;
+      font-weight: 500;
+      line-height: 1.1;
+      background: linear-gradient(100deg,
+        var(--gold-deep) 0%,
+        var(--gold) 28%,
+        var(--gold-bright) 50%,
+        var(--gold) 72%,
+        var(--gold-deep) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation: goldShift 6s linear infinite;
+    }
+
+    .tile-divider {
+      width: 34px;
+      height: 1px;
+      margin-top: 8px;
+      background: linear-gradient(to right, transparent, var(--gold-soft), transparent);
+    }
+
+    @keyframes goldShift {
+      to { background-position: 200% center; }
+    }
+
+    /* Tile placement + per-tile drift character */
+    .tile-mbappe {
+      top: 13%; left: 5%;
+      --w: 212px;
+      --inDelay: 0.9s;  --driftDur: 17s;
+      --dx: 18px; --dy: -24px; --r0: -1.4deg; --r1: 0.8deg;
+      --sheenDur: 6.2s; --sheenDelay: 0.4s;
+    }
+    .tile-dembele {
+      top: 10%; right: 6%;
+      --w: 198px;
+      --inDelay: 1.2s;  --driftDur: 19s;
+      --dx: -16px; --dy: -18px; --r0: 1.2deg; --r1: -1deg;
+      --sheenDur: 7.1s; --sheenDelay: 1.6s;
+    }
+    .tile-olise {
+      bottom: 11%; right: 7%;
+      --w: 186px;
+      --inDelay: 1.5s;  --driftDur: 15s;
+      --dx: -14px; --dy: 20px; --r0: -0.9deg; --r1: 1.3deg;
+      --sheenDur: 6.8s; --sheenDelay: 2.8s;
+    }
+    .tile-doue {
+      bottom: 10%; left: 6%;
+      --w: 186px;
+      --inDelay: 1.8s;  --driftDur: 18s;
+      --dx: 15px; --dy: 22px; --r0: 1deg; --r1: -1.2deg;
+      --sheenDur: 7.4s; --sheenDelay: 4s;
+    }
+    .tile-barcola {
+      top: 4%; left: 50%; margin-left: -84px;
+      --w: 168px;
+      --inDelay: 2.1s;  --driftDur: 16s;
+      --dx: 10px; --dy: 14px; --r0: -0.7deg; --r1: 0.9deg;
+      --sheenDur: 6.6s; --sheenDelay: 5.2s;
+    }
+
+    @media (max-width: 760px) {
+      .player-tile {
+        --tileOp: 0.32;
+        padding: 16px 10px 14px;
+      }
+      .tile-mbappe  { --w: 138px; top: 8%; left: 3%; }
+      .tile-dembele { --w: 132px; top: 6%; right: 3%; }
+      .tile-olise   { --w: 128px; bottom: 7%; right: 3%; }
+      .tile-doue    { --w: 128px; bottom: 6%; left: 3%; }
+      .tile-barcola { display: none; }
+      .tile-name  { font-size: 20px; }
+      .tile-first { font-size: 10px; }
+      .tile-pos   { font-size: 7px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .player-tile {
+        animation: tileIn 0.5s ease forwards;
+      }
+      .player-tile::after,
+      .tile-name {
+        animation: none;
+      }
+    }
+
     /* Main container */
     .stage {
       position: relative;
@@ -131,18 +324,6 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-    }
-
-    .logo-placeholder-text {
-      font-size: 9px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
-      opacity: 0.5;
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 300;
-      line-height: 1.5;
-      text-align: center;
     }
 
     @keyframes logoReveal {
@@ -177,6 +358,17 @@
 
     .declaration .typed-text {
       display: inline;
+      background: linear-gradient(100deg,
+        var(--gold-deep) 0%,
+        var(--gold) 28%,
+        var(--gold-bright) 50%,
+        var(--gold) 72%,
+        var(--gold-deep) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: goldShift 7s linear infinite;
     }
 
     /* Cursor */
@@ -282,6 +474,40 @@
     </svg>
   </div>
 
+  <!-- Floating player tiles (behind the text) -->
+  <div class="tile-field" aria-hidden="true">
+    <div class="player-tile tile-mbappe">
+      <span class="tile-pos">Forward · Captain</span>
+      <span class="tile-first">Kylian</span>
+      <span class="tile-name">Mbappé</span>
+      <span class="tile-divider"></span>
+    </div>
+    <div class="player-tile tile-dembele">
+      <span class="tile-pos">Forward</span>
+      <span class="tile-first">Ousmane</span>
+      <span class="tile-name">Dembélé</span>
+      <span class="tile-divider"></span>
+    </div>
+    <div class="player-tile tile-olise">
+      <span class="tile-pos">Winger</span>
+      <span class="tile-first">Michael</span>
+      <span class="tile-name">Olise</span>
+      <span class="tile-divider"></span>
+    </div>
+    <div class="player-tile tile-doue">
+      <span class="tile-pos">Winger</span>
+      <span class="tile-first">Désiré</span>
+      <span class="tile-name">Doué</span>
+      <span class="tile-divider"></span>
+    </div>
+    <div class="player-tile tile-barcola">
+      <span class="tile-pos">Winger</span>
+      <span class="tile-first">Bradley</span>
+      <span class="tile-name">Barcola</span>
+      <span class="tile-divider"></span>
+    </div>
+  </div>
+
   <!-- Main content -->
   <div class="stage">
 
@@ -289,18 +515,18 @@
       <img src="https://www.dulran.com/logofiles/crestlogomedium.png" alt="Les Bleus" />
     </div>
 
-    <span class="eyebrow">FIFA World Cup 2026</span>
+    <span class="eyebrow">FIFA World Cup 2026 &nbsp;·&nbsp; Au Revoir</span>
 
     <p class="declaration" id="declaration">
       <span class="typed-text" id="typedText"></span><span class="cursor" id="cursor"></span>
     </p>
 
-    <span class="signature" id="signature">Allez les Bleus &nbsp;·&nbsp; Since 2018</span>
+    <span class="signature" id="signature">Merci, Les Bleus &nbsp;·&nbsp; 2018 – 2026</span>
 
   </div>
 
   <script>
-    const message = "I hereby reaffirm my support for Les Bleus for the 2026 FIFA World Cup, as I have done since 2018.";
+    const message = "Sorry to see you go, Les Bleus. Merci for the memories — with you since 2018, with you again in 2030.";
     const typedEl = document.getElementById('typedText');
     const cursor  = document.getElementById('cursor');
     const sigEl   = document.getElementById('signature');
@@ -333,7 +559,7 @@
 <script>
     setTimeout(function() {
         window.location.href = "https://dulran.com/home70";
-    }, 9500); // time in milliseconds
-</script> 
+    }, 20000); // time in milliseconds — extended so the tiles get seen
+</script>
 </body>
 </html>
