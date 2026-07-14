@@ -191,7 +191,7 @@
       0%        { background-position: 130% -30%; }
       50%, 100% { background-position: -30% 130%; }
     }
-
+<!--
     /* ===================================================================
        LAYER 3  ·  Le Coq — the rooster watermark.
        =================================================================== */
@@ -227,7 +227,7 @@
     .corner.br { bottom: 24px; right: 24px; transform: scale(-1); }
 
     @keyframes fadeIn { to { opacity: 1; } }
-
+-->
     /* ===================================================================
        LAYER 4  ·  The text (top). Full-screen darkened scrim keeps it
        legible while the reel shows through around it.
@@ -340,27 +340,7 @@
 
   <!-- LAYER 3 : le coq -->
   <div class="coq" aria-hidden="true">
-    <svg viewBox="0 0 260 240" xmlns="http://www.w3.org/2000/svg">
-      <!-- tail plumes -->
-      <path class="coq-stroke" d="M96 150 C58 150 34 120 26 78 C48 104 70 112 92 112"/>
-      <path class="coq-stroke" d="M104 150 C70 156 40 138 22 104 C50 122 74 126 96 120"/>
-      <path class="coq-stroke" d="M110 152 C82 168 48 160 34 130 C58 144 84 142 104 132"/>
-      <!-- body -->
-      <path class="coq-fill coq-stroke" d="M108 150
-        C96 150 86 140 86 122 C86 96 108 78 140 78 C150 66 168 64 178 72
-        C176 60 186 50 198 52 C190 44 196 30 208 32 C202 22 212 12 222 18
-        C218 30 224 38 220 48 C232 50 236 64 228 72 C240 76 240 92 228 96
-        C222 118 200 132 172 132 C170 146 156 158 140 158 Z"/>
-      <!-- beak -->
-      <path class="coq-fill coq-stroke" d="M220 66 L244 62 L222 78 Z"/>
-      <!-- wattle -->
-      <path class="coq-fill coq-stroke" d="M216 80 C214 92 208 96 202 92 C210 88 210 82 214 78 Z"/>
-      <!-- eye -->
-      <circle cx="206" cy="62" r="3.4" fill="rgba(6,16,38,0.9)"/>
-      <!-- legs + feet -->
-      <path class="coq-stroke" d="M132 158 L128 196 M118 200 L128 196 L140 200 M128 196 L124 208"/>
-      <path class="coq-stroke" d="M156 158 L160 196 M150 200 L160 196 L172 200 M160 196 L156 208"/>
-    </svg>
+    <img viewBox="0 0 260 240" src="https://www.cleanpng.com/free/fff-logo.html">
   </div>
 
   <!-- Framing -->
@@ -378,7 +358,7 @@
     <p class="declaration">
       <span class="typed-text" id="typedText"></span><span class="cursor" id="cursor"></span>
     </p>
-    <span class="signature" id="signature">Merci, Les Bleus &nbsp;·&nbsp; 2018 – 2026</span>
+    <span class="signature" id="signature">Merci, Les Bleus &nbsp;·&nbsp;2026</span>
   </div>
 
   <script>
@@ -419,7 +399,7 @@
     });
 
     /* ---- Typewriter farewell ---- */
-    const message = "Sorry to see you go, Les Bleus. Merci for the memories — with you since 2018, with you again in 2030.";
+    const message = "Sorry to see you go, Les Bleus. Merci for the memories. With you again in 2030.";
     const typedEl = document.getElementById('typedText');
     const cursor  = document.getElementById('cursor');
     const sigEl   = document.getElementById('signature');
