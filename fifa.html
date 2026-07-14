@@ -6,30 +6,22 @@
   <title>Au Revoir, Les Bleus — 2026</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet"/>
   <style>
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --bg: #0c2752;
+      --bg-deep: #061029;
       --gold: #f0e0a0;
       --gold-bright: #fff6d8;
       --gold-deep: #a98e4d;
       --gold-soft: rgba(240, 224, 160, 0.75);
       --gold-dim: rgba(240, 224, 160, 0.18);
-      --gold-glow: rgba(240, 224, 160, 0.06);
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
 
     body {
-      background-color: var(--bg);
+      background: radial-gradient(ellipse at 50% 40%, #12315f 0%, var(--bg) 45%, var(--bg-deep) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -38,528 +30,395 @@
       position: relative;
     }
 
-    /* Subtle noise overlay */
-    body::before {
-      content: '';
+    /* ===================================================================
+       LAYER 1  ·  The moving player reel (behind everything)
+       Columns of player "kit" tiles scrolling continuously, some up,
+       some down — the montage the text sits over.
+       =================================================================== */
+    .reel {
       position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      opacity: 0.35;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Radial vignette */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at center, transparent 40%, rgba(4, 12, 30, 0.7) 100%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Decorative top rule */
-    .rule-top, .rule-bottom {
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 1px;
-      background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
+      inset: -6% 0;
       z-index: 1;
-      opacity: 0;
-      animation: fadeRule 1.5s ease forwards;
-    }
-    .rule-top {
-      top: 0;
-      height: 120px;
-      animation-delay: 0.3s;
-    }
-    .rule-bottom {
-      bottom: 0;
-      height: 120px;
-      animation-delay: 0.4s;
-    }
-
-    .rule-h-top, .rule-h-bottom {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(to right, transparent, var(--gold-dim) 30%, var(--gold-dim) 70%, transparent);
-      z-index: 1;
-      opacity: 0;
-      animation: fadeRule 1.5s ease forwards;
-    }
-    .rule-h-bottom {
-      top: auto;
-      bottom: 0;
-      animation-delay: 0.2s;
-    }
-
-    @keyframes fadeRule {
-      to { opacity: 1; }
-    }
-
-    /* ============================================================
-       Floating player tiles — behind the text, ~50% opacity,
-       drifting slowly with a periodic gold light-sweep across
-       each one (20th Century Fox molten-gold reflection feel).
-       ============================================================ */
-    .tile-field {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: clamp(14px, 4vw, 46px);
       pointer-events: none;
       overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+              mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
     }
 
-    .player-tile {
-      position: absolute;
-      width: var(--w, 190px);
-      padding: 26px 18px 22px;
+    .reel-col { width: clamp(120px, 30vw, 168px); flex: 0 0 auto; }
+    .reel-inner {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(16px, 3vw, 26px);
+      will-change: transform;
+    }
+    .reel-col.up   .reel-inner { animation: scrollUp   var(--dur, 32s) linear infinite; }
+    .reel-col.down .reel-inner { animation: scrollDown var(--dur, 32s) linear infinite; }
+
+    @keyframes scrollUp   { from { transform: translateY(0); }      to { transform: translateY(-50%); } }
+    @keyframes scrollDown { from { transform: translateY(-50%); }   to { transform: translateY(0); } }
+
+    /* Individual player tile */
+    .tile {
+      position: relative;
+      padding: 20px 12px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
       text-align: center;
-      border: 1px solid rgba(240, 224, 160, 0.24);
-      background: linear-gradient(165deg,
-        rgba(240, 224, 160, 0.10) 0%,
-        rgba(240, 224, 160, 0.03) 45%,
-        rgba(240, 224, 160, 0.07) 100%);
-      box-shadow: 0 0 42px rgba(240, 224, 160, 0.05),
-                  inset 0 0 26px rgba(240, 224, 160, 0.04);
-      overflow: hidden;
-      opacity: 0;
-      animation-name: tileIn, tileDrift;
-      animation-duration: 2.2s, var(--driftDur, 16s);
-      animation-timing-function: ease, ease-in-out;
-      animation-delay: var(--inDelay, 1s), 0s;
-      animation-iteration-count: 1, infinite;
-      animation-direction: normal, alternate;
-      animation-fill-mode: forwards, none;
+      border: 1px solid rgba(240, 224, 160, 0.22);
+      border-radius: 4px;
+      background:
+        linear-gradient(160deg, rgba(240,224,160,0.12) 0%, rgba(240,224,160,0.02) 50%, rgba(240,224,160,0.08) 100%);
+      box-shadow: inset 0 0 24px rgba(240,224,160,0.05), 0 8px 30px rgba(0,0,0,0.25);
     }
-
-    /* Inner hairline frame */
-    .player-tile::before {
+    .tile::before {
       content: '';
       position: absolute;
-      inset: 7px;
-      border: 1px solid rgba(240, 224, 160, 0.14);
+      inset: 5px;
+      border: 1px solid rgba(240, 224, 160, 0.12);
+      border-radius: 2px;
       pointer-events: none;
     }
 
-    /* Gold light sweep across the tile */
-    .player-tile::after {
-      content: '';
+    /* The kit / jersey "image" */
+    .kit { position: relative; width: 84%; max-width: 132px; margin: 2px auto 4px; }
+    .kit-svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+    .kit-num {
       position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(115deg,
-        transparent 35%,
-        rgba(255, 248, 222, 0.35) 47%,
-        rgba(240, 224, 160, 0.14) 53%,
-        transparent 65%);
-      background-size: 300% 100%;
-      background-position: 160% 0;
-      mix-blend-mode: screen;
-      animation: sheen var(--sheenDur, 6.5s) ease-in-out infinite;
-      animation-delay: var(--sheenDelay, 0s);
-    }
-
-    @keyframes tileIn {
-      from { opacity: 0; }
-      to   { opacity: var(--tileOp, 0.5); }
-    }
-
-    @keyframes tileDrift {
-      from { transform: translate3d(0, 0, 0) rotate(var(--r0, -1.1deg)); }
-      to   { transform: translate3d(var(--dx, 16px), var(--dy, -22px), 0) rotate(var(--r1, 1.1deg)); }
-    }
-
-    @keyframes sheen {
-      0%        { background-position: 160% 0; }
-      45%, 100% { background-position: -160% 0; }
-    }
-
-    .tile-pos {
-      font-size: 8px;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
-      font-weight: 300;
-    }
-
-    .tile-first {
-      font-size: 12px;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
-      font-weight: 400;
-      margin-top: 6px;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(26px, 7vw, 40px);
+      font-weight: 500;
+      font-style: italic;
+      line-height: 1;
+      color: var(--bg-deep);
+      text-shadow: 0 1px 0 rgba(255,246,216,0.35);
     }
 
     .tile-name {
-      font-size: 29px;
+      font-size: clamp(17px, 4.4vw, 23px);
       font-style: italic;
       font-weight: 500;
-      line-height: 1.1;
-      background: linear-gradient(100deg,
-        var(--gold-deep) 0%,
-        var(--gold) 28%,
-        var(--gold-bright) 50%,
-        var(--gold) 72%,
-        var(--gold-deep) 100%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
+      line-height: 1.05;
+      background: linear-gradient(100deg, var(--gold-deep) 0%, var(--gold) 30%, var(--gold-bright) 50%, var(--gold) 70%, var(--gold-deep) 100%);
+      background-size: 220% auto;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
       animation: goldShift 6s linear infinite;
     }
-
-    .tile-divider {
-      width: 34px;
-      height: 1px;
-      margin-top: 8px;
-      background: linear-gradient(to right, transparent, var(--gold-soft), transparent);
+    .tile-first {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      font-weight: 400;
+    }
+    .tile-pos {
+      font-size: 8px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: rgba(240,224,160,0.55);
+      margin-top: 3px;
     }
 
-    @keyframes goldShift {
-      to { background-position: 200% center; }
+    @keyframes goldShift { to { background-position: 220% center; } }
+
+    /* ===================================================================
+       LAYER 2  ·  The gold reflection sheet.
+       Semi-transparent brushed-gold film with a slow travelling
+       highlight, so the moving reel reads as if seen THROUGH gold.
+       =================================================================== */
+    .gold-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      background:
+        repeating-linear-gradient(118deg,
+          rgba(255,246,216,0.00) 0px,
+          rgba(255,246,216,0.05) 1px,
+          rgba(160,140,80,0.00) 4px,
+          rgba(255,246,216,0.00) 7px),
+        linear-gradient(125deg,
+          rgba(120,96,40,0.05) 0%,
+          rgba(240,224,160,0.14) 32%,
+          rgba(255,246,216,0.18) 50%,
+          rgba(240,224,160,0.12) 68%,
+          rgba(120,96,40,0.05) 100%);
+    }
+    .gold-sheet::after {
+      content: '';
+      position: absolute;
+      inset: -40%;
+      background: linear-gradient(118deg,
+        transparent 42%,
+        rgba(255,248,224,0.16) 49%,
+        rgba(255,248,224,0.28) 50%,
+        rgba(255,248,224,0.16) 51%,
+        transparent 58%);
+      background-size: 260% 260%;
+      mix-blend-mode: screen;
+      animation: sweep 8.5s ease-in-out infinite;
+    }
+    @keyframes sweep {
+      0%        { background-position: 130% -30%; }
+      50%, 100% { background-position: -30% 130%; }
     }
 
-    /* Tile placement + per-tile drift character */
-    .tile-mbappe {
-      top: 13%; left: 5%;
-      --w: 212px;
-      --inDelay: 0.9s;  --driftDur: 17s;
-      --dx: 18px; --dy: -24px; --r0: -1.4deg; --r1: 0.8deg;
-      --sheenDur: 6.2s; --sheenDelay: 0.4s;
+    /* ===================================================================
+       LAYER 3  ·  Le Coq — the rooster watermark.
+       =================================================================== */
+    .coq {
+      position: fixed;
+      z-index: 3;
+      left: 50%; bottom: 3%;
+      width: clamp(150px, 34vw, 230px);
+      transform: translateX(-50%);
+      opacity: 0;
+      pointer-events: none;
+      animation: coqIn 2.4s ease 0.6s forwards;
     }
-    .tile-dembele {
-      top: 10%; right: 6%;
-      --w: 198px;
-      --inDelay: 1.2s;  --driftDur: 19s;
-      --dx: -16px; --dy: -18px; --r0: 1.2deg; --r1: -1deg;
-      --sheenDur: 7.1s; --sheenDelay: 1.6s;
+    .coq svg { width: 100%; height: auto; display: block; }
+    .coq-stroke { fill: none; stroke: rgba(240,224,160,0.30); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+    .coq-fill   { fill: rgba(240,224,160,0.07); }
+    @keyframes coqIn { to { opacity: 1; } }
+
+    /* Framing rules + corners (kept from original) */
+    .rule-h-top, .rule-h-bottom {
+      position: fixed; left: 0; right: 0; height: 1px; z-index: 4;
+      background: linear-gradient(to right, transparent, var(--gold-dim) 30%, var(--gold-dim) 70%, transparent);
+      opacity: 0; animation: fadeIn 1.5s ease forwards;
     }
-    .tile-olise {
-      bottom: 11%; right: 7%;
-      --w: 186px;
-      --inDelay: 1.5s;  --driftDur: 15s;
-      --dx: -14px; --dy: 20px; --r0: -0.9deg; --r1: 1.3deg;
-      --sheenDur: 6.8s; --sheenDelay: 2.8s;
+    .rule-h-top { top: 0; }
+    .rule-h-bottom { bottom: 0; animation-delay: 0.2s; }
+
+    .corner { position: fixed; width: 36px; height: 36px; z-index: 4; opacity: 0; animation: fadeIn 2s ease 1s forwards; }
+    .corner svg { width: 100%; height: 100%; }
+    .corner.tl { top: 24px; left: 24px; }
+    .corner.tr { top: 24px; right: 24px; transform: scaleX(-1); }
+    .corner.bl { bottom: 24px; left: 24px; transform: scaleY(-1); }
+    .corner.br { bottom: 24px; right: 24px; transform: scale(-1); }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* ===================================================================
+       LAYER 4  ·  The text (top). Full-screen darkened scrim keeps it
+       legible while the reel shows through around it.
+       =================================================================== */
+    .stage {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(28px, 5vh, 46px);
+      padding: 40px 32px;
+      max-width: 760px;
+      width: 100%;
+      text-align: center;
     }
-    .tile-doue {
-      bottom: 10%; left: 6%;
-      --w: 186px;
-      --inDelay: 1.8s;  --driftDur: 18s;
-      --dx: 15px; --dy: 22px; --r0: 1deg; --r1: -1.2deg;
-      --sheenDur: 7.4s; --sheenDelay: 4s;
-    }
-    .tile-barcola {
-      top: 4%; left: 50%; margin-left: -84px;
-      --w: 168px;
-      --inDelay: 2.1s;  --driftDur: 16s;
-      --dx: 10px; --dy: 14px; --r0: -0.7deg; --r1: 0.9deg;
-      --sheenDur: 6.6s; --sheenDelay: 5.2s;
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: -14% -8%;
+      z-index: -1;
+      background: radial-gradient(ellipse at center, rgba(6,16,38,0.86) 0%, rgba(6,16,38,0.7) 42%, rgba(6,16,38,0.0) 78%);
     }
 
-    @media (max-width: 760px) {
-      .player-tile {
-        --tileOp: 0.32;
-        padding: 16px 10px 14px;
-      }
-      .tile-mbappe  { --w: 138px; top: 8%; left: 3%; }
-      .tile-dembele { --w: 132px; top: 6%; right: 3%; }
-      .tile-olise   { --w: 128px; bottom: 7%; right: 3%; }
-      .tile-doue    { --w: 128px; bottom: 6%; left: 3%; }
-      .tile-barcola { display: none; }
-      .tile-name  { font-size: 20px; }
-      .tile-first { font-size: 10px; }
-      .tile-pos   { font-size: 7px; }
+    .logo-slot {
+      width: 108px; height: 108px;
+      opacity: 0; transform: scale(0.85);
+      animation: logoReveal 1.2s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+    }
+    .logo-slot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 14px rgba(0,0,0,0.4)); }
+    @keyframes logoReveal { to { opacity: 1; transform: scale(1); } }
+
+    .eyebrow {
+      font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--gold-soft); font-weight: 300;
+      opacity: 0; animation: fadeUp 1s ease 0.9s forwards;
+    }
+
+    .declaration {
+      font-size: clamp(21px, 3vw, 34px);
+      font-weight: 300; font-style: italic;
+      line-height: 1.7; letter-spacing: 0.01em;
+      min-height: 3.2em; position: relative;
+    }
+    .declaration .typed-text {
+      background: linear-gradient(100deg, var(--gold-deep) 0%, var(--gold) 28%, var(--gold-bright) 50%, var(--gold) 72%, var(--gold-deep) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+      animation: goldShift 7s linear infinite;
+    }
+    .cursor {
+      display: inline-block; width: 1.5px; height: 1em;
+      background: var(--gold); margin-left: 3px; vertical-align: middle;
+      animation: blink 1.1s step-end infinite; transform: translateY(-0.06em);
+    }
+    .cursor.done { animation: cursorFade 0.8s ease 1.6s forwards; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes cursorFade { to { opacity: 0; } }
+
+    .signature {
+      font-size: 13px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--gold-soft); font-weight: 300;
+      opacity: 0; animation: fadeUp 1s ease forwards; animation-play-state: paused;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 720px) {
+      .reel-col.hide-sm { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .player-tile {
-        animation: tileIn 0.5s ease forwards;
-      }
-      .player-tile::after,
-      .tile-name {
-        animation: none;
-      }
-    }
-
-    /* Main container */
-    .stage {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 52px;
-      padding: 40px 48px;
-      max-width: 780px;
-      text-align: center;
-    }
-
-    /* Logo placeholder */
-    .logo-slot {
-      width: 120px;
-      height: 120px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      opacity: 0;
-      transform: scale(0.85);
-      animation: logoReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
-    }
-
-    .logo-slot img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    @keyframes logoReveal {
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    /* Eyebrow label */
-    .eyebrow {
-      font-size: 10px;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
-      opacity: 0;
-      animation: fadeUp 1s ease 0.8s forwards;
-      font-weight: 300;
-    }
-
-    /* Main text */
-    .declaration {
-      font-size: clamp(22px, 3.2vw, 36px);
-      font-weight: 300;
-      font-style: italic;
-      color: var(--gold);
-      line-height: 1.72;
-      letter-spacing: 0.01em;
-      min-height: 3.2em;
-      position: relative;
-    }
-
-    .declaration .typed-text {
-      display: inline;
-      background: linear-gradient(100deg,
-        var(--gold-deep) 0%,
-        var(--gold) 28%,
-        var(--gold-bright) 50%,
-        var(--gold) 72%,
-        var(--gold-deep) 100%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: goldShift 7s linear infinite;
-    }
-
-    /* Cursor */
-    .cursor {
-      display: inline-block;
-      width: 1.5px;
-      height: 1em;
-      background: var(--gold);
-      margin-left: 3px;
-      vertical-align: middle;
-      animation: blink 1.1s step-end infinite;
-      opacity: 1;
-      transform: translateY(-0.06em);
-    }
-
-    .cursor.done {
-      animation: cursorFade 0.8s ease 1.6s forwards;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    @keyframes cursorFade {
-      to { opacity: 0; }
-    }
-
-    /* Signature / year */
-    .signature {
-      font-size: 13px;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
-      opacity: 0;
-      animation: fadeUp 1s ease forwards;
-      animation-play-state: paused;
-      font-weight: 300;
-    }
-
-    /* Corner ornaments */
-    .corner {
-      position: fixed;
-      width: 36px;
-      height: 36px;
-      z-index: 2;
-      opacity: 0;
-      animation: fadeRule 2s ease 1s forwards;
-    }
-    .corner svg { width: 100%; height: 100%; }
-    .corner.tl { top: 28px; left: 28px; }
-    .corner.tr { top: 28px; right: 28px; transform: scaleX(-1); }
-    .corner.bl { bottom: 28px; left: 28px; transform: scaleY(-1); }
-    .corner.br { bottom: 28px; right: 28px; transform: scale(-1); }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Glow pulse on text once done */
-    @keyframes goldGlow {
-      0%, 100% { text-shadow: 0 0 40px rgba(240, 224, 160, 0.0); }
-      50% { text-shadow: 0 0 60px rgba(240, 224, 160, 0.12), 0 0 120px rgba(240, 224, 160, 0.05); }
-    }
-
-    .declaration.glow-active {
-      animation: goldGlow 4s ease-in-out infinite;
+      .reel-col .reel-inner,
+      .gold-sheet::after,
+      .tile-name, .declaration .typed-text { animation: none !important; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Structural rules -->
-  <div class="rule-top"></div>
-  <div class="rule-bottom"></div>
+  <!-- Shared SVG defs: gold gradient + the reusable jersey shape -->
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <defs>
+      <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0"   stop-color="#a98e4d"/>
+        <stop offset="0.35" stop-color="#f0e0a0"/>
+        <stop offset="0.5" stop-color="#fff6d8"/>
+        <stop offset="0.65" stop-color="#f0e0a0"/>
+        <stop offset="1"   stop-color="#8f7538"/>
+      </linearGradient>
+      <symbol id="jersey" viewBox="0 0 100 112">
+        <path d="M50 6 C46 12 40 13 34 10 L20 17 C15 20 11 26 9 33 L7 41
+                 C6 45 9 48 13 47 L24 43 L24 101 C24 105 27 107 31 107
+                 L69 107 C73 107 76 105 76 101 L76 43 L87 47 C91 48 94 45 93 41
+                 L91 33 C89 26 85 20 80 17 L66 10 C60 13 54 12 50 6 Z"
+              fill="url(#goldGrad)" stroke="rgba(255,246,216,0.5)" stroke-width="1"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- LAYER 1 : moving player reel -->
+  <div class="reel" aria-hidden="true">
+    <div class="reel-col up"   style="--dur:30s"><div class="reel-inner" data-col="0"></div></div>
+    <div class="reel-col down" style="--dur:38s"><div class="reel-inner" data-col="1"></div></div>
+    <div class="reel-col up hide-sm" style="--dur:34s"><div class="reel-inner" data-col="2"></div></div>
+  </div>
+
+  <!-- LAYER 2 : gold reflection film -->
+  <div class="gold-sheet" aria-hidden="true"></div>
+
+  <!-- LAYER 3 : le coq -->
+  <div class="coq" aria-hidden="true">
+    <svg viewBox="0 0 260 240" xmlns="http://www.w3.org/2000/svg">
+      <!-- tail plumes -->
+      <path class="coq-stroke" d="M96 150 C58 150 34 120 26 78 C48 104 70 112 92 112"/>
+      <path class="coq-stroke" d="M104 150 C70 156 40 138 22 104 C50 122 74 126 96 120"/>
+      <path class="coq-stroke" d="M110 152 C82 168 48 160 34 130 C58 144 84 142 104 132"/>
+      <!-- body -->
+      <path class="coq-fill coq-stroke" d="M108 150
+        C96 150 86 140 86 122 C86 96 108 78 140 78 C150 66 168 64 178 72
+        C176 60 186 50 198 52 C190 44 196 30 208 32 C202 22 212 12 222 18
+        C218 30 224 38 220 48 C232 50 236 64 228 72 C240 76 240 92 228 96
+        C222 118 200 132 172 132 C170 146 156 158 140 158 Z"/>
+      <!-- beak -->
+      <path class="coq-fill coq-stroke" d="M220 66 L244 62 L222 78 Z"/>
+      <!-- wattle -->
+      <path class="coq-fill coq-stroke" d="M216 80 C214 92 208 96 202 92 C210 88 210 82 214 78 Z"/>
+      <!-- eye -->
+      <circle cx="206" cy="62" r="3.4" fill="rgba(6,16,38,0.9)"/>
+      <!-- legs + feet -->
+      <path class="coq-stroke" d="M132 158 L128 196 M118 200 L128 196 L140 200 M128 196 L124 208"/>
+      <path class="coq-stroke" d="M156 158 L160 196 M150 200 L160 196 L172 200 M160 196 L156 208"/>
+    </svg>
+  </div>
+
+  <!-- Framing -->
   <div class="rule-h-top"></div>
   <div class="rule-h-bottom"></div>
+  <div class="corner tl"><svg viewBox="0 0 36 36" fill="none"><path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/><path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/></svg></div>
+  <div class="corner tr"><svg viewBox="0 0 36 36" fill="none"><path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/><path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/></svg></div>
+  <div class="corner bl"><svg viewBox="0 0 36 36" fill="none"><path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/><path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/></svg></div>
+  <div class="corner br"><svg viewBox="0 0 36 36" fill="none"><path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/><path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/></svg></div>
 
-  <!-- Corner ornaments -->
-  <div class="corner tl">
-    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
-      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
-    </svg>
-  </div>
-  <div class="corner tr">
-    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
-      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
-    </svg>
-  </div>
-  <div class="corner bl">
-    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
-      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
-    </svg>
-  </div>
-  <div class="corner br">
-    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 34 L2 2 L34 2" stroke="rgba(240,224,160,0.3)" stroke-width="1"/>
-      <path d="M2 18 L2 2 L18 2" stroke="rgba(240,224,160,0.15)" stroke-width="0.5"/>
-    </svg>
-  </div>
-
-  <!-- Floating player tiles (behind the text) -->
-  <div class="tile-field" aria-hidden="true">
-    <div class="player-tile tile-mbappe">
-      <span class="tile-pos">Forward · Captain</span>
-      <span class="tile-first">Kylian</span>
-      <span class="tile-name">Mbappé</span>
-      <span class="tile-divider"></span>
-    </div>
-    <div class="player-tile tile-dembele">
-      <span class="tile-pos">Forward</span>
-      <span class="tile-first">Ousmane</span>
-      <span class="tile-name">Dembélé</span>
-      <span class="tile-divider"></span>
-    </div>
-    <div class="player-tile tile-olise">
-      <span class="tile-pos">Winger</span>
-      <span class="tile-first">Michael</span>
-      <span class="tile-name">Olise</span>
-      <span class="tile-divider"></span>
-    </div>
-    <div class="player-tile tile-doue">
-      <span class="tile-pos">Winger</span>
-      <span class="tile-first">Désiré</span>
-      <span class="tile-name">Doué</span>
-      <span class="tile-divider"></span>
-    </div>
-    <div class="player-tile tile-barcola">
-      <span class="tile-pos">Winger</span>
-      <span class="tile-first">Bradley</span>
-      <span class="tile-name">Barcola</span>
-      <span class="tile-divider"></span>
-    </div>
-  </div>
-
-  <!-- Main content -->
+  <!-- LAYER 4 : text -->
   <div class="stage">
-
-    <div class="logo-slot" id="logoSlot">
-      <img src="https://www.dulran.com/logofiles/crestlogomedium.png" alt="Les Bleus" />
-    </div>
-
+    <div class="logo-slot"><img src="logofiles/crestlogomedium.png" alt="Les Bleus" /></div>
     <span class="eyebrow">FIFA World Cup 2026 &nbsp;·&nbsp; Au Revoir</span>
-
-    <p class="declaration" id="declaration">
+    <p class="declaration">
       <span class="typed-text" id="typedText"></span><span class="cursor" id="cursor"></span>
     </p>
-
     <span class="signature" id="signature">Merci, Les Bleus &nbsp;·&nbsp; 2018 – 2026</span>
-
   </div>
 
   <script>
+    /* ---- Build the moving reel ---- */
+    const players = [
+      { name: 'Mbappé',  first: 'Kylian',  pos: 'Attaquant · Capitaine', num: 10 },
+      { name: 'Dembélé', first: 'Ousmane', pos: 'Attaquant',             num: 11 },
+      { name: 'Olise',   first: 'Michael', pos: 'Ailier',                num: 17 },
+      { name: 'Doué',    first: 'Désiré',  pos: 'Ailier',                num: 20 },
+      { name: 'Barcola', first: 'Bradley', pos: 'Ailier',                num: 24 },
+    ];
+
+    function tileHTML(p) {
+      return (
+        '<div class="tile">' +
+          '<div class="kit">' +
+            '<svg class="kit-svg" viewBox="0 0 100 112"><use href="#jersey" xlink:href="#jersey"/></svg>' +
+            '<span class="kit-num">' + p.num + '</span>' +
+          '</div>' +
+          '<span class="tile-first">' + p.first + '</span>' +
+          '<span class="tile-name">' + p.name + '</span>' +
+          '<span class="tile-pos">' + p.pos + '</span>' +
+        '</div>'
+      );
+    }
+
+    // Three columns, each a different rotation so they never line up.
+    const orders = [ [0,1,2,3,4], [2,3,4,0,1], [4,0,1,2,3] ];
+    document.querySelectorAll('.reel-inner').forEach(function (col) {
+      const order = orders[+col.dataset.col];
+      const set = order.map(function (i) { return tileHTML(players[i]); }).join('');
+      col.innerHTML = set + set; // duplicated for a seamless loop
+    });
+
+    /* ---- Typewriter farewell ---- */
     const message = "Sorry to see you go, Les Bleus. Merci for the memories — with you since 2018, with you again in 2030.";
     const typedEl = document.getElementById('typedText');
     const cursor  = document.getElementById('cursor');
     const sigEl   = document.getElementById('signature');
-    const declEl  = document.getElementById('declaration');
 
-    const START_DELAY  = 1400;
-    const CHAR_SPEED   = 46;
-    const VARIANCE     = 18;
-
+    const START_DELAY = 1400, CHAR_SPEED = 46, VARIANCE = 18;
     let i = 0;
-
     function typeNext() {
       if (i < message.length) {
         typedEl.textContent += message[i];
         i++;
-        const delay = CHAR_SPEED + (Math.random() * VARIANCE * 2 - VARIANCE);
         const ch = message[i - 1];
         const extra = (ch === ',' || ch === '.') ? 180 : 0;
-        setTimeout(typeNext, delay + extra);
+        setTimeout(typeNext, CHAR_SPEED + (Math.random() * VARIANCE * 2 - VARIANCE) + extra);
       } else {
         cursor.classList.add('done');
-        declEl.classList.add('glow-active');
         sigEl.style.animationPlayState = 'running';
       }
     }
-
     setTimeout(typeNext, START_DELAY);
   </script>
 
-<script>
-    setTimeout(function() {
-        window.location.href = "https://dulran.com/home70";
-    }, 20000); // time in milliseconds — extended so the tiles get seen
-</script>
+  <script>
+    // Return home; index.html decides where that is.
+    setTimeout(function () { window.location.href = "index.html"; }, 20000);
+  </script>
 </body>
 </html>
