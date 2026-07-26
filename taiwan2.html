@@ -286,6 +286,11 @@
     transform: scale(1.12);            /* headroom for scroll parallax */
     filter: saturate(.92) contrast(1.04);
   }
+  .tw-media video, .tw-portal video {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    background: #000;
+  }
+  .tw-portal video { position: absolute; inset: 0; }
   .tw-media figcaption {
     position: absolute; left: 10px; bottom: 10px;
     font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
@@ -516,12 +521,108 @@
 
 <script>
 /* ======================================================================
-   TRIP DATA — one entry per bracketed block in taiwan_trip_cleaned2.md
+   ██  YOUR MEDIA — PASTE LINKS HERE  ██
    ----------------------------------------------------------------------
-   EDIT ME LATER:
-   · swap `twWm("File.jpg")` / picsum URLs for your own hosted photos
-   · videos: replace the {video:...} slots with real <video> sources
-   · every inline link carries data-pv-* attrs for the hover preview
+   The only section you need to touch to swap in your own photos and
+   clips. One entry per photo/video on the page, in page order.
+
+   · Paste an IMAGE link (.jpg .png .webp ...) or a VIDEO link
+     (.mp4 .webm .mov ...) between the quotes; the page detects which
+     it is from the link itself.
+   · Videos autoplay muted on a loop (browsers require muted for
+     autoplay) and pause automatically while offscreen.
+   · If a video link has no file extension, force it with a prefix:
+     "video:https://example.com/myclip"
+   · The four *_video_slot entries are the video moments; they hold
+     placeholder IMAGES for now. Paste your clip link and the play
+     button placeholder becomes a real autoplaying video.
+   · The "placeholder ·" caption prefix disappears automatically once
+     a link no longer points at a stock-placeholder host.
+   ====================================================================== */
+const MEDIA = {
+
+  // ─── 01 · Touchdown ──────────────────────────────────────
+  landing_video_slot:     "dulran.com/A7C032A6-91CE-4FA3-BB69-934EDCE142B2.mp4",
+
+  // ─── 02 · First Days ───────────────────────────────────── 
+  humid_taipei_streets:   "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20street%20scene.jpg?width=1100",
+  ntu_main_gate:          "https://commons.wikimedia.org/wiki/Special:FilePath/National%20Taiwan%20University%20main%20gate%2020041128.jpg?width=1100",
+  traditional_temple:     "https://commons.wikimedia.org/wiki/Special:FilePath/Dalongdong%20Baoan%20Temple.jpg?width=1100",
+  bouldering_gym:         "https://commons.wikimedia.org/wiki/Special:FilePath/Man%20climbing%20in%20bouldering%20gym.jpg?width=1100",
+  driving_range:          "https://picsum.photos/seed/tw-driving-range/1000/750",
+
+  // ─── 03 · Taipei 101 & the Google Office ─────────────────
+  taipei_101_tower:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei101.portrait.altonthompson.jpg?width=1100",
+  view_from_the_top:      "https://commons.wikimedia.org/wiki/Special:FilePath/View%20of%20skyscrapers%20from%20Taipei%20101%20Observatory%2020250518.jpg?width=1100",
+
+  // ─── 04 · Elephant Mountain & Lungshan ───────────────────
+  drone_video_slot:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20skyline%20from%20Elephant%20Mountain.jpg?width=1100",
+  lungshan_temple:        "https://commons.wikimedia.org/wiki/Special:FilePath/Longshan%20Temple%2C%20Taipei%2001.jpg?width=1100",
+  moon_blocks:            "https://picsum.photos/seed/tw-moon-blocks/1000/750",
+  red_string:             "https://picsum.photos/seed/tw-red-string/1000/750",
+
+  // ─── 05 · Academia Sinica & Yangmingshan ─────────────────
+  yangmingshan_fumaroles: "https://commons.wikimedia.org/wiki/Special:FilePath/9025%20Yangmingshan%20National%20Park%20Xiaoyoukeng%20Jim%20X%202953.jpg?width=1100",
+  yangmingshan_fog:       "https://commons.wikimedia.org/wiki/Special:FilePath/Xiaoyoukeng%20in%20Yangmingshan%20%285384181388%29.jpg?width=1100",
+  the_bench:              "https://picsum.photos/seed/tw-the-bench/1000/750",
+  yehliu_queens_head:     "https://commons.wikimedia.org/wiki/Special:FilePath/Queen%27s%20Head%2C%20Yehliu%2020060405.jpg?width=1100",
+  yehliu_coast:           "https://commons.wikimedia.org/wiki/Special:FilePath/Queens%20Head%20Rock%20Yeliu%20North%20Coast%20Taiwan.jpg?width=1100",
+  yehliu_rocks:           "https://commons.wikimedia.org/wiki/Special:FilePath/Queen%27s%20head%2C%20Yehliu%20Geopark%2C%20Taiwan%20-%20%E9%87%8E%E6%9F%B3%E5%9C%B0%E8%B3%AA%E5%85%AC%E5%9C%92%2C%20%E5%8F%B0%E6%B9%BE%20%2811353535854%29.jpg?width=1100",
+
+  // ─── 06 · Infrastructure ─────────────────────────────────
+  metro_video_slot:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taoyuan%20Metro%20Commuter%20Train%20at%20Platform%204%2C%20Taipei%20Main%20Station%2020170318.jpg?width=1100",
+  youbike_racks:          "https://commons.wikimedia.org/wiki/Special:FilePath/YouBike%20bicycle%20parking%20in%20Taipei%2020120916.jpg?width=1100",
+
+  // ─── 07 · NTHU & the Nuclear Reactor ─────────────────────
+  nthu_gate:              "https://commons.wikimedia.org/wiki/Special:FilePath/National%20Tsing%20Hua%20University%20West%20Gate%202020-11-30.jpg?width=1100",
+  reactor_pool:           "https://commons.wikimedia.org/wiki/Special:FilePath/Advanced%20Test%20Reactor.jpg?width=1100",
+  bnct_facility:          "https://picsum.photos/seed/tw-bnct-lab/1000/750",
+
+  // ─── 08 · Evergreen & the CKS Memorial ───────────────────
+  evergreen_ship:         "https://commons.wikimedia.org/wiki/Special:FilePath/Ever%20Ace%20C%20Hamburg%2008-09-2021%20%2814%29.jpg?width=1100",
+  cks_memorial:           "https://commons.wikimedia.org/wiki/Special:FilePath/Chiang%20Kai-shek%20memorial%20amk.jpg?width=1100",
+  cks_hall:               "https://commons.wikimedia.org/wiki/Special:FilePath/CKS%20Memorial%20Hall.jpg?width=1100",
+  cks_exhibits:           "https://picsum.photos/seed/tw-cks-exhibit/1000/750",
+
+  // ─── 09 · Central Taiwan ─────────────────────────────────
+  sun_moon_lake:          "https://commons.wikimedia.org/wiki/Special:FilePath/Sun%20Moon%20Lake.jpg?width=1100",
+  wenwu_temple:           "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%97%A5%E6%9C%88%E6%BD%AD%E6%96%87%E6%AD%A6%E5%BB%9F%20Sun%20Moon%20Lake%20Wen-Wu%20Temple%20-%20panoramio.jpg?width=1100",
+  old_rail_lines:         "https://commons.wikimedia.org/wiki/Special:FilePath/Taiwan%202009%20HuaTung%20Valley%20Decommissioned%20Railway%20Tracks%20by%20Rice%20Paddy%20FRD%208154.jpg?width=1100",
+  handmade_paper:         "https://picsum.photos/seed/tw-handmade-paper/1000/750",
+
+  // ─── 10 · TSMC ───────────────────────────────────────────
+  tsmc_building:          "https://commons.wikimedia.org/wiki/Special:FilePath/TSMC%20AP2%20building%20May%202025.jpg?width=1100",
+  tsmc_logo:              "https://commons.wikimedia.org/wiki/Special:FilePath/TSMC%20logo%20on%20Taichung%20factory%20building.jpg?width=1100",
+
+  // ─── 11 · Vietnam portal ─────────────────────────────────
+  vietnam_preview:        "https://commons.wikimedia.org/wiki/Special:FilePath/My%20Khe%20Beach%2C%20Da%20Nang%2C%20Vietnam.jpg?width=1100",
+
+  // ─── 12 · Tea Culture ────────────────────────────────────
+  winter_melon_tea:       "https://commons.wikimedia.org/wiki/Special:FilePath/Winter%20Melon%20Tea%20%28Taiwan%29.jpg?width=1100",
+  pearl_milk_tea:         "https://commons.wikimedia.org/wiki/Special:FilePath/Pearl%20Milk%20Tea%20in%20Chun%20Shui%20Tang.jpg?width=1100",
+  stinky_tofu:            "https://commons.wikimedia.org/wiki/Special:FilePath/Mala%20Stinky%20Tofu%20bought%20from%20Nan%20Ji%20Chang%20Night%20Market%2020040818.jpg?width=1100",
+
+  // ─── 13 · NTU Semiconductor Lab ──────────────────────────
+  silicon_wafers:         "https://commons.wikimedia.org/wiki/Special:FilePath/Wafer%202%20Zoll%20bis%208%20Zoll%202.jpg?width=1100",
+  fab_cleanroom:          "https://picsum.photos/seed/tw-cleanroom/1000/750",
+
+  // ─── 14 · China portal ───────────────────────────────────
+  china_preview:          "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/1280px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
+
+  // ─── 15 · Free Time · Ximending ──────────────────────────
+  ximending_night:        "https://commons.wikimedia.org/wiki/Special:FilePath/Ximending%20at%20night.jpg?width=1100",
+  ximending_market:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20Taiwan%20Ximending-Night-Market-03.jpg?width=1100",
+  ktv_room:               "https://commons.wikimedia.org/wiki/Special:FilePath/Karaoke-Box.jpg?width=1100",
+  protein_fuel:           "https://commons.wikimedia.org/wiki/Special:FilePath/Skewered%20food%20at%20Shida%20Night%20Market%20in%20Taipei.jpg?width=1100",
+
+  // ─── 16 · The Transportation System ──────────────────────
+  jingle_video_slot:      "https://commons.wikimedia.org/wiki/Special:FilePath/Platform%202%2C%20Taoyuan%20Metro%20Taipei%20Main%20Station%2020170225.jpg?width=1100",
+  easycard_machines:      "https://commons.wikimedia.org/wiki/Special:FilePath/EasyCard%20add-value%20machines%20in%20MRT%20Taipei%20Main%20Station%2020130424.jpg?width=1100",
+};
+
+/* ======================================================================
+   TRIP DATA — one entry per bracketed block in taiwan_trip_cleaned2.md
+   (text + captions live below; media links live in MEDIA above)
    ====================================================================== */
 
 // NOTE: all helpers are tw-prefixed — a CDN lib already declares a global `L`,
@@ -532,6 +633,13 @@ const twWm = (name, w = 1100) =>
 // guaranteed-to-load fallback for subjects with no good stock image yet
 const twPh = (seed) => "https://picsum.photos/seed/tw-" + seed + "/1000/750";
 
+// paste-a-link media: videos are detected by extension, or force with "video:"
+const twIsVideo = (u) => /^video:/i.test(u) ||
+  /\.(mp4|webm|mov|m4v|ogv)$/i.test((u || "").split(/[?#]/)[0]);
+const twSrc = (u) => (u || "").replace(/^(video|image|img):/i, "");
+const twIsPlaceholder = (u) =>
+  /commons\.wikimedia\.org|upload\.wikimedia\.org|picsum\.photos/.test(u || "");
+
 // inline curly-brace link builder → gold underlined anchor + hover preview
 const twL = (text, href, pvTitle, pvText, pvImg) =>
   `<a class="tlink" href="${href}" target="_blank" rel="noopener"` +
@@ -541,7 +649,7 @@ const twL = (text, href, pvTitle, pvText, pvImg) =>
 const TW_TRIP = [
 
 { chapter: "Touchdown", slides: [
-  { kind: "video", poster: twWm("Taiwan 2009 HuaLien Rice Paddy at Foot of Mountain FRD 6130 Book Back Cover.jpg"),
+  { kind: "video", poster: MEDIA.landing_video_slot,
     videoLabel: "Landing footage (placeholder)",
     text: `<p>As we were landing, I noticed (though I only understood this later) that the
     airport was a bit far from the main city, Taipei, and closer to a rural area. So I expected
@@ -561,14 +669,14 @@ const TW_TRIP = [
 
 { chapter: "First Days", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("Taipei street scene.jpg"), cap: "placeholder · Taipei streets" }],
+      { src: MEDIA.humid_taipei_streets, cap: "Taipei streets" }],
     text: `<p>The first thing we noticed right out of the gate was the <strong>humidity</strong>.
     Honestly, looking back, the first few days weren't much fun. The temperature itself was
     about average, but the humidity made it miserable; I'd sweat profusely from a bit of light
     cardio or even just walking.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("National Taiwan University main gate 20041128.jpg"), cap: "placeholder · NTU main gate" }],
+      { src: MEDIA.ntu_main_gate, cap: "NTU main gate" }],
     text: `<p>On the first day we went to check out the university: our professor's alma mater,
     ${twL("National Taiwan University", "https://www.ntu.edu.tw/english/", "National Taiwan University",
         "Taiwan's top-ranked university, founded 1928. Known for electrical engineering.",
@@ -579,14 +687,14 @@ const TW_TRIP = [
     engineering, so we visited those buildings.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Dalongdong Baoan Temple.jpg"), cap: "placeholder · a Taipei temple" }],
+      { src: MEDIA.traditional_temple, cap: "a Taipei temple" }],
     text: `<p>The next day we visited one of the old traditional temples. Interestingly, temples
     in Taiwan tend to blend <strong>three religious traditions</strong>: some Buddhist elements,
     some Taoist elements, and a third one I can't quite recall.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Man climbing in bouldering gym.jpg"), cap: "placeholder · bouldering" },
-      { src: twPh("driving-range"), cap: "placeholder · driving range" }],
+      { src: MEDIA.bouldering_gym, cap: "bouldering" },
+      { src: MEDIA.driving_range, cap: "driving range" }],
     text: `<p>Whenever I had free time, I went to a bouldering place to do some rock climbing,
     and there was also a nice driving range we visited. Most of the time, though, we stayed
     together as a group; we went almost everywhere together, which was actually a nice
@@ -595,8 +703,8 @@ const TW_TRIP = [
 
 { chapter: "Taipei 101 & the Google Office", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("Taipei101.portrait.altonthompson.jpg"), cap: "placeholder · Taipei 101" },
-      { src: twWm("View of skyscrapers from Taipei 101 Observatory 20250518.jpg"), cap: "placeholder · view from up top" }],
+      { src: MEDIA.taipei_101_tower, cap: "Taipei 101" },
+      { src: MEDIA.view_from_the_top, cap: "view from up top" }],
     text: `<p>A few days in, we hit one of the highlights of the trip: a visit to
     ${twL("Taipei 101", "https://www.taipei-101.com.tw/en/", "Taipei 101",
         "509 m supertall skyscraper, the world's tallest building from 2004 to 2010.",
@@ -616,7 +724,7 @@ const TW_TRIP = [
 ]},
 
 { chapter: "Elephant Mountain & Lungshan Temple", slides: [
-  { kind: "video", poster: twWm("Taipei skyline from Elephant Mountain.jpg"),
+  { kind: "video", poster: MEDIA.drone_video_slot,
     videoLabel: "Drone footage (maybe someday)",
     text: `<p>After that we went to ${twL("Elephant Mountain", "https://en.wikipedia.org/wiki/Xiangshan_(Taipei)",
         "Elephant Mountain (象山)", "Short, steep hike with the classic postcard view over Taipei 101.",
@@ -627,9 +735,9 @@ const TW_TRIP = [
     <p class="tw-aside">I might post the footage at some point.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Longshan Temple, Taipei 01.jpg"), cap: "placeholder · Lungshan Temple" },
-      { src: twPh("moon-blocks"), cap: "placeholder · jiaobei moon blocks" },
-      { src: twPh("red-string"), cap: "placeholder · the elusive red string" }],
+      { src: MEDIA.lungshan_temple, cap: "Lungshan Temple" },
+      { src: MEDIA.moon_blocks, cap: "jiaobei moon blocks" },
+      { src: MEDIA.red_string, cap: "the elusive red string" }],
     text: `<p>We also visited ${twL("Lungshan Temple (龍山寺)", "https://en.wikipedia.org/wiki/Bangka_Lungshan_Temple",
         "Bangka Lungshan Temple", "Founded 1738. Taipei's most famous temple, historically a refuge for the vulnerable.",
         twWm("Longshan Temple, Taipei 01.jpg", 500))}, located in an area historically associated
@@ -651,9 +759,9 @@ const TW_TRIP = [
     government-run. Still a solid VC-style setup overall.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("9025 Yangmingshan National Park Xiaoyoukeng Jim X 2953.jpg"), cap: "placeholder · Yangmingshan fumaroles" },
-      { src: twWm("Xiaoyoukeng in Yangmingshan (5384181388).jpg"), cap: "placeholder · the fog up top" },
-      { src: twPh("the-bench"), cap: "placeholder · that bench" }],
+      { src: MEDIA.yangmingshan_fumaroles, cap: "Yangmingshan fumaroles" },
+      { src: MEDIA.yangmingshan_fog, cap: "the fog up top" },
+      { src: MEDIA.the_bench, cap: "that bench" }],
     text: `<p>The rural areas we passed through were dense, foggy, and pleasant. We went hiking
     in the Yangmingshan area.</p>
     <p>There was a funny incident there: we noticed news reporters filming near a bench and
@@ -662,17 +770,17 @@ const TW_TRIP = [
     <em>"Yangmingshan bench incident."</em></p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Queen's Head, Yehliu 20060405.jpg"), cap: "placeholder · the Queen's Head" },
-      { src: twWm("Queens Head Rock Yeliu North Coast Taiwan.jpg"), cap: "placeholder · Yehliu coast" },
-      { src: twWm("Queen's head, Yehliu Geopark, Taiwan - 野柳地質公園, 台湾 (11353535854).jpg"), cap: "placeholder · hoodoo rocks" }],
+      { src: MEDIA.yehliu_queens_head, cap: "the Queen's Head" },
+      { src: MEDIA.yehliu_coast, cap: "Yehliu coast" },
+      { src: MEDIA.yehliu_rocks, cap: "hoodoo rocks" }],
     text: `<p>After that we visited the <strong>Yehliu Geopark</strong>, which was genuinely
     beautiful; I really liked the natural scenery there.</p>` },
 ]},
 
 { chapter: "Infrastructure", slides: [
-  { kind: "mixed", poster: twWm("Taoyuan Metro Commuter Train at Platform 4, Taipei Main Station 20170318.jpg"),
+  { kind: "mixed", poster: MEDIA.metro_video_slot,
     videoLabel: "Metro clip or photo (TBD)",
-    imgs: [{ src: twWm("YouBike bicycle parking in Taipei 20120916.jpg"), cap: "placeholder · YouBikes outside a station" }],
+    imgs: [{ src: MEDIA.youbike_racks, cap: "YouBikes outside a station" }],
     text: `<p>I loved the infrastructure: well thought out, robust, and genuinely deep. It wasn't
     just the metro system; there was supporting infrastructure around it, like rentable bikes
     right outside metro stations.</p>
@@ -683,9 +791,9 @@ const TW_TRIP = [
 
 { chapter: "NTHU & the Nuclear Reactor", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("National Tsing Hua University West Gate 2020-11-30.jpg"), cap: "placeholder · NTHU gate" },
-      { src: twWm("Advanced Test Reactor.jpg"), cap: "placeholder · a reactor pool (not the one we saw)" },
-      { src: twPh("bnct-lab"), cap: "placeholder · BNCT facility" }],
+      { src: MEDIA.nthu_gate, cap: "NTHU gate" },
+      { src: MEDIA.reactor_pool, cap: "a reactor pool (not the one we saw)" },
+      { src: MEDIA.bnct_facility, cap: "BNCT facility" }],
     text: `<p>We visited National Tsing Hua University in Taiwan, not to be confused with
     China's top-tier Tsinghua University. There's some history around the two institutions and
     how the Taiwanese one has, at times, positioned itself as connected to a broader "China"
@@ -697,16 +805,16 @@ const TW_TRIP = [
 
 { chapter: "Evergreen & the Chiang Kai-shek Memorial", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("Ever Ace C Hamburg 08-09-2021 (14).jpg"), cap: "placeholder · an Evergreen ship" }],
+      { src: MEDIA.evergreen_ship, cap: "an Evergreen ship" }],
     text: `<p>Something you may not know: those green shipping containers you see everywhere,
     <strong>Evergreen</strong>, are from a Taiwanese company. It was founded by someone who, I
     believe, once lived in Hong Kong, and I later found out he was also the founder of EVA Air.
     We visited a ship museum related to this.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Chiang Kai-shek memorial amk.jpg"), cap: "placeholder · CKS Memorial Hall" },
-      { src: twWm("CKS Memorial Hall.jpg"), cap: "placeholder · the hall" },
-      { src: twPh("cks-exhibit"), cap: "placeholder · exhibits inside" }],
+      { src: MEDIA.cks_memorial, cap: "CKS Memorial Hall" },
+      { src: MEDIA.cks_hall, cap: "the hall" },
+      { src: MEDIA.cks_exhibits, cap: "exhibits inside" }],
     text: `<p>After that, we went to the Chiang Kai-shek Memorial Hall. Chiang Kai-shek is the
     infamous figure who fled to Taiwan and established what became the Republic of China (ROC)
     government there. The current ruling party tends to be less favorable toward him, so the
@@ -724,10 +832,10 @@ const TW_TRIP = [
 
 { chapter: "Central Taiwan", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("Sun Moon Lake.jpg"), cap: "placeholder · Sun Moon Lake" },
-      { src: twWm("日月潭文武廟 Sun Moon Lake Wen-Wu Temple - panoramio.jpg"), cap: "placeholder · Wenwu Temple" },
-      { src: twWm("Taiwan 2009 HuaTung Valley Decommissioned Railway Tracks by Rice Paddy FRD 8154.jpg"), cap: "placeholder · old rail lines" },
-      { src: twPh("handmade-paper"), cap: "placeholder · making paper by hand" }],
+      { src: MEDIA.sun_moon_lake, cap: "Sun Moon Lake" },
+      { src: MEDIA.wenwu_temple, cap: "Wenwu Temple" },
+      { src: MEDIA.old_rail_lines, cap: "old rail lines" },
+      { src: MEDIA.handmade_paper, cap: "making paper by hand" }],
     text: `<p>We then traveled to central Taiwan, which had a lot to see. It used to be a
     resource-extraction hub, so there's old rail infrastructure still around. We visited
     <strong>Sun Moon Lake</strong>, which was beautiful, and took a boat ride on it. We also
@@ -745,8 +853,8 @@ const TW_TRIP = [
 
 { chapter: "TSMC", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("TSMC AP2 building May 2025.jpg"), cap: "placeholder · TSMC" },
-      { src: twWm("TSMC logo on Taichung factory building.jpg"), cap: "placeholder · the logo everywhere" }],
+      { src: MEDIA.tsmc_building, cap: "TSMC" },
+      { src: MEDIA.tsmc_logo, cap: "the logo everywhere" }],
     text: `<p>One of the highlights was visiting <strong>TSMC</strong>. We toured the museum and
     learned about the history of nanotechnology and chip manufacturing, and how Taiwan became
     the dominant player in the chip industry.</p>
@@ -759,7 +867,7 @@ const TW_TRIP = [
 
 { chapter: "Vietnam Break", slides: [
   { kind: "portal", href: "vietnam.html", tag: "Side quest · 3–4 day break",
-    title: "Vietnam", img: twWm("My Khe Beach, Da Nang, Vietnam.jpg"),
+    title: "Vietnam", img: MEDIA.vietnam_preview,
     cta: "Click here for the Da Nang write-up",
     note: "Same kind of journey, different country; page coming soon. (Da Nang was a genuinely nice beach town, for reference.)" },
 ]},
@@ -783,8 +891,8 @@ const TW_TRIP = [
     worth.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Winter Melon Tea (Taiwan).jpg"), cap: "placeholder · winter melon tea" },
-      { src: twWm("Pearl Milk Tea in Chun Shui Tang.jpg"), cap: "placeholder · pearl milk tea" }],
+      { src: MEDIA.winter_melon_tea, cap: "winter melon tea" },
+      { src: MEDIA.pearl_milk_tea, cap: "pearl milk tea" }],
     text: `<p>More broadly, the food and drink profile of the country is very tea-heavy. The
     most prevalent variety by far is <strong>winter melon tea</strong>: a bit sweet, takes some
     getting used to, but grows on you.</p>
@@ -794,7 +902,7 @@ const TW_TRIP = [
     highest prevalence, but it's not overwhelmingly dominant.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Mala Stinky Tofu bought from Nan Ji Chang Night Market 20040818.jpg"), cap: "placeholder · stinky tofu" }],
+      { src: MEDIA.stinky_tofu, cap: "stinky tofu" }],
     text: `<p>On the protein side: tofu, pork, beef, and chicken are all common, though chicken
     specifically was hardest to find; Protein Box (more on that below) was really the only
     reliable source I found for it.</p>
@@ -805,8 +913,8 @@ const TW_TRIP = [
 
 { chapter: "NTU Semiconductor Lab", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("Wafer 2 Zoll bis 8 Zoll 2.jpg"), cap: "placeholder · silicon wafers" },
-      { src: twPh("cleanroom"), cap: "placeholder · the fab lab" }],
+      { src: MEDIA.silicon_wafers, cap: "silicon wafers" },
+      { src: MEDIA.fab_cleanroom, cap: "the fab lab" }],
     text: `<p>One more place worth mentioning: before the tea village, we visited a
     semiconductor fabrication lab at National Taiwan University, a research center tied to a
     consortium focused on key technologies, working on electromechanical systems (NEMS-related
@@ -816,15 +924,15 @@ const TW_TRIP = [
     to go through.</p>` },
 
   { kind: "portal", href: "china.html", tag: "Next stop · after Taiwan",
-    title: "China", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/1280px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
+    title: "China", img: MEDIA.china_preview,
     cta: "Click here for the China chapter",
     note: "After Taiwan, I went on to China. That journal is brewing on its own page." },
 ]},
 
 { chapter: "Free Time · Ximending", slides: [
   { kind: "photos", imgs: [
-      { src: twWm("Ximending at night.jpg"), cap: "placeholder · Ximending at night" },
-      { src: twWm("Taipei Taiwan Ximending-Night-Market-03.jpg"), cap: "placeholder · night market" }],
+      { src: MEDIA.ximending_night, cap: "Ximending at night" },
+      { src: MEDIA.ximending_market, cap: "night market" }],
     text: `<p>In my free time, both early on and later during the central Taiwan stretch, I'd
     often go to ${twL("Ximending (西門町)", "https://en.wikipedia.org/wiki/Ximending", "Ximending",
         "Taipei's youth-culture and shopping district, 'the Harajuku of Taipei.'",
@@ -833,13 +941,13 @@ const TW_TRIP = [
     with a decent night market where you can browse clothing and other shops.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Karaoke-Box.jpg"), cap: "placeholder · KTV" }],
+      { src: MEDIA.ktv_room, cap: "KTV" }],
     text: `<p><strong>KTV is a must-do</strong> too; I'd recommend the one near Jingmei
     Station; it's a solid spot. The other place I'd default to was the area right around
     Taipei 101, since there's a mall there I could just wander around.</p>` },
 
   { kind: "photos", imgs: [
-      { src: twWm("Skewered food at Shida Night Market in Taipei.jpg"), cap: "placeholder · fuel" }],
+      { src: MEDIA.protein_fuel, cap: "fuel" }],
     text: `<p>On the food side, the first few days were tough for finding good protein sources
     and generally nutritious food. Eventually I found a place on the NTU campus called
     <strong>Protein Box</strong>, which I'd recommend: about 99 NTD for a bowl with rice,
@@ -868,9 +976,9 @@ const TW_TRIP = [
     within one city, since Taiwan's cities are compact enough that it wouldn't make financial or
     practical sense.</p>` },
 
-  { kind: "mixed", poster: twWm("Platform 2, Taoyuan Metro Taipei Main Station 20170225.jpg"),
+  { kind: "mixed", poster: MEDIA.jingle_video_slot,
     videoLabel: "The jingle (clip TBD)",
-    imgs: [{ src: twWm("EasyCard add-value machines in MRT Taipei Main Station 20130424.jpg"), cap: "placeholder · EasyCard machines" }],
+    imgs: [{ src: MEDIA.easycard_machines, cap: "EasyCard machines" }],
     text: `<p>The metro system itself is top-notch. There's also a well-known <strong>jingle</strong>
     that plays when a train arrives, at least on the green line.</p>
     <p class="tw-aside">I'll add the name of the jingle later.</p>` },
@@ -885,17 +993,26 @@ const TW_TRIP = [
   const root = document.getElementById("tw-journey");
   let chNum = 0, flip = false;
 
-  const figure = (img) =>
-    `<figure><img loading="lazy" src="${img.src}" alt="${img.cap || "trip photo"}"
+  const figure = (img) => {
+    const src = twSrc(img.src);
+    const cap = (twIsPlaceholder(src) ? "placeholder · " : "") + (img.cap || "");
+    if (twIsVideo(img.src))
+      return `<figure><video src="${src}" autoplay muted loop playsinline preload="metadata"></video>
+        <figcaption>${cap}</figcaption></figure>`;
+    return `<figure><img loading="lazy" src="${src}" alt="${img.cap || "trip photo"}"
        onerror="this.onerror=null;this.src='${twPh("fallback-" + Math.random().toString(36).slice(2, 7))}';" />
-      <figcaption>${img.cap || "placeholder"}</figcaption></figure>`;
+      <figcaption>${cap}</figcaption></figure>`;
+  };
 
-  const videoFrame = (poster, label) =>
-    `<figure class="tw-video" title="Video placeholder, real clip coming soon">
+  const videoFrame = (poster, label) => {
+    if (twIsVideo(poster))
+      return `<figure><video src="${twSrc(poster)}" autoplay muted loop playsinline preload="metadata"></video></figure>`;
+    return `<figure class="tw-video" title="Video placeholder, real clip coming soon">
        <img loading="lazy" src="${poster}" alt="video placeholder" />
        <span class="tw-video-tag">${label || "Video · placeholder"}</span>
        <span class="tw-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
      </figure>`;
+  };
 
   for (const ch of TW_TRIP) {
     chNum++;
@@ -912,9 +1029,12 @@ const TW_TRIP = [
       if (s.kind === "portal") {
         const wrap = document.createElement("div");
         wrap.className = "tw-portal-wrap tw-reveal";
+        const pMedia = twIsVideo(s.img)
+          ? `<video src="${twSrc(s.img)}" autoplay muted loop playsinline preload="metadata"></video>`
+          : `<img loading="lazy" src="${twSrc(s.img)}" alt="${s.title} preview"
+                 onerror="this.onerror=null;this.src='${twPh(s.title.toLowerCase())}';" />`;
         wrap.innerHTML = `<a class="tw-portal" href="${s.href}">
-            <img loading="lazy" src="${s.img}" alt="${s.title} preview"
-                 onerror="this.onerror=null;this.src='${twPh(s.title.toLowerCase())}';" />
+            ${pMedia}
             <span class="tw-portal-scrim"></span>
             <span class="tw-portal-copy">
               <span class="tw-portal-tag">${s.tag}</span>
@@ -949,6 +1069,13 @@ const TW_TRIP = [
       root.appendChild(el);
     }
   }
+
+  // autoplaying videos: pause while offscreen, resume when visible
+  const vio = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) e.target.play().catch(() => {});
+    else e.target.pause();
+  }), { rootMargin: "240px" });
+  document.querySelectorAll("#tw-journey video").forEach((v) => vio.observe(v));
 })();
 
 /* ======================================================================
