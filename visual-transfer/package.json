@@ -1,0 +1,26 @@
+{
+  "name": "visual-transfer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transfer files between devices by pointing a camera at a screen — fountain-coded QR streams, or visual pairing plus direct peer-to-peer.",
+  "main": "server.js",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test/codec.test.mjs && node test/signalling.test.mjs",
+    "build:vendor": "esbuild node_modules/qrcode/lib/browser.js --bundle --format=iife --global-name=QRCodeLib --minify --outfile=public/vendor/qrcode.min.js && cp node_modules/jsqr/dist/jsQR.js public/vendor/jsqr.js"
+  },
+  "dependencies": {
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4"
+  }
+}
