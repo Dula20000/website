@@ -1,0 +1,6 @@
+# Trip videos live on disk only — GitHub hard-rejects any file over 100 MB,
+# and these run from 6 MB to 549 MB. The photos alongside them are tracked.
+taiwanpics/*.MOV
+taiwanpics/*.mov
+taiwanpics/*.MP4
+taiwanpics/*.mp4
