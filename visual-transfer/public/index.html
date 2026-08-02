@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d11">
+<meta name="description" content="Send files between devices by pointing a camera at a screen. No accounts, no cloud, no cables.">
+<title>Visual Transfer — files by line of sight</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%230b0d11'/><g fill='%2364e3b0'><rect x='18' y='18' width='22' height='22'/><rect x='60' y='18' width='22' height='22'/><rect x='18' y='60' width='22' height='22'/><rect x='60' y='60' width='10' height='10'/><rect x='72' y='72' width='10' height='10'/></g></svg>">
+<link rel="stylesheet" href="app.css">
+<script src="vendor/qrcode.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="brand" id="brand" type="button">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><g fill="currentColor"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="16" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="3" height="3" rx=".5"/><rect x="20" y="20" width="3" height="3" rx=".5"/><rect x="11" y="11" width="3" height="3" rx=".5"/></g></svg>
+    </span>
+    <span class="brand-text">Visual&nbsp;Transfer</span>
+  </button>
+  <div class="topbar-right">
+    <span class="net-badge" id="netBadge" hidden></span>
+    <button class="ghost-btn" id="helpBtn" type="button">How it works</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ─────────────────────────────────────────────────────── home ── -->
+<section class="view" id="view-home" data-view="home">
+  <div class="hero">
+    <h1>Files travel by <em>line of sight</em>.</h1>
+    <p class="lede">
+      Point one device's camera at another device's screen. No cables, no accounts,
+      no cloud in the middle. Any file type, any size.
+    </p>
+  </div>
+
+  <div class="choice-grid">
+    <button class="choice" id="goSend" type="button">
+      <span class="choice-icon" aria-hidden="true">⬆</span>
+      <span class="choice-title">Send files</span>
+      <span class="choice-sub">Pick files, show the code</span>
+    </button>
+    <button class="choice" id="goReceive" type="button">
+      <span class="choice-icon" aria-hidden="true">⬇</span>
+      <span class="choice-title">Receive files</span>
+      <span class="choice-sub">Open the camera, aim at the code</span>
+    </button>
+  </div>
+
+  <div class="mode-explainer">
+    <div class="mode-card">
+      <h3><span class="dot dot-link"></span>Link</h3>
+      <p>The code carries a pairing address. Bytes then move device&#8209;to&#8209;device over the local network at full speed.</p>
+      <p class="mode-meta">Any size · MB/s · needs both devices online</p>
+    </div>
+    <div class="mode-card">
+      <h3><span class="dot dot-beam"></span>Beam</h3>
+      <p>The code <em>is</em> the file. Data is painted on screen as a stream of codes and read back through the lens.</p>
+      <p class="mode-meta">Small files · ~1–10 KB/s · works fully air&#8209;gapped</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── send ── -->
+<section class="view" id="view-send" data-view="send" hidden>
+  <div class="view-head">
+    <button class="back-btn" data-back type="button">← Back</button>
+    <h2>Send</h2>
+  </div>
+
+  <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to send">
+    <input type="file" id="fileInput" multiple hidden>
+    <div class="dropzone-inner">
+      <span class="dz-icon" aria-hidden="true">＋</span>
+      <strong>Drop files here</strong>
+      <span class="dz-sub">or click to browse · or paste with <kbd>⌘V</kbd></span>
+    </div>
+  </div>
+
+  <ul class="file-list" id="fileList"></ul>
+
+  <div class="send-config" id="sendConfig" hidden>
+    <div class="seg" role="radiogroup" aria-label="Transfer mode">
+      <button class="seg-btn is-active" data-mode="link" role="radio" aria-checked="true" type="button">
+        <strong>Link</strong><small>Any size · fast</small>
+      </button>
+      <button class="seg-btn" data-mode="beam" role="radio" aria-checked="false" type="button">
+        <strong>Beam</strong><small>Optical only</small>
+      </button>
+    </div>
+
+    <div class="beam-options" id="beamOptions" hidden>
+      <label class="field">
+        <span>Frame density</span>
+        <select id="densitySelect"></select>
+      </label>
+      <label class="field">
+        <span>Frame rate <output id="fpsOut">10</output>/s</span>
+        <input type="range" id="fpsRange" min="4" max="20" step="1" value="10">
+      </label>
+      <p class="hint" id="beamEstimate"></p>
+    </div>
+
+    <button class="primary-btn" id="startSend" type="button">Show the code</button>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── link (sender side) ── -->
+<section class="view" id="view-link" data-view="link" hidden>
+  <div class="view-head">
+    <button class="back-btn" data-back type="button">← Cancel</button>
+    <h2>Scan to receive</h2>
+  </div>
+
+  <div class="stage">
+    <div class="qr-frame" id="linkQrFrame">
+      <canvas id="linkCanvas" width="720" height="720" aria-label="Pairing QR code"></canvas>
+    </div>
+    <div class="stage-side">
+      <p class="stage-status" id="linkStatus">Starting…</p>
+      <div class="code-row" id="codeRow" hidden>
+        <span class="code-label">or type this code at <span class="host-hint" id="hostHint"></span></span>
+        <strong class="pair-code" id="pairCode">······</strong>
+      </div>
+      <div class="progress-block" id="linkProgress" hidden>
+        <div class="progress-head">
+          <span id="linkProgName">—</span>
+          <span id="linkProgPct">0%</span>
+        </div>
+        <div class="bar"><div class="bar-fill" id="linkProgBar"></div></div>
+        <p class="progress-meta" id="linkProgMeta"></p>
+      </div>
+      <p class="hint">Any camera app works — the code opens this page on the other device.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── beam (sender side) ── -->
+<section class="view" id="view-beam" data-view="beam" hidden>
+  <div class="view-head">
+    <button class="back-btn" data-back type="button">← Stop</button>
+    <h2>Beaming</h2>
+    <button class="ghost-btn" id="beamFullscreen" type="button">Fullscreen</button>
+  </div>
+
+  <div class="stage stage-beam" id="beamStage">
+    <div class="qr-frame qr-frame-beam">
+      <canvas id="beamCanvas" width="900" height="900" aria-label="Data frame stream"></canvas>
+    </div>
+    <div class="stage-side">
+      <p class="stage-status">Hold the receiving camera on this code.</p>
+      <dl class="stat-grid">
+        <div><dt>File</dt><dd id="beamFile">—</dd></div>
+        <div><dt>Frames sent</dt><dd id="beamFrames">0</dd></div>
+        <div><dt>Pass</dt><dd id="beamPass">1</dd></div>
+        <div><dt>Per frame</dt><dd id="beamRate">—</dd></div>
+      </dl>
+      <div class="bar bar-loop"><div class="bar-fill" id="beamBar"></div></div>
+      <p class="hint" id="beamHint">
+        The stream repeats forever, so nothing is lost if the camera looks away.
+        It stops when you do.
+      </p>
+      <div class="btn-row">
+        <button class="ghost-btn" id="beamNext" type="button">Skip to next file</button>
+        <button class="ghost-btn" id="beamPause" type="button">Pause</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────────────── receive ── -->
+<section class="view" id="view-receive" data-view="receive" hidden>
+  <div class="view-head">
+    <button class="back-btn" data-back type="button">← Back</button>
+    <h2>Receive</h2>
+    <button class="ghost-btn" id="torchBtn" type="button" hidden>Light</button>
+  </div>
+
+  <div class="scanner">
+    <div class="viewport" id="viewport">
+      <video id="video" playsinline muted></video>
+      <div class="reticle" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <p class="scan-hint" id="scanHint">Looking for a code…</p>
+    </div>
+
+    <div class="scanner-side">
+      <div class="progress-block" id="rxProgress" hidden>
+        <div class="progress-head">
+          <span id="rxName">—</span>
+          <span id="rxPct">0%</span>
+        </div>
+        <div class="bar"><div class="bar-fill" id="rxBar"></div></div>
+        <p class="progress-meta" id="rxMeta"></p>
+      </div>
+      <div class="manual-code">
+        <label for="manualCode">Have a code instead?</label>
+        <div class="manual-row">
+          <input id="manualCode" maxlength="6" placeholder="ABC234" autocomplete="off"
+                 autocapitalize="characters" spellcheck="false" inputmode="text">
+          <button class="ghost-btn" id="manualJoin" type="button">Connect</button>
+        </div>
+      </div>
+      <p class="hint" id="cameraNote"></p>
+    </div>
+  </div>
+
+  <div class="received" id="receivedWrap" hidden>
+    <h3>Received <span class="count" id="receivedCount">0</span></h3>
+    <ul class="received-list" id="receivedList"></ul>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── link (receiver side) ── -->
+<section class="view" id="view-join" data-view="join" hidden>
+  <div class="view-head">
+    <button class="back-btn" data-back type="button">← Leave</button>
+    <h2>Connected</h2>
+  </div>
+
+  <div class="join-state">
+    <div class="pulse" id="joinPulse"><span></span></div>
+    <p class="stage-status" id="joinStatus">Connecting…</p>
+    <p class="hint" id="joinHint">Files will download as they arrive.</p>
+
+    <div class="progress-block" id="joinProgress" hidden>
+      <div class="progress-head">
+        <span id="joinProgName">—</span>
+        <span id="joinProgPct">0%</span>
+      </div>
+      <div class="bar"><div class="bar-fill" id="joinProgBar"></div></div>
+      <p class="progress-meta" id="joinProgMeta"></p>
+    </div>
+
+    <div class="reverse-send" id="reverseSend" hidden>
+      <input type="file" id="reverseInput" multiple hidden>
+      <button class="ghost-btn" id="reverseBtn" type="button">Send files back ↑</button>
+    </div>
+  </div>
+
+  <div class="received" id="joinReceivedWrap" hidden>
+    <h3>Received <span class="count" id="joinReceivedCount">0</span></h3>
+    <ul class="received-list" id="joinReceivedList"></ul>
+  </div>
+</section>
+
+</main>
+
+<div class="toast-stack" id="toasts" aria-live="polite"></div>
+
+<dialog class="sheet" id="helpSheet">
+  <h2>How it works</h2>
+  <section>
+    <h3><span class="dot dot-link"></span>Link — visual pairing</h3>
+    <p>
+      The sender's screen shows a code containing a one-time address on this server.
+      The receiver scans it with <em>any</em> camera app, which opens this page and
+      joins automatically. The two devices then open a direct connection and the
+      file moves between them at network speed.
+    </p>
+    <p class="fine">The server only introduces the two devices. File contents never pass through it.</p>
+  </section>
+  <section>
+    <h3><span class="dot dot-beam"></span>Beam — the code is the file</h3>
+    <p>
+      The file is split into blocks and painted on screen as a fast stream of codes.
+      The receiving camera reads them back and rebuilds the file.
+    </p>
+    <p>
+      Frames are <strong>fountain-coded</strong>: each one is a combination of
+      several blocks rather than one numbered piece. The receiver can start
+      watching late, look away, drop half the frames, and still finish — it just
+      needs slightly more frames than the file has blocks. Nothing needs resending,
+      which is why there is no back-channel and no pairing at all.
+    </p>
+    <p class="fine">Every transfer is checked with a CRC-32 before it is saved.</p>
+  </section>
+  <section>
+    <h3>Formats</h3>
+    <p>
+      Both paths move raw bytes and carry the original filename and media type, so
+      anything works — photos, video, PDFs, archives, code, 3D models, databases.
+      Nothing is re-encoded.
+    </p>
+  </section>
+  <button class="primary-btn" id="helpClose" type="button">Got it</button>
+</dialog>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
