@@ -122,6 +122,15 @@ body.locked { overflow: hidden; }
   color: var(--gold);
   text-shadow: 0 0 18px rgba(232, 176, 75, 0.6);
 }
+/* one link carries a faint green the others don't — a nudge, not a shout */
+.nav a.link.featured {
+  color: #8fb98d;
+  text-shadow: 0 0 14px rgba(126, 190, 128, 0.22);
+}
+.nav a.link.featured:hover {
+  color: #b6e3ad;
+  text-shadow: 0 0 18px rgba(126, 190, 128, 0.55);
+}
 
 /* ---------- intro ceremony ---------- */
 #intro {
@@ -510,7 +519,7 @@ footer a:hover { color: var(--gold); }
   </a>
   <a class="link active" href="index.html">Home</a>
   <a class="link" href="resumesburntorange.html">Resume</a>
-  <a class="link" href="projects/index.html">Projects</a>
+  <a class="link featured" href="projects/index.html">Projects</a>
   <a class="link" href="https://www.instagram.com/dul.is.running" target="_blank" rel="noopener">Gallery</a>
 </nav>
 
