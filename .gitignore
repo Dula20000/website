@@ -4,3 +4,9 @@ taiwanpics/*.MOV
 taiwanpics/*.mov
 taiwanpics/*.MP4
 taiwanpics/*.mp4
+
+# Web-sized videos stay local: the repo is already ~950 MB and GitHub
+# recommends staying under 1 GB. The page falls back to placeholders
+# when these are absent, so the site still works without them.
+taiwanpics/web/*.mp4
+taiwanpics/web/*.m4v

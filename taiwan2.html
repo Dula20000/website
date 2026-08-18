@@ -542,7 +542,7 @@
 const MEDIA = {
 
   // ─── 01 · Touchdown ──────────────────────────────────────
-  landing_video_slot:     "dulran.com/A7C032A6-91CE-4FA3-BB69-934EDCE142B2.mp4",
+  landing_video_slot:     "A7C032A6-91CE-4FA3-BB69-934EDCE142B2.MP4", // local file in this repo (name is case-sensitive once deployed)
 
   // ─── 02 · First Days ───────────────────────────────────── 
   humid_taipei_streets:   "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20street%20scene.jpg?width=1100",
@@ -557,6 +557,9 @@ const MEDIA = {
 
   // ─── 04 · Elephant Mountain & Lungshan ───────────────────
   drone_video_slot:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20skyline%20from%20Elephant%20Mountain.jpg?width=1100",
+  elephant_mtn_photo:     "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20skyline%20from%20Elephant%20Mountain.jpg?width=1100",
+  academia_sinica:        "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20street%20scene.jpg?width=1100",
+  academia_sinica_group:  "https://picsum.photos/seed/tw-sinica-group/1000/750",
   lungshan_temple:        "https://commons.wikimedia.org/wiki/Special:FilePath/Longshan%20Temple%2C%20Taipei%2001.jpg?width=1100",
   moon_blocks:            "https://picsum.photos/seed/tw-moon-blocks/1000/750",
   red_string:             "https://picsum.photos/seed/tw-red-string/1000/750",
@@ -621,6 +624,67 @@ const MEDIA = {
 };
 
 /* ======================================================================
+   ██  YOUR PHOTOS & VIDEOS  ██
+   ----------------------------------------------------------------------
+   The real trip media ships with this repo in taiwanpics/web/ (web-sized
+   copies of taiwanpics/: HEIC converted to JPEG, phone photos shrunk,
+   videos re-encoded). Because it lives in the repo, these are plain
+   relative paths — they work locally AND on dulran.com. No bucket, no
+   API keys, no CDN account.
+
+   To swap or add: drop the file in taiwanpics/web/ and put its filename
+   here. Anything left "" keeps its placeholder from MEDIA above, and any
+   file that fails to load falls back automatically.
+   ====================================================================== */
+const MEDIA_BASE = "taiwanpics/web/";
+
+const MEDIA_FILES = {
+  // ─── 01 · Touchdown ─────────────────────────────
+  landing_video_slot:     "1.mp4",    // landing over the fields, out the window
+  // ─── 02 · First Days ────────────────────────────
+  humid_taipei_streets:   "",
+  ntu_main_gate:          "10.jpg",   // the cohort with our professor
+  traditional_temple:     "2.jpg",    // the temple lit up at night
+  bouldering_gym:         "",
+  driving_range:          "",
+  // ─── 03 · Taipei 101 & the Google Office ────────
+  taipei_101_tower:       "5.jpg",    // inside the Google office
+  view_from_the_top:      "7.jpg",    // Taipei 101 from the hillside
+  // ─── 04 · Elephant Mountain & Lungshan ──────────
+  drone_video_slot:       "8.mp4",    // Taipei 101 from Elephant Mountain
+  elephant_mtn_photo:     "6.jpg",
+  lungshan_temple:        "13.jpg",
+  moon_blocks:            "11.jpg",
+  red_string:             "12.jpg",
+  // ─── 05 · Academia Sinica & Yangmingshan ────────
+  academia_sinica:        "14.jpg",   // Research Center for Applied Sciences
+  academia_sinica_group:  "21.jpg",
+  yangmingshan_fumaroles: "16.jpg",   // water buffalo on the grassland
+  yangmingshan_fog:       "17.jpg",
+  the_bench:              "15.jpg",   // the news crew filming in the fog
+  yehliu_queens_head:     "19.jpg",
+  yehliu_coast:           "20.jpg",
+  yehliu_rocks:           "18.jpg",
+  // ─── 06 onward ──────────────────────────────────
+  // No photos past Yehliu yet, so those chapters keep their
+  // placeholders. Add files to taiwanpics/web/ and list them here.
+};
+
+/* machinery: point each slot at its file when one is listed, and remember
+   the placeholder so a failed load can fall back to it */
+const TW_FALLBACK = new Map();
+(() => {
+  const raw = (MEDIA_BASE || "").trim();
+  // NB: "".replace(/\/*$/,"/") yields "/", so only build a base when non-empty
+  const base = raw ? raw.replace(/\/*$/, "/") : "";
+  for (const k in MEDIA) {
+    const placeholder = MEDIA[k];
+    if (base && MEDIA_FILES[k]) MEDIA[k] = base + MEDIA_FILES[k];
+    TW_FALLBACK.set(MEDIA[k].replace(/^(video|image|img):/i, ""), placeholder);
+  }
+})();
+
+/* ======================================================================
    TRIP DATA — one entry per bracketed block in taiwan_trip_cleaned2.md
    (text + captions live below; media links live in MEDIA above)
    ====================================================================== */
@@ -676,7 +740,7 @@ const TW_TRIP = [
     cardio or even just walking.</p>` },
 
   { kind: "photos", imgs: [
-      { src: MEDIA.ntu_main_gate, cap: "NTU main gate" }],
+      { src: MEDIA.ntu_main_gate, cap: "the cohort, with our professor" }],
     text: `<p>On the first day we went to check out the university: our professor's alma mater,
     ${twL("National Taiwan University", "https://www.ntu.edu.tw/english/", "National Taiwan University",
         "Taiwan's top-ranked university, founded 1928. Known for electrical engineering.",
@@ -687,7 +751,7 @@ const TW_TRIP = [
     engineering, so we visited those buildings.</p>` },
 
   { kind: "photos", imgs: [
-      { src: MEDIA.traditional_temple, cap: "a Taipei temple" }],
+      { src: MEDIA.traditional_temple, cap: "the temple, lit up at night" }],
     text: `<p>The next day we visited one of the old traditional temples. Interestingly, temples
     in Taiwan tend to blend <strong>three religious traditions</strong>: some Buddhist elements,
     some Taoist elements, and a third one I can't quite recall.</p>` },
@@ -703,8 +767,8 @@ const TW_TRIP = [
 
 { chapter: "Taipei 101 & the Google Office", slides: [
   { kind: "photos", imgs: [
-      { src: MEDIA.taipei_101_tower, cap: "Taipei 101" },
-      { src: MEDIA.view_from_the_top, cap: "view from up top" }],
+      { src: MEDIA.taipei_101_tower, cap: "inside the Google office" },
+      { src: MEDIA.view_from_the_top, cap: "Taipei 101 from the hillside" }],
     text: `<p>A few days in, we hit one of the highlights of the trip: a visit to
     ${twL("Taipei 101", "https://www.taipei-101.com.tw/en/", "Taipei 101",
         "509 m supertall skyscraper, the world's tallest building from 2004 to 2010.",
@@ -724,8 +788,9 @@ const TW_TRIP = [
 ]},
 
 { chapter: "Elephant Mountain & Lungshan Temple", slides: [
-  { kind: "video", poster: MEDIA.drone_video_slot,
+  { kind: "mixed", poster: MEDIA.drone_video_slot,
     videoLabel: "Drone footage (maybe someday)",
+    imgs: [{ src: MEDIA.elephant_mtn_photo, cap: "up on Elephant Mountain" }],
     text: `<p>After that we went to ${twL("Elephant Mountain", "https://en.wikipedia.org/wiki/Xiangshan_(Taipei)",
         "Elephant Mountain (象山)", "Short, steep hike with the classic postcard view over Taipei 101.",
         twWm("Taipei skyline from Elephant Mountain.jpg", 500))}, which has a great viewpoint over
@@ -736,8 +801,8 @@ const TW_TRIP = [
 
   { kind: "photos", imgs: [
       { src: MEDIA.lungshan_temple, cap: "Lungshan Temple" },
-      { src: MEDIA.moon_blocks, cap: "jiaobei moon blocks" },
-      { src: MEDIA.red_string, cap: "the elusive red string" }],
+      { src: MEDIA.moon_blocks, cap: "the crowd at the temple" },
+      { src: MEDIA.red_string, cap: "temple grounds" }],
     text: `<p>We also visited ${twL("Lungshan Temple (龍山寺)", "https://en.wikipedia.org/wiki/Bangka_Lungshan_Temple",
         "Bangka Lungshan Temple", "Founded 1738. Taipei's most famous temple, historically a refuge for the vulnerable.",
         twWm("Longshan Temple, Taipei 01.jpg", 500))}, located in an area historically associated
@@ -753,15 +818,17 @@ const TW_TRIP = [
 ]},
 
 { chapter: "Academia Sinica & Yangmingshan", slides: [
-  { kind: "text", ornament: "研究",
+  { kind: "photos", imgs: [
+      { src: MEDIA.academia_sinica, cap: "Research Center for Applied Sciences" },
+      { src: MEDIA.academia_sinica_group, cap: "the group that day" }],
     text: `<p>We then went to Academia Sinica, a large campus with an ecosystem built around
     biomedical research and startups, something like a YC-style incubator, except
     government-run. Still a solid VC-style setup overall.</p>` },
 
   { kind: "photos", imgs: [
-      { src: MEDIA.yangmingshan_fumaroles, cap: "Yangmingshan fumaroles" },
-      { src: MEDIA.yangmingshan_fog, cap: "the fog up top" },
-      { src: MEDIA.the_bench, cap: "that bench" }],
+      { src: MEDIA.yangmingshan_fumaroles, cap: "water buffalo on the grassland" },
+      { src: MEDIA.yangmingshan_fog, cap: "hiking into the mist" },
+      { src: MEDIA.the_bench, cap: "the news crew, filming in the fog" }],
     text: `<p>The rural areas we passed through were dense, foggy, and pleasant. We went hiking
     in the Yangmingshan area.</p>
     <p>There was a funny incident there: we noticed news reporters filming near a bench and
@@ -770,9 +837,9 @@ const TW_TRIP = [
     <em>"Yangmingshan bench incident."</em></p>` },
 
   { kind: "photos", imgs: [
-      { src: MEDIA.yehliu_queens_head, cap: "the Queen's Head" },
-      { src: MEDIA.yehliu_coast, cap: "Yehliu coast" },
-      { src: MEDIA.yehliu_rocks, cap: "hoodoo rocks" }],
+      { src: MEDIA.yehliu_queens_head, cap: "Yehliu hoodoos" },
+      { src: MEDIA.yehliu_coast, cap: "the cape at Yehliu" },
+      { src: MEDIA.yehliu_rocks, cap: "mushroom rocks" }],
     text: `<p>After that we visited the <strong>Yehliu Geopark</strong>, which was genuinely
     beautiful; I really liked the natural scenery there.</p>` },
 ]},
@@ -995,20 +1062,25 @@ const TW_TRIP = [
 
   const figure = (img) => {
     const src = twSrc(img.src);
+    const fb = TW_FALLBACK.get(src) || twPh("fallback-" + Math.random().toString(36).slice(2, 7));
     const cap = (twIsPlaceholder(src) ? "placeholder · " : "") + (img.cap || "");
     if (twIsVideo(img.src))
-      return `<figure><video src="${src}" autoplay muted loop playsinline preload="metadata"></video>
+      return `<figure><video src="${src}" data-fallback="${fb}"
+        autoplay muted loop playsinline preload="metadata"></video>
         <figcaption>${cap}</figcaption></figure>`;
     return `<figure><img loading="lazy" src="${src}" alt="${img.cap || "trip photo"}"
-       onerror="this.onerror=null;this.src='${twPh("fallback-" + Math.random().toString(36).slice(2, 7))}';" />
+       onerror="this.onerror=null;this.src='${fb}';" />
       <figcaption>${cap}</figcaption></figure>`;
   };
 
   const videoFrame = (poster, label) => {
+    const fb = TW_FALLBACK.get(twSrc(poster)) || poster;
     if (twIsVideo(poster))
-      return `<figure><video src="${twSrc(poster)}" autoplay muted loop playsinline preload="metadata"></video></figure>`;
+      return `<figure><video src="${twSrc(poster)}" data-fallback="${fb}"
+        autoplay muted loop playsinline preload="metadata"></video></figure>`;
     return `<figure class="tw-video" title="Video placeholder, real clip coming soon">
-       <img loading="lazy" src="${poster}" alt="video placeholder" />
+       <img loading="lazy" src="${twSrc(poster)}" alt="video placeholder"
+            onerror="this.onerror=null;this.src='${fb}';" />
        <span class="tw-video-tag">${label || "Video · placeholder"}</span>
        <span class="tw-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
      </figure>`;
@@ -1032,7 +1104,7 @@ const TW_TRIP = [
         const pMedia = twIsVideo(s.img)
           ? `<video src="${twSrc(s.img)}" autoplay muted loop playsinline preload="metadata"></video>`
           : `<img loading="lazy" src="${twSrc(s.img)}" alt="${s.title} preview"
-                 onerror="this.onerror=null;this.src='${twPh(s.title.toLowerCase())}';" />`;
+                 onerror="this.onerror=null;this.src='${TW_FALLBACK.get(twSrc(s.img)) || twPh(s.title.toLowerCase())}';" />`;
         wrap.innerHTML = `<a class="tw-portal" href="${s.href}">
             ${pMedia}
             <span class="tw-portal-scrim"></span>
@@ -1075,7 +1147,24 @@ const TW_TRIP = [
     if (e.isIntersecting) e.target.play().catch(() => {});
     else e.target.pause();
   }), { rootMargin: "240px" });
-  document.querySelectorAll("#tw-journey video").forEach((v) => vio.observe(v));
+  document.querySelectorAll("#tw-journey video").forEach((v) => {
+    vio.observe(v);
+    // a clip that will not load falls back: to the placeholder video if
+    // there is one, otherwise to the placeholder image
+    v.addEventListener("error", () => {
+      const fb = v.dataset.fallback || "";
+      if (!v.dataset.fbTried && twIsVideo(fb)) {
+        v.dataset.fbTried = "1";
+        v.src = twSrc(fb); v.load(); v.play().catch(() => {});
+        return;
+      }
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.src = (fb && !twIsVideo(fb)) ? fb : twPh("video-fallback");
+      img.alt = "placeholder";
+      v.replaceWith(img);
+    });
+  });
 })();
 
 /* ======================================================================
