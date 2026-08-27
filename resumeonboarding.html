@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Request Access to Resume — DULRAN</title>
+<meta name="description" content="Request access to Dulran Kariyawasam's resume. Requests are received live and access decisions are made swiftly." />
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/png" href="logofiles/crestlogosmall.png" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #070503;
+  --ember: #cc5500;
+  --ember-hot: #ff8c3c;
+  --gold: #e8b04b;
+  --cream: #f2e9da;
+  --muted: #9a8f80;
+  --dim: #5e564a;
+  --err: #e0574f;
+  --font-display: 'Space Grotesk', Helvetica, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html, body { height: 100%; background: var(--bg); }
+
+body {
+  color: var(--cream);
+  font-family: var(--font-display);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(204, 85, 0, 0.55); color: #fff; }
+
+/* ---------- ambient background (matches home73) ---------- */
+.nebula {
+  position: fixed; inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 32% at 20% 24%, rgba(204, 85, 0, 0.15), transparent 70%),
+    radial-gradient(30% 28% at 82% 14%, rgba(156, 43, 48, 0.13), transparent 70%),
+    radial-gradient(42% 38% at 62% 86%, rgba(232, 176, 75, 0.08), transparent 70%);
+  filter: blur(55px);
+  animation: nebula-drift 26s ease-in-out infinite alternate;
+}
+@keyframes nebula-drift {
+  to { transform: translate(3%, -4%) rotate(4deg) scale(1.1); }
+}
+
+.grain {
+  position: fixed; inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0.45;
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.5) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- progress ---------- */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 60;
+  background: rgba(242, 233, 218, 0.08);
+}
+.progress__bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--ember), var(--gold), var(--ember-hot));
+  transition: width 0.55s var(--ease-out);
+}
+
+/* ---------- masthead ---------- */
+.mast {
+  position: fixed;
+  top: 22px; left: 28px;
+  z-index: 60;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.3s var(--ease-out);
+}
+.mast:hover { color: var(--gold); }
+
+/* ---------- slide stage ---------- */
+.stage {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  width: 100%;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  /* plain `center` clips overflow past the TOP of a short viewport and makes it
+     unscrollable; `safe center` falls back to start-alignment when it overflows */
+  justify-content: center;
+  justify-content: safe center;
+  padding: 96px clamp(28px, 8vw, 120px) 128px;
+  max-width: 860px;
+  margin: 0 auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(34px);
+  transition: opacity 0.32s var(--ease-out), transform 0.5s var(--ease-out), visibility 0.5s;
+  overflow-y: auto;
+}
+.slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  /* incoming waits for the outgoing slide to clear, so they never overlap mid-fade */
+  transition: opacity 0.42s var(--ease-out) 0.14s, transform 0.5s var(--ease-out), visibility 0s;
+}
+.slide.is-past {
+  transform: translateY(-34px);
+}
+
+/* ---------- question typography ---------- */
+.qnum {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ember-hot);
+  margin-bottom: 18px;
+  letter-spacing: 0.04em;
+}
+.qnum svg { width: 11px; height: 11px; }
+
+.qtitle {
+  font-size: clamp(1.5rem, 3.6vw, 2.3rem);
+  font-weight: 500;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+  margin-bottom: 14px;
+}
+.qtitle .req { color: var(--ember); font-weight: 300; }
+
+.qhelp {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted);
+  font-weight: 300;
+  margin-bottom: 34px;
+  max-width: 58ch;
+}
+
+/* ---------- intro slide ---------- */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 26px;
+}
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 26px; height: 1px;
+  background: var(--ember);
+  vertical-align: middle;
+  margin-right: 12px;
+}
+
+.intro-title {
+  font-size: clamp(2.1rem, 6.2vw, 3.9rem);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin-bottom: 26px;
+  background: linear-gradient(120deg, var(--cream) 20%, var(--gold) 60%, var(--ember-hot) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.intro-body {
+  font-size: clamp(0.98rem, 1.6vw, 1.1rem);
+  line-height: 1.72;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 60ch;
+  margin-bottom: 42px;
+}
+
+/* ---------- inputs ---------- */
+.field {
+  position: relative;
+  max-width: 620px;
+}
+
+.input, .textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(242, 233, 218, 0.16);
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  font-weight: 300;
+  padding: 10px 2px 12px;
+  outline: none;
+  transition: border-color 0.3s var(--ease-out);
+}
+.textarea {
+  resize: none;
+  line-height: 1.55;
+  min-height: 72px;
+  border-bottom-width: 2px;
+}
+.input::placeholder, .textarea::placeholder { color: var(--dim); font-weight: 300; }
+.input:focus, .textarea:focus { border-bottom-color: var(--ember); }
+.field.has-error .input, .field.has-error .textarea { border-bottom-color: var(--err); }
+
+.error {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #fff;
+  background: var(--err);
+  padding: 7px 12px;
+  border-radius: 3px;
+  width: fit-content;
+}
+.field.has-error .error { display: inline-flex; }
+.field.has-error { animation: nudge 0.36s var(--ease-out); }
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  22% { transform: translateX(-7px); }
+  62% { transform: translateX(5px); }
+}
+
+/* ---------- choice list ---------- */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: rgba(242, 233, 218, 0.03);
+  border: 1.5px solid rgba(242, 233, 218, 0.16);
+  border-radius: 6px;
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 300;
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: border-color 0.22s var(--ease-out), background 0.22s var(--ease-out), transform 0.22s var(--ease-out);
+}
+.choice:hover {
+  border-color: rgba(232, 176, 75, 0.6);
+  background: rgba(204, 85, 0, 0.08);
+}
+.choice:focus-visible {
+  outline: none;
+  border-color: var(--gold);
+}
+.choice.is-selected {
+  border-color: var(--ember-hot);
+  background: rgba(204, 85, 0, 0.16);
+}
+
+.choice__key {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border: 1.5px solid rgba(242, 233, 218, 0.28);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  transition: all 0.22s var(--ease-out);
+}
+.choice:hover .choice__key { border-color: var(--gold); color: var(--gold); }
+.choice.is-selected .choice__key {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #fff;
+}
+.choice__check {
+  margin-left: auto;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.22s var(--ease-out);
+  color: var(--ember-hot);
+  display: grid;
+  place-items: center;
+}
+.choice.is-selected .choice__check { opacity: 1; transform: scale(1); }
+
+/* ---------- action row ---------- */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 34px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(120deg, var(--ember), var(--ember-hot));
+  color: #120a04;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 13px 26px;
+  cursor: pointer;
+  transition: transform 0.24s var(--ease-out), box-shadow 0.24s var(--ease-out), opacity 0.24s;
+  box-shadow: 0 6px 26px rgba(204, 85, 0, 0.22);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 34px rgba(204, 85, 0, 0.34); }
+.btn:active { transform: translateY(0); }
+.btn[disabled] { opacity: 0.55; cursor: progress; transform: none; }
+.btn--lg { font-size: 1.06rem; padding: 15px 34px; }
+
+.hint {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--dim);
+  letter-spacing: 0.02em;
+}
+.hint kbd {
+  font-family: var(--font-mono);
+  background: rgba(242, 233, 218, 0.08);
+  border: 1px solid rgba(242, 233, 218, 0.14);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* ---------- nav arrows ---------- */
+.nav {
+  position: fixed;
+  right: 28px; bottom: 24px;
+  z-index: 60;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease-out);
+}
+.nav.is-visible { opacity: 1; pointer-events: auto; }
+.nav button {
+  display: grid;
+  place-items: center;
+  width: 36px; height: 32px;
+  background: rgba(204, 85, 0, 0.85);
+  border: none;
+  color: #120a04;
+  cursor: pointer;
+  transition: background 0.2s var(--ease-out), opacity 0.2s;
+}
+.nav button:first-child { border-radius: 4px 0 0 4px; }
+.nav button:last-child { border-radius: 0 4px 4px 0; }
+.nav button:hover:not([disabled]) { background: var(--ember-hot); }
+.nav button[disabled] { opacity: 0.35; cursor: default; }
+
+/* ---------- status / done ---------- */
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(18, 10, 4, 0.3);
+  border-top-color: #120a04;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.seal {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(232, 176, 75, 0.5);
+  color: var(--gold);
+  margin-bottom: 28px;
+  animation: seal-in 0.7s var(--ease-out) both;
+}
+@keyframes seal-in {
+  from { opacity: 0; transform: scale(0.72); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.recap {
+  margin-top: 30px;
+  border-left: 2px solid rgba(204, 85, 0, 0.5);
+  padding-left: 18px;
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+}
+.recap div { display: grid; gap: 3px; }
+.recap dt {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.recap dd {
+  font-size: 0.98rem;
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.footnote {
+  position: fixed;
+  left: 28px; bottom: 24px;
+  z-index: 60;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--dim);
+  letter-spacing: 0.04em;
+}
+
+/* honeypot — never shown to humans */
+.hp {
+  position: absolute !important;
+  left: -9999px !important;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+/* short viewports (landscape phones, small panes): top-align and let it scroll,
+   for browsers without `safe` alignment support */
+@media (max-height: 640px) {
+  .slide { justify-content: flex-start; padding-top: 84px; padding-bottom: 96px; }
+}
+
+@media (max-width: 620px) {
+  .slide { padding: 84px 24px 112px; }
+  .mast { top: 18px; left: 20px; }
+  .footnote { display: none; }
+  .nav { right: 20px; bottom: 18px; }
+  .actions { gap: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="nebula" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
+<a class="mast" href="home73.html">← Dulran</a>
+<div class="footnote">Never submit passwords.</div>
+
+<main class="stage" id="stage">
+
+  <!-- ============ SLIDE 1 — intro ============ -->
+  <section class="slide is-active" data-slide="intro" aria-label="Introduction">
+    <div class="eyebrow">Access Request</div>
+    <h1 class="intro-title">Request Access<br />to Resume</h1>
+    <p class="intro-body">
+      Due to increased traffic to my webpage, I am now offering resume access upon request
+      rather than displaying it publicly. Requests are received live and discretionary access
+      decisions are usually made swiftly. Please provide your details to proceed.
+    </p>
+    <div class="actions">
+      <button class="btn btn--lg" data-next type="button">
+        Begin
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <span class="hint">Takes 30 sec</span>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2 — name ============ -->
+  <section class="slide" data-slide="name" data-required="true" aria-label="Question 1">
+    <div class="qnum">1
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <h2 class="qtitle"><label for="q_name">What is your name or alias?</label><span class="req">*</span></h2>
+    <div class="field" id="field_name">
+      <input class="input" type="text" id="q_name" name="name" placeholder="Type your answer here..."
+             autocomplete="name" maxlength="120" spellcheck="false" />
+      <span class="error">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        Please fill this in
+      </span>
+    </div>
+    <div class="actions">
+      <button class="btn" data-next type="button">
+        OK
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+      </button>
+      <span class="hint">press <kbd>Enter ↵</kbd></span>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 3 — relationship ============ -->
+  <section class="slide" data-slide="relationship" data-required="true" aria-label="Question 2">
+    <div class="qnum">2
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <h2 class="qtitle" id="q_rel_label">Which best describes your relationship to me?</h2>
+    <div class="field" id="field_relationship">
+      <div class="choices" role="radiogroup" aria-labelledby="q_rel_label" id="choices">
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="A" data-value="University Colleague">
+          <span class="choice__key">A</span><span>University Colleague</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="B" data-value="University Professor">
+          <span class="choice__key">B</span><span>University Professor</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="C" data-value="Recruiter">
+          <span class="choice__key">C</span><span>Recruiter</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="D" data-value="Student">
+          <span class="choice__key">D</span><span>Student</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="E" data-value="Hiring Manager">
+          <span class="choice__key">E</span><span>Hiring Manager</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="F" data-value="Friend or Personal Contact">
+          <span class="choice__key">F</span><span>Friend or Personal Contact</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+        <button type="button" class="choice" role="radio" aria-checked="false" data-key="G" data-value="Other">
+          <span class="choice__key">G</span><span>Other</span>
+          <span class="choice__check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg></span>
+        </button>
+      </div>
+      <span class="error">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        Please make a selection
+      </span>
+    </div>
+    <div class="actions">
+      <span class="hint">Choose one — or press <kbd>A</kbd>–<kbd>G</kbd></span>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 4 — context ============ -->
+  <section class="slide" data-slide="context" aria-label="Question 3">
+    <div class="qnum">3
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <h2 class="qtitle"><label for="q_context">Would you like to share any additional context? (Optional)</label></h2>
+    <p class="qhelp">You may mention the company or organization you're from or your reason for requesting access.</p>
+    <div class="field">
+      <textarea class="textarea" id="q_context" name="context" rows="3" maxlength="1200"
+                placeholder="Type your answer here..."></textarea>
+      <p class="hint" style="margin-top:12px;">Shift <kbd>⇧</kbd> + <kbd>Enter ↵</kbd> to make a line break</p>
+    </div>
+    <div class="actions">
+      <button class="btn" data-submit type="button" id="submitBtn">
+        <span id="submitLabel">Submit</span>
+        <svg id="submitIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+      </button>
+      <span class="hint">press <kbd>Cmd ⌘</kbd> + <kbd>Enter ↵</kbd></span>
+    </div>
+    <p class="error" id="submitError" style="display:none;"></p>
+  </section>
+
+  <!-- ============ SLIDE 5 — confirmation ============ -->
+  <section class="slide" data-slide="done" aria-label="Request received">
+    <div class="seal">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+    </div>
+    <div class="eyebrow">Request Received</div>
+    <h2 class="intro-title" style="font-size:clamp(1.8rem,4.6vw,2.9rem);">Thank you<span id="doneName"></span>.</h2>
+    <p class="intro-body" style="margin-bottom:0;">
+      Your request has landed with me directly. Requests are reviewed live and access
+      decisions are usually made swiftly — you'll hear back shortly.
+    </p>
+    <dl class="recap" id="recap"></dl>
+    <div class="actions">
+      <a class="btn" href="home73.html" style="text-decoration:none;">
+        Back to site
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<!-- honeypot: bots fill this, humans never see it -->
+<input class="hp" type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+<nav class="nav" id="nav" aria-label="Slide navigation">
+  <button type="button" id="navUp" aria-label="Previous question">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+  </button>
+  <button type="button" id="navDown" aria-label="Next question">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+</nav>
+
+<script>
+/* =====================================================================
+   CONFIG — paste your Web3Forms access key below.
+   Get one free (no account needed) at https://web3forms.com :
+   enter your email, and they mail you a key that looks like a UUID.
+   Only the key lives here, so your email address stays out of this file.
+   ===================================================================== */
+const WEB3FORMS_ACCESS_KEY = 'PASTE_YOUR_WEB3FORMS_ACCESS_KEY_HERE';
+const MAIL_SUBJECT_PREFIX  = 'Resume Access Request';
+
+/* ------------------------------- state ------------------------------ */
+const slides   = Array.from(document.querySelectorAll('.slide'));
+const nav      = document.getElementById('nav');
+const navUp    = document.getElementById('navUp');
+const navDown  = document.getElementById('navDown');
+const progress = document.getElementById('progressBar');
+
+const DONE_INDEX = slides.findIndex(s => s.dataset.slide === 'done');
+let index = 0;
+let submitting = false;
+
+const answers = { name: '', relationship: '', context: '' };
+
+/* ---------------------------- navigation ---------------------------- */
+function render() {
+  slides.forEach((slide, i) => {
+    slide.classList.toggle('is-active', i === index);
+    slide.classList.toggle('is-past', i < index);
+  });
+
+  // progress counts the three questions only; full bar once submitted
+  const pct = index >= DONE_INDEX ? 100 : Math.round((index / DONE_INDEX) * 100);
+  progress.style.width = pct + '%';
+
+  const onDone = index === DONE_INDEX;
+  nav.classList.toggle('is-visible', index > 0 && !onDone);
+  navUp.disabled   = index <= 1;
+  navDown.disabled = index >= DONE_INDEX - 1;
+
+  focusActive();
+}
+
+function focusActive() {
+  const slide = slides[index];
+  const target = slide.querySelector('input:not(.hp), textarea, .choice, .btn, a.btn');
+  if (target) window.setTimeout(() => target.focus({ preventScroll: true }), 520);
+}
+
+function validate(slide) {
+  if (slide.dataset.required !== 'true') return true;
+  const key   = slide.dataset.slide;
+  const field = slide.querySelector('.field');
+  const ok    = key === 'name' ? answers.name.trim().length > 0 : answers.relationship !== '';
+  field.classList.toggle('has-error', !ok);
+  return ok;
+}
+
+function next() {
+  if (index >= DONE_INDEX) return;
+  if (!validate(slides[index])) return;
+  index += 1;
+  render();
+}
+
+function prev() {
+  if (index <= 1 || index >= DONE_INDEX) return;
+  index -= 1;
+  render();
+}
+
+navDown.addEventListener('click', next);
+navUp.addEventListener('click', prev);
+document.querySelectorAll('[data-next]').forEach(b => b.addEventListener('click', next));
+
+/* ------------------------------ inputs ------------------------------ */
+const nameInput    = document.getElementById('q_name');
+const contextInput = document.getElementById('q_context');
+
+nameInput.addEventListener('input', e => {
+  answers.name = e.target.value;
+  if (answers.name.trim()) document.getElementById('field_name').classList.remove('has-error');
+});
+
+contextInput.addEventListener('input', e => {
+  answers.context = e.target.value;
+  // grow the textarea with its content
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 260) + 'px';
+});
+
+/* ------------------------------ choices ----------------------------- */
+const choices = Array.from(document.querySelectorAll('.choice'));
+
+function selectChoice(btn, advance) {
+  choices.forEach(c => {
+    const on = c === btn;
+    c.classList.toggle('is-selected', on);
+    c.setAttribute('aria-checked', String(on));
+  });
+  answers.relationship = btn.dataset.value;
+  document.getElementById('field_relationship').classList.remove('has-error');
+  if (advance) window.setTimeout(next, 380);
+}
+
+choices.forEach(btn => btn.addEventListener('click', () => selectChoice(btn, true)));
+
+/* ----------------------------- keyboard ----------------------------- */
+document.addEventListener('keydown', e => {
+  if (submitting) return;
+  const slide   = slides[index];
+  const key     = slide.dataset.slide;
+  const typing  = e.target === nameInput || e.target === contextInput;
+  const meta    = e.metaKey || e.ctrlKey;
+  // a focused button/link activates itself on Enter — never double-handle it
+  const onCtrl  = e.target instanceof Element &&
+                  (e.target.tagName === 'BUTTON' || e.target.tagName === 'A');
+  // some layouts/input stacks leave e.key empty — fall back to the physical code
+  const isEnter = e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter';
+  const isDown  = e.key === 'ArrowDown' || e.key === 'PageDown' || e.code === 'ArrowDown';
+  const isUp    = e.key === 'ArrowUp'   || e.key === 'PageUp'   || e.code === 'ArrowUp';
+
+  // letter shortcuts on the choice slide
+  if (key === 'relationship' && !typing && !meta && /^[a-gA-G]$/.test(e.key)) {
+    const match = choices.find(c => c.dataset.key === e.key.toUpperCase());
+    if (match) { e.preventDefault(); selectChoice(match, true); }
+    return;
+  }
+
+  // arrows move between options inside the choice group, not between slides
+  if (key === 'relationship' && (isDown || isUp)) {
+    e.preventDefault();
+    const here = choices.indexOf(document.activeElement);
+    const step = isDown ? 1 : -1;
+    const to   = here === -1 ? 0 : (here + step + choices.length) % choices.length;
+    choices[to].focus();
+    return;
+  }
+
+  if (isEnter) {
+    if (key === 'context') {
+      if (e.shiftKey) return;          // Shift+Enter = line break
+      if (onCtrl) return;              // the Submit button handles its own Enter
+      e.preventDefault();
+      submit();                        // Enter and Cmd/Ctrl+Enter both submit
+      return;
+    }
+    if (key === 'done' || onCtrl) return;
+    e.preventDefault();
+    next();
+    return;
+  }
+
+  if (!typing && !onCtrl) {
+    if (isDown) { e.preventDefault(); next(); }
+    if (isUp)   { e.preventDefault(); prev(); }
+  }
+});
+
+/* --------------------------- submission ----------------------------- */
+const submitBtn   = document.getElementById('submitBtn');
+const submitLabel = document.getElementById('submitLabel');
+const submitError = document.getElementById('submitError');
+const CHECK_SVG   = '<svg id="submitIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" ' +
+                    'stroke="currentColor" stroke-width="2.6" stroke-linecap="round" ' +
+                    'stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>';
+
+submitBtn.addEventListener('click', submit);
+
+function showSubmitError(msg) {
+  submitError.textContent = msg;
+  submitError.style.display = 'inline-flex';
+}
+
+function setBusy(busy) {
+  submitting = busy;
+  submitBtn.disabled = busy;
+  submitLabel.textContent = busy ? 'Sending…' : 'Submit';
+  // re-query: the previous node was replaced, so a cached reference would be detached
+  const icon = document.getElementById('submitIcon');
+  if (icon) {
+    icon.outerHTML = busy ? '<span class="spinner" id="submitIcon"></span>' : CHECK_SVG;
+  }
+}
+
+async function submit() {
+  if (submitting) return;
+
+  // a required answer may have been skipped via the back arrow — jump to it
+  const missing = slides.findIndex(s => s.dataset.required === 'true' && !validate(s));
+  if (missing !== -1) { index = missing; render(); return; }
+
+  if (!WEB3FORMS_ACCESS_KEY || WEB3FORMS_ACCESS_KEY.startsWith('PASTE_')) {
+    showSubmitError('This form is not configured yet. Please email me directly.');
+    return;
+  }
+
+  submitError.style.display = 'none';
+  setBusy(true);
+
+  const payload = {
+    access_key:   WEB3FORMS_ACCESS_KEY,
+    subject:      MAIL_SUBJECT_PREFIX + ' — ' + answers.name.trim(),
+    from_name:    'dulran.com — Resume Access',
+    Name:         answers.name.trim(),
+    Relationship: answers.relationship,
+    Context:      answers.context.trim() || '(none provided)',
+    Submitted:    new Date().toLocaleString('en-US', { timeZoneName: 'short' }),
+    Referrer:     document.referrer || '(direct)',
+    botcheck:     document.getElementById('botcheck').value
+  };
+
+  try {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || data.success === false) {
+      throw new Error(data.message || 'Request failed (' + res.status + ')');
+    }
+
+    finish();
+  } catch (err) {
+    setBusy(false);
+    showSubmitError('Could not send: ' + err.message + '. Please try again.');
+  }
+}
+
+function finish() {
+  const first = answers.name.trim().split(/\s+/)[0] || '';
+  document.getElementById('doneName').textContent = first ? ', ' + first : '';
+
+  const rows = [
+    ['Name', answers.name.trim()],
+    ['Relationship', answers.relationship]
+  ];
+  if (answers.context.trim()) rows.push(['Context', answers.context.trim()]);
+
+  const recap = document.getElementById('recap');
+  recap.textContent = '';
+  rows.forEach(([label, value]) => {
+    const wrap = document.createElement('div');
+    const dt = document.createElement('dt');
+    const dd = document.createElement('dd');
+    dt.textContent = label;          // textContent, never innerHTML — this is user input
+    dd.textContent = value;
+    wrap.append(dt, dd);
+    recap.appendChild(wrap);
+  });
+
+  submitting = false;
+  index = DONE_INDEX;
+  render();
+}
+
+render();
+</script>
+
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+
+</body>
+</html>
