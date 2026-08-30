@@ -583,9 +583,33 @@ body {
     </div>
   </section>
 
-  <!-- ============ SLIDE 4 — context ============ -->
-  <section class="slide" data-slide="context" aria-label="Question 3">
+  <!-- ============ SLIDE 4 — contact ============ -->
+  <section class="slide" data-slide="contact" data-required="true" aria-label="Question 3">
     <div class="qnum">3
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <h2 class="qtitle"><label for="q_contact">How can I reach you?</label><span class="req">*</span></h2>
+    <p class="qhelp">An email, phone number, or any other handle that reaches you — this is where I'll send my decision.</p>
+    <div class="field" id="field_contact">
+      <input class="input" type="text" id="q_contact" name="contact" placeholder="Type your answer here..."
+             autocomplete="off" maxlength="160" spellcheck="false" />
+      <span class="error">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        Please provide a way to reach you
+      </span>
+    </div>
+    <div class="actions">
+      <button class="btn" data-next type="button">
+        OK
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+      </button>
+      <span class="hint">press <kbd>Enter ↵</kbd></span>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 5 — context ============ -->
+  <section class="slide" data-slide="context" aria-label="Question 4">
+    <div class="qnum">4
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </div>
     <h2 class="qtitle"><label for="q_context">Would you like to share any additional context? (Optional)</label></h2>
@@ -605,7 +629,7 @@ body {
     <p class="error" id="submitError" style="display:none;"></p>
   </section>
 
-  <!-- ============ SLIDE 5 — confirmation ============ -->
+  <!-- ============ SLIDE 6 — confirmation ============ -->
   <section class="slide" data-slide="done" aria-label="Request received">
     <div class="seal">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
@@ -646,7 +670,7 @@ body {
    enter your email, and they mail you a key that looks like a UUID.
    Only the key lives here, so your email address stays out of this file.
    ===================================================================== */
-const WEB3FORMS_ACCESS_KEY = '826f3f12-1fe9-47da-b9e8-d7baded57ddf';
+const WEB3FORMS_ACCESS_KEY = 'PASTE_YOUR_WEB3FORMS_ACCESS_KEY_HERE';
 const MAIL_SUBJECT_PREFIX  = 'Resume Access Request';
 
 /* ------------------------------- state ------------------------------ */
@@ -660,7 +684,7 @@ const DONE_INDEX = slides.findIndex(s => s.dataset.slide === 'done');
 let index = 0;
 let submitting = false;
 
-const answers = { name: '', relationship: '', context: '' };
+const answers = { name: '', relationship: '', contact: '', context: '' };
 
 /* ---------------------------- navigation ---------------------------- */
 function render() {
@@ -689,9 +713,13 @@ function focusActive() {
 
 function validate(slide) {
   if (slide.dataset.required !== 'true') return true;
-  const key   = slide.dataset.slide;
   const field = slide.querySelector('.field');
-  const ok    = key === 'name' ? answers.name.trim().length > 0 : answers.relationship !== '';
+  const filled = {
+    name:         answers.name.trim(),
+    relationship: answers.relationship,
+    contact:      answers.contact.trim()
+  }[slide.dataset.slide];
+  const ok = Boolean(filled);
   field.classList.toggle('has-error', !ok);
   return ok;
 }
@@ -715,11 +743,17 @@ document.querySelectorAll('[data-next]').forEach(b => b.addEventListener('click'
 
 /* ------------------------------ inputs ------------------------------ */
 const nameInput    = document.getElementById('q_name');
+const contactInput = document.getElementById('q_contact');
 const contextInput = document.getElementById('q_context');
 
 nameInput.addEventListener('input', e => {
   answers.name = e.target.value;
   if (answers.name.trim()) document.getElementById('field_name').classList.remove('has-error');
+});
+
+contactInput.addEventListener('input', e => {
+  answers.contact = e.target.value;
+  if (answers.contact.trim()) document.getElementById('field_contact').classList.remove('has-error');
 });
 
 contextInput.addEventListener('input', e => {
@@ -750,7 +784,7 @@ document.addEventListener('keydown', e => {
   if (submitting) return;
   const slide   = slides[index];
   const key     = slide.dataset.slide;
-  const typing  = e.target === nameInput || e.target === contextInput;
+  const typing  = e.target === nameInput || e.target === contactInput || e.target === contextInput;
   const meta    = e.metaKey || e.ctrlKey;
   // a focused button/link activates itself on Enter — never double-handle it
   const onCtrl  = e.target instanceof Element &&
@@ -838,17 +872,23 @@ async function submit() {
   submitError.style.display = 'none';
   setBusy(true);
 
+  const contact = answers.contact.trim();
+
   const payload = {
     access_key:   WEB3FORMS_ACCESS_KEY,
     subject:      MAIL_SUBJECT_PREFIX + ' — ' + answers.name.trim(),
     from_name:    'dulran.com — Resume Access',
     Name:         answers.name.trim(),
     Relationship: answers.relationship,
+    Contact:      contact,
     Context:      answers.context.trim() || '(none provided)',
     Submitted:    new Date().toLocaleString('en-US', { timeZoneName: 'short' }),
     Referrer:     document.referrer || '(direct)',
     botcheck:     document.getElementById('botcheck').value
   };
+
+  // if they left an email address, make the notification directly replyable
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact)) payload.replyto = contact;
 
   try {
     const res = await fetch('https://api.web3forms.com/submit', {
@@ -875,7 +915,8 @@ function finish() {
 
   const rows = [
     ['Name', answers.name.trim()],
-    ['Relationship', answers.relationship]
+    ['Relationship', answers.relationship],
+    ['Contact', answers.contact.trim()]
   ];
   if (answers.context.trim()) rows.push(['Context', answers.context.trim()]);
 
