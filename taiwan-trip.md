@@ -44,7 +44,7 @@
 
 [Something you may not know: those green shipping containers you see everywhere, Evergreen, are from a Taiwanese company. It was founded by someone who, I believe, once lived in Hong Kong, and I later found out he was also the founder of EVA Air. We visited a ship museum related to this.(1 photo)]
 
-[After that, we went to the Chiang Kai-shek Memorial Hall. Chiang Kai-shek is the infamous figure who fled to Taiwan and established what became the Republic of China (ROC) government there. The current ruling party tends to be less favorable toward him, so the memorial displays some of the more dictatorial aspects of his rule that the opposing party, when in power, chose not to highlight. It's worth being honest about it: he was a dictator, and Taiwan didn't have real political freedom until roughly 2000(when KMT lost), worth remembering for anyone invoking Taiwan purely as a democracy success story versus China. There's also the issue of the coercion (potentially amounting to genocide, by some accounts) of the island's earlier Indigenous populations when the ROC government moved in. I've heard criticizing Chiang Kai-shek is treated as something close to sacrilege by the older generation, but younger people are generally more willing to be critical of him, and since we belong to that younger group, it's fair for us to be critical too.(3 photos)]
+[----to be revised-----(3 photos)]
 
 ## Central Taiwan
 
