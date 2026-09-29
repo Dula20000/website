@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why Turbofans Keep Getting Bigger · Propulsion Research No. 4</title>
+<meta name="description" content="Parametric and off-design cycle study of a two-spool separate-exhaust turbofan (Mattingly-style analysis with variable-cp NASA-polynomial gas properties and turbine cooling air): bypass ratio, fan pressure ratio, turbine inlet temperature, installation penalty and an in-browser cycle tool.">
+<meta property="og:title" content="Why turbofans keep getting bigger — a parametric and off-design cycle study">
+<meta property="og:description" content="Two-spool turbofan cycle analysis with variable-cp gas properties, turbine cooling air and off-design matching, verified against the ideal cycle and applied to CFM56-, LEAP-, GE90- and F100-class engines. Includes a JavaScript port of the solver.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="../assets/paper.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="../assets/plot.js"></script>
+<script src="code/js/tfcycle.js"></script>
+<style>
+  .schem-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); padding: 8px; }
+  .schem { display: block; min-width: 660px; width: 100%; height: auto; font-family: var(--mono); }
+  .schem .box { fill: var(--raised); stroke: var(--line-2); }
+  .schem .hot { fill: var(--accent-bg); stroke: var(--accent); }
+  .schem .lbl { fill: var(--ink); font-size: 12px; font-family: var(--sans); }
+  .schem .stn { fill: var(--accent); font-size: 11px; }
+  .schem .flow { stroke: var(--ink-3); stroke-width: 1.4; fill: none; }
+  .schem .shaft { stroke: var(--blue); stroke-width: 2; fill: none; }
+  .schem .shaftlbl { fill: var(--blue); font-size: 11px; }
+  .tool .adv { display: none; }
+  .tool.show-adv .adv { display: grid; }
+  .tool h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 18px 0 8px; font-weight: 400; }
+  .tool .msg { font-family: var(--sans); font-size: 13px; color: var(--warn); min-height: 1.2em; margin: 6px 0 0; }
+  .tool .ctl select { width: 100%; }
+  .kv { font-family: var(--sans); font-size: 13.5px; color: var(--ink-2); }
+  .eqn-note { font-family: var(--sans); font-size: 14px; color: var(--ink-2); }
+  .inline-select { font: inherit; font-family: var(--mono); font-size: 12.5px; color: var(--ink); background: var(--raised); border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 6px; }
+  td.hl { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="series-bar"><div class="wide">
+  <span class="dot"></span>
+  <a href="../../index.html" target="_top">← Projects</a>
+  <a href="../index.html">Propulsion Research Series</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/Dula20000/website/tree/main/projects/propulsion/turbofan-cycle/code" target="_blank" rel="noopener">Code ↗</a>
+</div></nav>
+
+<main>
+<div class="wrap">
+<header class="paper-head">
+  <p class="kicker">Propulsion Research · No. 4</p>
+  <h1>Why turbofans keep getting bigger: a parametric and off-design cycle study of bypass ratio, fan pressure ratio and turbine inlet temperature</h1>
+  <p class="byline"><b>Dulran</b> · September 2026</p>
+  <div class="meta-row">
+    <span class="chip">variable cp (NASA polynomials)</span>
+    <span class="chip">turbine cooling bleed</span>
+    <span class="chip">two-spool, separate exhaust</span>
+    <span class="chip">off-design matching</span>
+    <span class="chip">1976 US Standard Atmosphere</span>
+    <span class="chip">Python + JS port</span>
+  </div>
+  <div class="abstract">
+    <h2>Abstract</h2>
+    <p>I wrote an on-design and off-design cycle code for a two-spool, separate-exhaust turbofan, following Mattingly's
+    parametric and performance analysis, then used it to ask why bypass ratio keeps rising and what stops it. The gas model is
+    thermally perfect: air and Jet-A combustion products take their properties from NASA 7-coefficient polynomials, and the fuel-air
+    ratio comes from an enthalpy balance on a common reference state. A simple turbine cooling-air bleed
+    (<span data-k="eps_pct"></span> of core flow, assumed) is included. In the constant-cp, loss-free limit the code matches the
+    closed-form ideal turbofan to <span data-k="v_ideal" data-html></span> relative error.
+    Energy and spool power balances close to round-off. The numerically found optimum fan pressure ratio agrees with
+    the analytic ideal-cycle optimum and with an exact first-order condition I derive for the lossy cycle.
+    On representative public inputs, a CFM56-7B-class engine at M 0.78 / 35,000 ft gives a cruise TSFC of
+    <span data-k="cfm_S"></span> lb/(lbf·h) (<span data-k="cfm_band"></span> for Tt4 ±<span data-k="band"></span> K). That is somewhat below the
+    ≈0.63–0.67 region quoted publicly; only the top of the band reaches it. A LEAP-1A-class cycle comes out
+    <span data-k="imp"></span> lower, against the manufacturer's ≈15 % claim.
+    About <span data-k="split_p"></span> of that gain comes from propulsive efficiency. On its own, the cycle keeps
+    improving up to a bypass ratio of ≈<span data-k="unin_opt"></span>. Nacelle drag and engine weight both
+    scale with fan area, and adding them pulls the optimum back to ≈<span data-k="inst_opt"></span> for my baseline
+    installation assumptions (range <span data-k="inst_band"></span> when those penalties are halved or doubled).
+    The installed optimum moves up by roughly <span data-k="dalpha_tt4"></span> in bypass ratio per 100 K of turbine inlet
+    temperature. That is the short answer to the title: hotter cores keep pushing the optimum fan larger.</p>
+  </div>
+  <div class="results-strip">
+    <div class="stat"><div class="v"><span data-k="cfm_S"></span><small>lb/lbf·h</small></div><div class="l">CFM56-7B-class cruise TSFC (public ≈0.63–0.67)</div></div>
+    <div class="stat"><div class="v"><span data-k="imp"></span></div><div class="l">LEAP-1A-class vs CFM56-class TSFC (claim ≈15 %)</div></div>
+    <div class="stat"><div class="v"><span data-k="split_p"></span></div><div class="l">share of that gain from propulsive efficiency</div></div>
+    <div class="stat"><div class="v">≈<span data-k="inst_opt"></span></div><div class="l">installed optimum BPR at Tt4 1600 K, OPR 40 (uninstalled ≈<span data-k="unin_opt"></span>)</div></div>
+  </div>
+</header>
+
+<!-- 1 ---------------------------------------------------------------- -->
+<section id="motivation">
+  <h2><span class="num">1</span>Motivation</h2>
+  <p>Civil turbofan bypass ratio has gone from about 1 on the first turbofans, to about 5 on the CFM56 family, to about 11 on
+  the LEAP and PW1000G. Fan diameter has grown with it, until it now sets landing-gear length and nacelle
+  drag. The textbook reason is propulsive efficiency: moving a lot of air slowly takes less energy per unit thrust than
+  moving a little air fast. That argument has no stopping point, though, and real engines do stop. So I wanted to
+  answer three questions with a tool I could check line by line:</p>
+  <ol>
+    <li>How much of the improvement from a CFM56-class to a LEAP-class engine is propulsive, and how much is thermal?</li>
+    <li>For a given core (OPR, Tt4, component efficiencies), where is the best fan pressure ratio and bypass ratio, both uninstalled
+    and once nacelle drag and weight are charged to the engine?</li>
+    <li>How does a fixed design behave away from its design point (thrust lapse with altitude and Mach, TSFC at part throttle)?</li>
+  </ol>
+</section>
+
+<!-- 2 ---------------------------------------------------------------- -->
+<section id="method">
+  <h2><span class="num">2</span>Method</h2>
+  <h3>2.1 Engine model and station numbering</h3>
+  <p>The engine is a two-spool, separate-exhaust turbofan with stations numbered as in Mattingly [1]. The low-pressure (LP)
+  spool's turbine drives the fan, which compresses the bypass stream by \(\pi_f\), and the LPC, which compresses the core stream by
+  \(\pi_{cL}\) (fan root plus booster). The high-pressure (HP) spool's turbine drives the HPC (\(\pi_{cH}\)).
+  The overall pressure ratio is \(\mathrm{OPR}=\pi_{cL}\pi_{cH}\). A turbojet is the same model with \(\alpha=0\).</p>
+  <div class="schem-wrap">
+  <svg class="schem" viewBox="0 0 760 210" role="img" aria-label="Station diagram of a two-spool separate-exhaust turbofan">
+    <defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--ink-3)"/></marker></defs>
+    <text class="stn" x="6" y="98">0</text>
+    <path class="flow" d="M18 94 H36" marker-end="url(#ar)"/>
+    <rect class="box" x="38" y="76" width="56" height="36" rx="5"/><text class="lbl" x="48" y="99">Inlet</text>
+    <text class="stn" x="98" y="72">2</text>
+    <path class="flow" d="M94 94 H112" marker-end="url(#ar)"/>
+    <rect class="box" x="114" y="40" width="52" height="108" rx="5"/><text class="lbl" x="127" y="99">Fan</text>
+    <path class="flow" d="M166 52 H290" marker-end="url(#ar)"/><text class="stn" x="172" y="44">13</text>
+    <text class="lbl" x="200" y="44" style="font-size:11px;fill:var(--ink-2)">bypass  α ṁc</text>
+    <rect class="box" x="292" y="34" width="96" height="36" rx="5"/><text class="lbl" x="302" y="57">Fan nozzle</text>
+    <path class="flow" d="M388 52 H420" marker-end="url(#ar)"/><text class="stn" x="424" y="56">18 / 19</text>
+    <path class="flow" d="M166 130 H184" marker-end="url(#ar)"/>
+    <rect class="box" x="186" y="112" width="52" height="36" rx="5"/><text class="lbl" x="197" y="135">LPC</text>
+    <text class="stn" x="238" y="108">2.5</text>
+    <path class="flow" d="M238 130 H256" marker-end="url(#ar)"/>
+    <rect class="box" x="258" y="112" width="52" height="36" rx="5"/><text class="lbl" x="268" y="135">HPC</text>
+    <text class="stn" x="314" y="108">3</text>
+    <path class="flow" d="M310 130 H328" marker-end="url(#ar)"/>
+    <rect class="hot" x="330" y="112" width="64" height="36" rx="5"/><text class="lbl" x="338" y="135">Burner</text>
+    <text class="stn" x="398" y="108">4</text>
+    <path class="flow" d="M394 130 H412" marker-end="url(#ar)"/>
+    <rect class="hot" x="414" y="112" width="52" height="36" rx="5"/><text class="lbl" x="424" y="135">HPT</text>
+    <text class="stn" x="462" y="108">4.4/4.5</text>
+    <path class="flow" d="M300 112 V92 H478 V110" style="stroke-dasharray:4 3" marker-end="url(#ar)"/>
+    <text class="lbl" x="336" y="87" style="font-size:11px;fill:var(--ink-2)">cooling air ε ṁc (3 → mixed after HPT)</text>
+    <path class="flow" d="M466 130 H488" marker-end="url(#ar)"/>
+    <rect class="hot" x="490" y="112" width="52" height="36" rx="5"/><text class="lbl" x="501" y="135">LPT</text>
+    <text class="stn" x="546" y="108">5</text>
+    <path class="flow" d="M542 130 H566" marker-end="url(#ar)"/>
+    <rect class="hot" x="568" y="112" width="100" height="36" rx="5"/><text class="lbl" x="576" y="135">Core nozzle</text>
+    <path class="flow" d="M668 130 H692" marker-end="url(#ar)"/><text class="stn" x="696" y="134">8 / 9</text>
+    <path class="shaft" d="M284 148 V172 H440 V148"/><text class="shaftlbl" x="330" y="186">HP spool (η<tspan dy="3" style="font-size:8px">mH</tspan><tspan dy="-3">)</tspan></text>
+    <path class="shaft" d="M140 148 V198 H516 V148 M212 148 V198"/><text class="shaftlbl" x="460" y="192">LP spool (η<tspan dy="3" style="font-size:8px">mL</tspan><tspan dy="-3">)</tspan></text>
+    <text class="lbl" x="190" y="104" style="font-size:11px;fill:var(--ink-2)">core</text>
+  </svg>
+  </div>
+
+  <h3>2.2 On-design (parametric) analysis</h3>
+  <p>The cycle bookkeeping follows Mattingly's parametric analysis [1]: polytropic efficiencies for fan, LPC, HPC, HPT and LPT;
+  total-pressure ratios for inlet (MIL-E-5007 ram recovery above Mach 1), burner and nozzles; burner efficiency \(\eta_b\); one mechanical
+  efficiency per spool. The thermodynamics is thermally perfect rather than Mattingly's two constant-cp gases. Each gas is an ideal-gas
+  mixture whose \(c_p(T)\), sensible enthalpy \(h(T)\) and entropy function \(s^\circ(T)\) come from NASA 7-coefficient polynomials
+  (GRI-Mech 3.0 data for N<sub>2</sub>, O<sub>2</sub>, Ar, CO<sub>2</sub>, H<sub>2</sub>O [8, 9]). Combustion products follow from complete lean
+  combustion of a CH<sub>1.92</sub> Jet-A surrogate in dry air, so their properties depend on the fuel-air ratio. All enthalpies are
+  sensible enthalpies measured from 298.15 K, the reference state of the lower heating value \(h_{PR}=42.8\) MJ/kg, and the fuel enters at
+  298.15 K. The burner fuel-air ratio \(f_b\) (per kg of burner air) then solves</p>
+  <div class="eq">$$h_{air}(T_{t3}) + f_b\,\eta_b h_{PR} = (1+f_b)\,h_{prod}(T_{t4}, f_b).$$</div>
+  <p>Along any process of fixed composition \(s^\circ(T_2)-s^\circ(T_1)=R\ln(P_2/P_1)\) for an isentrope, so polytropic compressors and turbines are</p>
+  <div class="eq">$$s^\circ(T_{t,out})-s^\circ(T_{t,in}) = \frac{R}{e_c}\ln\pi_c,\qquad s^\circ(T_{t,out})-s^\circ(T_{t,in}) = e_t R\ln\pi_t,$$</div>
+  <p>and the spool power balances use enthalpy differences:</p>
+  <div class="eq">$$\eta_{mH}(1-\varepsilon)(1+f_b)\,[h_4-h_{4.4}] = h_3-h_{2.5},\qquad
+    \eta_{mL}(1+f)\,[h_{4.5}-h_5] = (h_{2.5}-h_2) + \alpha(h_{13}-h_2).$$</div>
+  <p><b>Cooling air.</b> A fraction \(\varepsilon\) of the core air is bled after the HPC. It bypasses the burner and HPT and is remixed at constant
+  total pressure ahead of the LPT: \((1-\varepsilon)(1+f_b)h_{prod}(T_{t4.4},f_b)+\varepsilon h_{air}(T_{t3})=(1+f)h_{prod}(T_{t4.5},f)\), with
+  \(f=(1-\varepsilon)f_b\) the fuel per unit core air (the mixture of products and air is again "products" at the overall fuel-air ratio).
+  Coolant that does no HPT work is a conservative simplification. I use \(\varepsilon=\)<span data-k="eps_frac"></span> for every engine as
+  an assumption. <b>Fallback.</b> With <code>thermo='cpg'</code>, \(h=c_pT\) and \(s^\circ=c_p\ln T\), so the same code reduces to Mattingly's
+  two-gas "modified" cycle and, with one gas and all losses off, to the ideal cycle (§3.1).</p>
+  <p>Nozzles expand isentropically from \((T_{t9},P_{t9})\): \(s^\circ(T_9)=s^\circ(T_{t9})+R\ln(P_9/P_{t9})\), \(V_9=\sqrt{2[h(T_{t9})-h(T_9)]}\).
+  A convergent nozzle chokes when the static pressure at \(M=1\) (from \(2[h(T_t)-h(T^*)]=\gamma(T^*)RT^*\)) exceeds \(P_0\), and then produces
+  pressure thrust. The "expanded" option sets \(P_9=P_0\). Thrust per unit total inlet air, TSFC (with \(f\) per unit core air) and the efficiencies are:</p>
+  <div class="eq">$$\frac{F}{\dot m_0} = \frac{1}{1+\alpha}\Big\{(1+f)V_9 - V_0 + (1+f)\frac{R_tT_9}{V_9}\Big(1-\frac{P_0}{P_9}\Big)
+    + \alpha\Big[V_{19}-V_0+\frac{R_cT_{19}}{V_{19}}\Big(1-\frac{P_0}{P_{19}}\Big)\Big]\Big\},\qquad S=\frac{f}{(1+\alpha)F/\dot m_0}$$</div>
+  <div class="eq">$$\eta_o = \frac{(1+\alpha)(F/\dot m_0)V_0}{f\,h_{PR}},\qquad
+    \eta_{th} = \frac{(1+f)\tilde V_9^2 + \alpha\tilde V_{19}^2 - (1+\alpha)V_0^2}{2 f h_{PR}},\qquad \eta_p = \eta_o/\eta_{th}$$</div>
+  <p class="eqn-note">Here \(\tilde V\) is the velocity the jet would reach if it kept expanding isentropically from the nozzle-exit
+  static state down to \(P_0\). With a choked convergent nozzle, energy held as exit over-pressure then still counts
+  as thermal output. The cost of not expanding it fully shows up as a lower \(\eta_p\), which keeps \(\eta_p\) below 1.
+  For ideally expanded nozzles, \(\tilde V = V\).</p>
+
+  <h3>2.3 Off-design matching</h3>
+  <p>For off-design I use Mattingly's performance method [1]: the HPT nozzle (4) and LPT nozzle (4.5, after coolant mixing) throats are
+  choked and fixed in area, and the component adiabatic efficiencies (evaluated with the real-gas \(h\) and \(s^\circ\)) and the cooling fraction stay
+  at their design values. For a constant-cp gas without cooling, two choked throats in series fix the HPT operating point. With variable
+  properties and coolant mixed between the throats, it moves slightly: the HPT exit temperature is solved so that the 4.5 throat passes the
+  HPT flow plus the coolant. Choked and unchoked mass flux \(\rho V\) follow from \(h\) and \(s^\circ\) as in the nozzles. Continuity through
+  the core and fan nozzles (convergent, choked or unchoked) gives the LPT exit state and the bypass ratio:</p>
+  <div class="eq">$$\dot m_4 = A_4\,(\rho V)^*(T_{t4},P_{t4}),\qquad
+    A_{4.5}(\rho V)^*(T_{t4.5},P_{t4.5}) = A_8\,(\rho V)(T_{t5},\pi_{tL}\pi_nP_{t4.5},P_0) = (1+f)\dot m_c,\qquad
+    \alpha = \frac{A_{18}(\rho V)(T_{t13},\pi_{fn}P_{t13},P_0)}{\dot m_c}$$</div>
+  <p>The LPC work follows the fan work on the shared shaft, \(\Delta h_{cL} = K\Delta h_f\), with \(K\) frozen at design (Mattingly's
+  \(\tau_{cL}=\tau_f\) is the constant-cp case \(K=1\)). With throttle set by \(T_{t4}\), the only outer unknown is the fan work, found by a Brent
+  root solve of the LP-spool power balance. Inside each evaluation, the HP spool, burner and HPT are converged by fixed-point iteration on
+  \(T_{t3}\) with a Brent solve for the HPT exit temperature, and the LPT exit temperature comes from a second Brent solve. Absolute size enters only through the design mass flow, so
+  thrust lapse and TSFC do not depend on it.</p>
+
+  <h3>2.4 Fan size and installation penalty</h3>
+  <p>The fan diameter comes from the total air flow passing the fan face at an axial Mach number \(M_2 = 0.60\) through an annulus with
+  hub/tip ratio 0.30. The installation penalty has two parts. Nacelle skin-friction drag is
+  \(q_0 C_f FQ\,S_{wet}\), with \(C_f\) from the Schlichting turbulent flat-plate law [7], form × interference factor \(FQ=1.4\), and a nacelle
+  1.2 fan diameters across and 1.5 long. Weight drag is \(m g/(L/D)\), with \(L/D = 17\) and propulsion-system mass taken
+  proportional to \(D^2\), anchored at 2,400 kg for a 1.55 m fan (roughly a CFM56-7B-class dry mass). Because both terms scale with
+  \(D^2\propto\dot m_0\), the penalty as a fraction of thrust is</p>
+  <div class="eq">$$\phi = \frac{D_{nac}+D_W}{F} = \frac{c_{pen}}{F/\dot m_0},\qquad S_{inst} = \frac{S}{1-\phi},$$</div>
+  <p>where \(c_{pen}\) depends only on flight condition and the assumptions above. At M 0.78 / 35,000 ft it is
+  <span data-k="cpen"></span> m/s (<span data-k="cnac"></span> nacelle drag + <span data-k="cwt"></span> weight). Every assumption in \(c_{pen}\) is crude,
+  so I report results with \(c_{pen}\) halved and doubled as well.</p>
+
+  <h3>2.5 Implementation</h3>
+  <p>The Python package (<code>tfcycle</code>) has modules for the atmosphere (1976 US Standard, all layers to 86 km [3]), the gas
+  model, on-design, off-design and installation. <code>run_study.py</code> regenerates every number on this page into
+  <code>data/*.json</code> in about 40 s. The in-browser tool (§6) runs <code>code/js/tfcycle.js</code>, a line-by-line JavaScript port with the same
+  equations and the same Brent algorithm. Run under Node against the Python output, it agrees to
+  <span data-k="js_design" data-html></span> on all design-point quantities and <span data-k="js_off" data-html></span> on
+  <span data-k="js_n"></span> off-design points.</p>
+</section>
+
+<!-- 3 ---------------------------------------------------------------- -->
+<section id="vv">
+  <h2><span class="num">3</span>Verification &amp; validation</h2>
+  <p>Verification here means comparing against things I can compute exactly: closed-form ideal cycles, conservation laws, and
+  self-consistency between the on- and off-design solvers. The same checks are the automated tests in <code>code/tests/</code>.</p>
+  <div class="table-wrap"><table id="vvTable">
+    <caption>Verification summary (all values computed by <code>run_study.py</code>)</caption>
+    <thead><tr><th>Check</th><th>Reference</th><th class="num">Worst rel. error</th><th>Result</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+
+  <h3>3.1 Ideal-cycle limit</h3>
+  <p>With the constant-cp fallback (<code>thermo='cpg'</code>), no cooling air, polytropic, burner, mechanical and pressure-ratio efficiencies all set to 1, one gas (\(\gamma=1.4\), \(c_p=1004\) J/kg·K),
+  ideally expanded nozzles and fuel mass neglected in the flow terms, the real-cycle code must reduce to Mattingly's ideal turbofan:</p>
+  <div class="eq">$$\frac{F}{\dot m_0} = \frac{a_0}{1+\alpha}\Big[\frac{V_9}{a_0}-M_0+\alpha\Big(\frac{V_{19}}{a_0}-M_0\Big)\Big],\quad
+    \frac{V_9}{a_0}=\sqrt{\tfrac{2}{\gamma-1}\Big[\tau_\lambda-\tau_r\big(\tau_c-1+\alpha(\tau_f-1)\big)-\tfrac{\tau_\lambda}{\tau_r\tau_c}\Big]},\quad
+    \frac{V_{19}}{a_0}=\sqrt{\tfrac{2}{\gamma-1}(\tau_r\tau_f-1)}$$</div>
+  <p>Across five input sets, spanning static to Mach 2, BPR 0 to 12 and Tt4 1400 to 1900 K, the worst relative difference in specific thrust,
+  TSFC, fuel-air ratio, jet velocities, \(\eta_{th}\) and \(\eta_p\) is <span data-k="v_ideal" data-html></span>. That is machine precision:
+  the general code path contains the ideal cycle exactly. An independent closed-form ideal turbojet
+  (\(\alpha = 0\)) matches to <span data-k="v_tj" data-html></span>.</p>
+
+  <h3>3.2 Conservation</h3>
+  <p>A whole-engine first-law balance on sensible enthalpies, \((1+\alpha)h_{air}(T_{t0}) + f\eta_b h_{PR} = (1+f)[h_{prod}(T_9)+V_9^2/2]+\alpha[h_{air}(T_{19})+V_{19}^2/2]\)
+  plus shaft losses (the coolant mixer conserves enthalpy by construction), closes to <span data-k="v_energy" data-html></span> for all four case engines. The HP and LP spool power balances
+  (\(\eta_m W_{turbine} = W_{load}\)) close to <span data-k="v_spool" data-html></span>. For the CFM56-class case, the HPT delivers
+  <span data-k="w_hpt"></span> kJ per kg of core air to an HPC that absorbs <span data-k="w_hpc"></span> kJ/kg. The LPT delivers
+  <span data-k="w_lpt"></span> kJ/kg to fan plus LPC loads of <span data-k="w_lp"></span> kJ/kg.</p>
+
+  <h3>3.3 Optimum fan pressure ratio</h3>
+  <p>For the ideal cycle, TSFC at fixed \(\alpha\) is minimised when the two jets leave at the same speed, \(V_{19}=V_9\), which gives</p>
+  <div class="eq">$$\tau_f^{*} = \frac{\tau_\lambda-\tau_r(\tau_c-1)-\tau_\lambda/(\tau_r\tau_c)+\alpha\tau_r+1}{\tau_r(1+\alpha)}.$$</div>
+  <p>A golden-section search on the full code lands on \(\pi_f^*\) to within <span data-k="v_optideal" data-html></span>
+  (a flat minimum limits this to roughly the square root of machine precision), with \(V_{19}/V_9 = 1\) at the optimum.
+  For the lossy cycle, Mattingly gives the approximate condition \(V_{19}/V_9\approx\eta_f\eta_{tL}\). Working through the
+  marginal energy exchange with polytropic components gives the exact first-order condition (ideally expanded nozzles):</p>
+  <div class="eq">$$\frac{V_{19}}{V_9}\bigg|_{opt} = \eta_{mL}\,\frac{1-x_{19}(1-e_f)}{1+x_9\,(1/e_{tL}-1)},\qquad x_{19}=\frac{T_{19}}{T_{t19}},\ \ x_9=\frac{T_9}{T_{t9}}.$$</div>
+  <p class="eqn-note">The derivation holds for variable \(c_p\), because \(dh(T_s)=(T_s/T_t)(1-e)\,dw\) follows from the entropy-function form of the polytropic
+  relation. Shift work \(dw\) per unit bypass air from core to bypass stream. The bypass jet gains kinetic energy
+  \(dw[1-x_{19}(1-e_f)]\), because the extra pressure ratio also lets the existing flow expand further. The core jet loses
+  \((dw/\eta_{mL})[1+x_9(1/e_{tL}-1)]\), the turbine reheat penalty. Fuel flow does not change. Setting \(dF=0\) gives the ratio.</p>
+  <p>The numerical optimum satisfies this exact condition to <span data-k="v_optexact" data-html></span>. Mattingly's simpler form is
+  off by <span data-k="v_optapprox"></span> over BPR 4–12. That is expected for an approximation, and it tends to put the optimum fan pressure ratio a little low.</p>
+  <figure>
+    <div id="figOpt" class="plot"></div>
+    <figcaption><b>Figure 1.</b> TSFC vs fan pressure ratio at three bypass ratios, M 0.8 / 35,000 ft, OPR 36, Tt4 1666.7 K, ideally expanded nozzles.
+    Dashed lines: ideal cycle. Solid lines: real cycle (variable cp, default component efficiencies, <span data-k="eps_pct"></span> cooling air). Open circles: analytic ideal optimum \(\tau_f^*\).
+    Filled circles: numerical real-cycle optimum. Losses raise TSFC and move the optimum to a lower fan pressure ratio.</figcaption>
+  </figure>
+
+  <h3>3.4 Off-design solver</h3>
+  <p>With the off-design solver run at the design flight condition and design Tt4, it reproduces the on-design specific thrust, TSFC,
+  bypass ratio and OPR to <span data-k="v_odrep" data-html></span> for three engines. Over a grid of
+  <span data-k="v_odn"></span> converged points (0–12 km, M 0–0.85, Tt4 1250–1650 K), the LP power balance and the mass flow
+  at stations 4.5 and 8 close to <span data-k="v_odres" data-html></span>. The atmosphere reproduces the tabulated 1976 layer-base
+  pressures to <span data-k="v_atm" data-html></span>.</p>
+
+  <h3>3.5 Thermodynamic data, and what the variable-property model changed</h3>
+  <p>The species polynomials reproduce JANAF-table values of \(c_p\) and \(s^\circ\) at 298.15 K and of \(c_p\) and \(H(1000\,\mathrm K)-H(298.15\,\mathrm K)\) to
+  within <span data-k="v_janaf"></span> [10], and the CO<sub>2</sub> and H<sub>2</sub>O formation enthalpies to 0.01 %. \(T(h)\) and \(T(s^\circ)\) invert to
+  <span data-k="v_inv" data-html></span>, with \(h\) and \(s^\circ\) continuous at the 1000 K range boundary. As an independent check, the air enthalpy rise across
+  each case engine's burner agrees with a cubic \(c_p(T)\) fit for air [6] to <span data-k="v_airpoly"></span>.</p>
+  <p>The first published version of this study used Mattingly's two-gas burner balance, \(c_{pt}T_{t4}-c_{pc}T_{t3}\), which measures two different
+  specific heats from the same zero. At each case engine's burner conditions it needs <span data-k="bb_range"></span> more fuel than the enthalpy balance
+  above. (My earlier note quoted 14–16 %, comparing only the air enthalpy rise. That overstated the fuel effect, because the fuel term in the denominator
+  and the products' higher \(c_p\) partly offset it.) Over the whole cycle, including the turbines and nozzles, switching the gas model lowers CFM56-class
+  TSFC by <span data-k="dS_gas"></span> at unchanged inputs. The table in §4 shows each step from the old model to the current one.</p>
+  <p><b>Validation in spirit.</b> I did not reproduce a specific tabulated textbook example, so I make no claim of matching textbook numbers. For a
+  Mattingly-style input set (M 0.8, T0 = 216.7 K, \(\alpha=8\), \(\pi_f=1.7\), \(\pi_c=36\), Tt4 = 1666.7 K, \(e_c=0.90\), \(e_f=e_t=0.89\),
+  \(\pi_b = 0.96\), expanded nozzles, no cooling), the two-gas model gives \(F/\dot m_0\) = <span data-k="ms_Fs"></span> N·s/kg
+  (<span data-k="ms_Fsl"></span> lbf/(lbm/s)) and \(S\) = <span data-k="ms_S"></span> lb/(lbf·h). The variable-property model gives
+  <span data-k="ms_Sv"></span>, and the ideal cycle <span data-k="ms_Si"></span>.</p>
+</section>
+
+<!-- 4 ---------------------------------------------------------------- -->
+<section id="cases">
+  <h2><span class="num">4</span>Case studies</h2>
+  <p>Four engine classes, each at its own cruise point in the ISA 1976 atmosphere. Bypass ratio, OPR and fan diameter are
+  representative values from public manufacturer specifications. Fan pressure ratio, the LPC/HPC split, Tt4 and component efficiencies
+  are not generally public. I chose values that are plausible for each engine's generation, of the magnitude given in Mattingly's
+  component technology-level tables [1, 2], and I label them as assumptions. Tt4 carries a ±<span data-k="band"></span> K sensitivity band.
+  Because cooling air is now modelled explicitly, Tt4 is the combustor exit temperature. I therefore raised every case's cruise Tt4 by 100 K from the
+  first version, whose values were "equivalent uncooled" temperatures. This was decided before seeing the new results and not tuned afterwards.
+  The cooling fraction is <span data-k="eps_pct"></span> for all engines (assumed).</p>
+  <div class="table-wrap"><table id="inTable">
+    <caption>Inputs (representative values from public sources; "assumed" = my plausible choice, not a published figure)</caption>
+    <thead></thead><tbody></tbody>
+  </table></div>
+  <div class="table-wrap"><table id="stepTable">
+    <caption>Effect of the thermodynamic model on cruise TSFC [lb/(lbf·h)]: first version (v1) → current (v2)</caption>
+    <thead></thead><tbody></tbody>
+  </table></div>
+  <div class="table-wrap"><table id="resTable">
+    <caption>Results at each engine's cruise point</caption>
+    <thead></thead><tbody></tbody>
+  </table></div>
+  <h3>4.1 Comparison with public figures</h3>
+  <p><b>CFM56-7B-class.</b> Predicted cruise TSFC is <span data-k="cfm_S"></span> lb/(lbf·h), or <span data-k="cfm_band"></span> across the
+  ±<span data-k="band"></span> K Tt4 band. The public figures sit around ≈0.63–0.67, so the nominal prediction is about
+  <span data-k="cfm_gap"></span> below the bottom of that range, and only the hot end of the band reaches it. The first version's 0.655 fell inside
+  the range partly because the burner bias offset the missing cooling air. With both effects modelled, the prediction is on the optimistic side. Likely
+  contributors: customer bleed and gearbox power extraction are still not modelled; the assumed efficiencies may be generous for a 1990s design; the
+  simple coolant model ignores cooling-flow pressure and mixing losses; and \(V_{19}/V_9\) (below) suggests the core still carries more energy than
+  the real engine's. I have not retuned the inputs to close the gap.
+  <b>LEAP-1A-class.</b> TSFC <span data-k="leap_S"></span>, or <span data-k="imp"></span> below the CFM56-class engine. With
+  both Tt4 values varied independently over their bands, the improvement spans <span data-k="imp_rng"></span>. The manufacturer quotes ≈15 %.
+  That claim is for fuel burn against the CFM56-5B on the A320, and it includes installation and airframe effects, so reproducing
+  it closely is partly luck. The robust result is the size and sign of the gain.
+  <b>GE90-115B-class.</b> TSFC <span data-k="ge_S"></span> at M 0.83. I do not have a public cruise TSFC for it that I trust, so I report it without comparison.
+  <b>F100-class.</b> TSFC <span data-k="f100_S"></span> at M 0.9, about <span data-k="f100_ratio"></span>× the CFM56-class value. Its specific thrust is
+  <span data-k="f100_Fs"></span> N·s/kg against <span data-k="cfm_Fs"></span>: a low-BPR engine buys thrust per unit frontal area at the cost
+  of propulsive efficiency (<span data-k="f100_ep"></span> vs <span data-k="cfm_ep"></span>).</p>
+  <p><b>Fan diameter.</b> Sizing each civil engine to the cruise thrust of its aircraft class (mass × g / (L/D) / 2) gives fan diameters of
+  <span data-k="Dratio_rng"></span> of the public values. The model runs small for two reasons. Real fans are sized at the top-of-climb corrected flow,
+  which is higher than mid-cruise. And the model's cores are energetic (see the jet-velocity ratio below), which raises specific thrust. In §5.5 I use the model's
+  diameter only in relative terms.</p>
+  <p><b>Jet-velocity ratio.</b> At the public fan pressure ratios, the model's \(V_{19}/V_9\) is <span data-k="vr_rng"></span>, below the TSFC-optimal
+  ≈0.8. So these cycles have more core energy than their fans extract, which suggests the model core is still somewhat more energetic than the real
+  one (no customer bleed or offtake, lossless coolant mixing).</p>
+  <div class="fig-grid">
+    <figure><div id="figTS" class="plot tall"></div>
+      <figcaption><b>Figure 2.</b> T–s diagrams of the CFM56-class and LEAP-class cycles, drawn from the station states. Solid: core. Dotted: bypass.
+      Grey dashed: the ambient isobar, which closes the cycle through heat rejection to the atmosphere.</figcaption></figure>
+    <figure><div id="figAudit" class="plot tall"></div>
+      <figcaption><b>Figure 3.</b> Loss audit: TSFC as each group of non-idealities is switched on in turn, starting from the ideal cycle with the same
+      \(\alpha,\pi_f,\mathrm{OPR},T_{t4}\). Real-gas properties raise TSFC, because hot products have a higher \(c_p\) than the ideal cycle's 1004 J/kg·K, so
+      more fuel is needed to reach Tt4. At fixed Tt4, compressor losses and cooling air both <em>lower</em> TSFC slightly. Both reduce the heat added
+      (a hotter Tt3, or less air through the burner), and cooling also brings these under-fanned cycles closer to their optimum jet-velocity ratio.
+      That is a property of holding Tt4 fixed, not a benefit of the losses themselves.</figcaption></figure>
+  </div>
+</section>
+
+<!-- 5 ---------------------------------------------------------------- -->
+<section id="results">
+  <h2><span class="num">5</span>Results &amp; discussion</h2>
+  <p>The trade studies share one baseline: M 0.78 / 35,000 ft, OPR 40 (\(\pi_{cL}=1.8\)), Tt4 = 1600 K, <span data-k="eps_pct"></span> cooling air,
+  variable-property gas, LEAP-level component efficiencies and convergent nozzles. Where a fan pressure ratio is not stated, it is the TSFC-optimal one for the bypass ratio in question.</p>
+
+  <h3>5.1 The carpet: TSFC versus specific thrust</h3>
+  <figure class="bleed"><div id="figCarpet" class="plot tall"></div>
+    <figcaption><b>Figure 4.</b> TSFC vs specific thrust for BPR 0–15. Each solid line sweeps fan pressure ratio at fixed BPR, and the dots mark
+    the TSFC-optimal \(\pi_f\). Thin dashed lines hold \(\pi_f\) fixed while BPR varies. The lower envelope of the dots is the best
+    TSFC available at each specific thrust.</figcaption></figure>
+  <p>The envelope shows the basic trade. Going from the turbojet (<span data-k="tj_S"></span> lb/(lbf·h) at <span data-k="tj_Fs"></span> N·s/kg)
+  to BPR 15 at its best \(\pi_f\) (<span data-k="b15_S"></span> at <span data-k="b15_Fs"></span> N·s/kg) cuts TSFC by <span data-k="tj_to_15"></span>.
+  It also cuts specific thrust about <span data-k="fs_ratio"></span>-fold, and for a fixed thrust the fan area has to grow by that factor.
+  Every step down the envelope makes the engine larger.</p>
+
+  <h3>5.2 Where the gain comes from: propulsive vs thermal efficiency</h3>
+  <div class="fig-grid">
+    <figure><div id="figSplit" class="plot"></div>
+      <figcaption><b>Figure 5a.</b> Thermal, propulsive and overall efficiency vs BPR at the optimal \(\pi_f\).</figcaption></figure>
+    <figure><div id="figSplit2" class="plot"></div>
+      <figcaption><b>Figure 5b.</b> Optimal \(\pi_f\) and specific thrust vs BPR (below BPR ≈ 1 TSFC keeps falling up to the turbine-work limit, so no optimum is plotted).</figcaption></figure>
+  </div>
+  <p>At fixed core conditions, raising BPR hardly moves thermal efficiency (<span data-k="eth_0"></span> at BPR 0 to
+  <span data-k="eth_15"></span> at 15, drifting down slightly as more work passes through the lossy fan and LPT). Propulsive efficiency climbs from
+  <span data-k="ep_0"></span> to <span data-k="ep_15"></span>. So at a fixed core, all of the BPR benefit is propulsive. Between the
+  CFM56-class and LEAP-class cycles, which also differ in OPR, Tt4 and component efficiencies, splitting \(\ln(\eta_{o,2}/\eta_{o,1})\) into its
+  thermal and propulsive parts gives <span data-k="split_p"></span> propulsive and <span data-k="split_t"></span> thermal.</p>
+
+  <h3>5.3 Turbine inlet temperature and OPR</h3>
+  <div class="fig-grid">
+    <figure><div id="figT4a" class="plot"></div><figcaption><b>Figure 6a.</b> TSFC vs OPR at BPR 11 for five Tt4 (optimal \(\pi_f\)).</figcaption></figure>
+    <figure><div id="figT4b" class="plot"></div><figcaption><b>Figure 6b.</b> Specific thrust vs OPR for the same cases.</figcaption></figure>
+  </div>
+  <p>At fixed BPR, raising OPR from 20 to 60 lowers TSFC by <span data-k="opr_gain"></span> at Tt4 = 1600 K, a thermal-efficiency effect.
+  Raising Tt4 from 1400 to 1800 K at OPR 40, even with the fan pressure ratio re-optimised, does not improve TSFC at this fixed BPR: it changes by
+  <span data-k="tt4_dS"></span>, while specific thrust rises by <span data-k="tt4_dFs"></span>. A hotter core at fixed BPR makes the engine smaller, not more economical. The extra energy only
+  improves TSFC if it goes into more bypass air. That is the link between turbine materials and fan size, and §5.5 puts a number on it.</p>
+
+  <h3>5.4 Off-design: thrust lapse and part throttle</h3>
+  <p>Each civil case engine is sized at its cruise point and then flown off-design on a max-climb-like schedule: \(T_{t4}/\theta_0\) held at
+  its design value and capped at Tt4<sub>des</sub> + <span data-k="dtmax"></span> K. Thrust is normalised by the sea-level-static value
+  on the same schedule.
+  Engine: <select id="odSel" class="inline-select" aria-label="engine for off-design figures"></select></p>
+  <div class="fig-grid">
+    <figure><div id="figLapse" class="plot"></div><figcaption><b>Figure 7a.</b> Thrust lapse F/F<sub>SLS</sub> vs altitude at five flight Mach numbers.</figcaption></figure>
+    <figure><div id="figLapseS" class="plot"></div><figcaption><b>Figure 7b.</b> TSFC vs altitude on the same schedule.</figcaption></figure>
+    <figure><div id="figMach" class="plot"></div><figcaption><b>Figure 7c.</b> Thrust lapse vs flight Mach at three altitudes.</figcaption></figure>
+    <figure><div id="figHook" class="plot"></div><figcaption><b>Figure 7d.</b> TSFC vs thrust at the design flight condition as Tt4 is varied (all three engines).</figcaption></figure>
+  </div>
+  <p>Cruise thrust is <span data-k="cr_sls"></span> of sea-level-static thrust for the three engines (CFM56-, LEAP-, GE90-class). Lapse is steeper for
+  the higher-BPR engine: its low specific thrust leaves little margin over ram drag as \(V_0\) rises (Figure 7c). Sea-level-static TSFC comes out
+  <span data-k="sls_S"></span> lb/(lbf·h). At part throttle, TSFC has the familiar "hook". It falls as Tt4 comes down from the maximum,
+  because lower jet velocities improve \(\eta_p\), then rises again as the core pressure ratio and thermal efficiency collapse.
+  The minimum sits at <span data-k="hook"></span> of design-point thrust.</p>
+
+  <h3>5.5 Installation: why fan diameter limits BPR</h3>
+  <div class="fig-grid">
+    <figure><div id="figInst" class="plot"></div><figcaption><b>Figure 8a.</b> Installed TSFC vs BPR, with \(\pi_f\) re-optimised for installed TSFC at each BPR,
+      for the baseline penalty and for it halved and doubled. Grey: uninstalled. Markers: optima.</figcaption></figure>
+    <figure><div id="figDia" class="plot"></div><figcaption><b>Figure 8b.</b> Fan diameter relative to the BPR-11 engine at equal net thrust (left) and the
+      installation penalty φ split into nacelle drag and weight (right), baseline assumptions.</figcaption></figure>
+  </div>
+  <p>Without installation effects, TSFC keeps falling to an optimum near BPR <span data-k="unin_opt"></span> (\(\pi_f\) ≈
+  <span data-k="unin_pf"></span>). Beyond that, the fixed fan and nozzle pressure losses consume the small fan pressure rise. Charging nacelle drag and weight to the engine moves
+  the optimum to BPR <span data-k="inst_opt"></span> (\(\pi_f\) ≈ <span data-k="inst_pf"></span>, φ = <span data-k="inst_phi"></span> of gross thrust).
+  The optimum is flat: installed TSFC is within 0.5 % of its minimum from BPR <span data-k="inst_flat"></span>. Halving or doubling the penalty moves the
+  optimum to <span data-k="inst_half"></span> or <span data-k="inst_dbl"></span>. At the baseline optimum the fan is <span data-k="d_rel"></span>× the
+  diameter of the BPR-11 engine at equal thrust. Scaled from a 1.98 m LEAP-1A-class fan, that is ≈<span data-k="d_abs"></span> m, which is already at
+  or beyond what fits under a low-wing single-aisle aircraft without longer landing gear (LEAP-1A 1.98 m, PW1100G 2.06 m). Ground clearance, which
+  this model does not include, is therefore likely to bind before the drag-and-weight optimum does.</p>
+  <div class="table-wrap"><table id="obTable">
+    <caption>Optimum BPR vs core technology (baseline penalty; OPR 40 for the Tt4 sweep, Tt4 1600 K for the OPR sweep)</caption>
+    <thead><tr><th>Core</th><th class="num">Installed opt. BPR</th><th class="num">Installed TSFC</th><th class="num">Uninstalled opt. BPR</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p><b>Answer.</b> For my baseline nacelle-drag and weight assumptions, the installed-TSFC optimum bypass ratio is ≈<span data-k="inst_opt"></span> for a
+  Tt4 = 1600 K, OPR 40 core, with a flat bottom from <span data-k="inst_flat"></span> and a range of <span data-k="inst_band"></span> across a factor-of-four
+  uncertainty in the penalty. The optimum rises with turbine inlet temperature, from <span data-k="ob_t0"></span> at 1400 K to <span data-k="ob_t1"></span> at 1800 K.
+  It falls slightly with OPR, because a higher-pressure-ratio core gets less heat per kilogram at a fixed Tt4. So turbofans keep getting bigger because
+  each generation of hotter cores has more energy per unit core flow to spread over bypass air. The bypass ratio has stayed below the uninstalled optimum
+  because a fan whose drag and weight scale with its area stops paying for itself around the installed optimum, and because ground clearance tends to bind first.
+  Geared fans and slimmer nacelles lower the penalty (the "halved" curve), which is the direction the industry is moving.</p>
+</section>
+
+<!-- 6 ---------------------------------------------------------------- -->
+<section id="tool">
+  <h2><span class="num">6</span>Interactive tool</h2>
+  <p>This is the JavaScript port of the solver running in your browser, not a lookup of stored results. Choose a preset, then move the sliders. The
+  off-design panel re-matches the engine you have designed at 27 altitudes × 4 Mach numbers each time an input changes.
+  <span id="liveCheck" class="kv"></span></p>
+</section>
+</div><!-- /wrap -->
+<div class="wide">
+  <div class="tool" id="toolBox">
+    <div class="tool-head">Turbofan cycle · on- and off-design</div>
+    <div class="controls">
+      <label class="ctl"><span class="row"><span>Preset</span></span>
+        <select id="preset"></select></label>
+      <label class="ctl"><span class="row"><span>Bypass ratio α</span><output id="o_alpha"></output></span><input type="range" id="alpha" min="0" max="20" step="0.1"></label>
+      <label class="ctl"><span class="row"><span>Fan pressure ratio π<sub>f</sub></span><output id="o_pi_f"></output></span><input type="range" id="pi_f" min="1.1" max="5" step="0.01"></label>
+      <label class="ctl"><span class="row"><span>Overall pressure ratio</span><output id="o_opr"></output></span><input type="range" id="opr" min="4" max="60" step="0.5"></label>
+      <label class="ctl"><span class="row"><span>T<sub>t4</sub> [K]</span><output id="o_Tt4"></output></span><input type="range" id="Tt4" min="1000" max="2000" step="5"></label>
+      <label class="ctl"><span class="row"><span>Flight Mach M<sub>0</sub></span><output id="o_M0"></output></span><input type="range" id="M0" min="0" max="2" step="0.01"></label>
+      <label class="ctl"><span class="row"><span>Altitude [ft]</span><output id="o_alt"></output></span><input type="range" id="alt" min="0" max="50000" step="500"></label>
+      <label class="ctl"><span class="row"><span>Cooling air ε [% core]</span><output id="o_eps"></output></span><input type="range" id="eps" min="0" max="0.25" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>Gas model</span></span><select id="thermo"><option value="varcp">variable cp (NASA polynomials)</option><option value="cpg">two-gas constant cp (Mattingly modified)</option></select></label>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="bOpt" type="button">Optimise π<sub>f</sub> for TSFC</button>
+      <button class="btn ghost" id="bAdv" type="button" aria-expanded="false">Show component efficiencies</button>
+      <button class="btn ghost" id="bReset" type="button">Reset preset</button>
+    </div>
+    <div class="controls adv" style="margin-top:14px">
+      <label class="ctl"><span class="row"><span>LPC ratio π<sub>cL</sub></span><output id="o_pi_cL"></output></span><input type="range" id="pi_cL" min="1" max="5" step="0.01"></label>
+      <label class="ctl"><span class="row"><span>e<sub>f</sub> fan</span><output id="o_e_f"></output></span><input type="range" id="e_f" min="0.8" max="1" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>e<sub>cL</sub> LPC</span><output id="o_e_cL"></output></span><input type="range" id="e_cL" min="0.8" max="1" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>e<sub>cH</sub> HPC</span><output id="o_e_cH"></output></span><input type="range" id="e_cH" min="0.8" max="1" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>e<sub>tH</sub> HPT</span><output id="o_e_tH"></output></span><input type="range" id="e_tH" min="0.8" max="1" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>e<sub>tL</sub> LPT</span><output id="o_e_tL"></output></span><input type="range" id="e_tL" min="0.8" max="1" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>π<sub>b</sub> burner</span><output id="o_pi_b"></output></span><input type="range" id="pi_b" min="0.9" max="1" step="0.005"></label>
+      <label class="ctl"><span class="row"><span>π<sub>d,max</sub> inlet</span><output id="o_pi_d_max"></output></span><input type="range" id="pi_d_max" min="0.9" max="1" step="0.001"></label>
+      <label class="ctl"><span class="row"><span>π<sub>n</sub> = π<sub>fn</sub> nozzles</span><output id="o_pi_n"></output></span><input type="range" id="pi_n" min="0.95" max="1" step="0.001"></label>
+      <label class="ctl"><span class="row"><span>η<sub>b</sub> burner</span><output id="o_eta_b"></output></span><input type="range" id="eta_b" min="0.9" max="1" step="0.001"></label>
+      <label class="ctl"><span class="row"><span>η<sub>m</sub> both spools</span><output id="o_eta_m"></output></span><input type="range" id="eta_m" min="0.95" max="1" step="0.001"></label>
+      <label class="ctl"><span class="row"><span>Nozzles</span></span><select id="nozzle"><option value="convergent">convergent (choke → pressure thrust)</option><option value="expanded">ideally expanded</option></select></label>
+    </div>
+    <div class="readout" id="readout"></div>
+    <p class="msg" id="toolMsg"></p>
+    <div class="fig-grid" style="margin-top:12px">
+      <figure style="margin:0"><div id="tTS" class="plot"></div><figcaption>T–s diagram of the current design (core solid, bypass dotted).</figcaption></figure>
+      <figure style="margin:0"><div id="tSweep" class="plot"></div><figcaption>TSFC vs π<sub>f</sub> at the current BPR, with the current point and the optimum marked.</figcaption></figure>
+    </div>
+    <h4>Station states</h4>
+    <div class="table-wrap"><table id="stTable"><thead><tr><th>Station</th><th>Location</th><th class="num">T<sub>t</sub> [K]</th><th class="num">P<sub>t</sub> [kPa]</th></tr></thead><tbody></tbody></table></div>
+    <h4>Off-design: current design flown on the max-climb schedule</h4>
+    <div class="controls">
+      <label class="ctl"><span class="row"><span>T<sub>t4,max</sub> − T<sub>t4,des</sub> [K]</span><output id="o_dT"></output></span><input type="range" id="dT" min="0" max="300" step="10" value="150"></label>
+    </div>
+    <div class="fig-grid">
+      <figure style="margin:0"><div id="tLapse" class="plot"></div><figcaption>Thrust lapse F/F<sub>SLS</sub> vs altitude.</figcaption></figure>
+      <figure style="margin:0"><div id="tLapseS" class="plot"></div><figcaption>TSFC vs altitude on the same schedule.</figcaption></figure>
+    </div>
+  </div>
+</div>
+<div class="wrap">
+
+<!-- 7 ---------------------------------------------------------------- -->
+<section id="limits">
+  <h2><span class="num">7</span>Limitations &amp; future work</h2>
+  <ul>
+    <li><b>Simple cooling, no bleed or power extraction.</b> One coolant stream (a fixed <span data-k="eps_pct"></span> of core air) bypasses the burner and
+    HPT and is remixed losslessly ahead of the LPT. A fuller model would split nozzle-guide-vane and rotor cooling (the NGV coolant does HPT work) and add
+    mixing pressure losses, customer bleed and shaft offtake.</li>
+    <li><b>Thermodynamics.</b> Complete lean combustion without dissociation (adequate below about 2000 K), a CH<sub>1.92</sub> fuel surrogate, the
+    lower heating value referred to 298.15 K, and fuel entering at 298.15 K.</li>
+    <li><b>No component maps.</b> Off-design uses constant adiabatic efficiencies and choked turbine nozzles, with no surge-margin, fan-speed or
+    corrected-flow limits beyond the Tt4 cap. That is adequate for lapse trends, not for detailed ratings.</li>
+    <li><b>Installation model.</b> The penalty is skin friction plus weight scaling with \(D^2\). It has no spillage, no core-cowl scrubbing drag,
+    no gearbox or LPT stage-count weights and no ground-clearance constraint. The optimum is flat, so its location is sensitive to these choices;
+    the penalty sweep is there to show that.</li>
+    <li><b>Low-BPR engine.</b> The F100-class case is treated as separate-flow and dry. The real engine is mixed-flow with an afterburner.</li>
+    <li><b>Public inputs.</b> Fan pressure ratios, pressure-ratio splits and efficiencies are my plausible assumptions, not manufacturer data.</li>
+  </ul>
+</section>
+
+<section id="refs">
+  <h2>References</h2>
+  <ol class="refs">
+    <li>J. D. Mattingly, <i>Elements of Propulsion: Gas Turbines and Rockets</i>, AIAA Education Series (2nd ed., 2006). Parametric (ideal and real/modified) cycle analysis, off-design performance analysis, component technology levels.</li>
+    <li>J. D. Mattingly, W. H. Heiser, D. T. Pratt, <i>Aircraft Engine Design</i>, AIAA Education Series (2nd ed., 2002). Engine sizing, installation losses, throttle ratio.</li>
+    <li>NOAA / NASA / USAF, <i>U.S. Standard Atmosphere, 1976</i>, U.S. Government Printing Office (1976).</li>
+    <li>P. G. Hill, C. R. Peterson, <i>Mechanics and Thermodynamics of Propulsion</i>, Addison-Wesley (2nd ed., 1992).</li>
+    <li>H. I. H. Saravanamuttoo, G. F. C. Rogers, H. Cohen, P. V. Straznicky, <i>Gas Turbine Theory</i>, Pearson. Optimum fan pressure ratio and polytropic efficiency.</li>
+    <li>Y. A. Çengel, M. A. Boles, <i>Thermodynamics: An Engineering Approach</i>, McGraw-Hill. Ideal-gas \(c_p(T)\) cubic fit for air.</li>
+    <li>H. Schlichting, <i>Boundary-Layer Theory</i>, McGraw-Hill; D. P. Raymer, <i>Aircraft Design: A Conceptual Approach</i>, AIAA. Turbulent flat-plate skin friction and form factors.</li>
+    <li>B. J. McBride, S. Gordon, M. A. Reno, <i>Coefficients for Calculating Thermodynamic and Transport Properties of Individual Species</i>, NASA TM-4513 (1993). NASA 7-coefficient polynomial form.</li>
+    <li>G. P. Smith et al., <i>GRI-Mech 3.0</i> thermodynamic data set (Gas Research Institute). Species coefficients used here.</li>
+    <li>M. W. Chase Jr. (ed.), <i>NIST-JANAF Thermochemical Tables</i>, 4th ed., J. Phys. Chem. Ref. Data Monograph 9 (1998). Reference values for the thermo checks.</li>
+    <li>CFM International, GE Aerospace and Pratt &amp; Whitney public product specifications for the CFM56-7B, LEAP-1A, GE90-115B, PW1100G and F100 (bypass ratio, pressure ratio, fan diameter; values quoted with ≈).</li>
+  </ol>
+</section>
+</div>
+</main>
+<footer class="paper-foot"><div class="wrap">Propulsion Research Series · No. 4 · Dulran · September 2026. All numbers on this page are generated by
+  <code>code/run_study.py</code> into <code>data/*.json</code> and loaded at view time.</div></footer>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const FTm = 0.3048;
+  const fx = (v, d) => (v == null || !isFinite(v)) ? '—' : Number(v).toFixed(d);
+  const pct = (v, d) => fx(100 * v, d == null ? 1 : d) + ' %';
+  function sci(v) {
+    if (v == null) return '—';
+    if (v === 0) return '0 (exact)';
+    let e = Math.floor(Math.log10(Math.abs(v))), m = v / Math.pow(10, e);
+    if (Number(m.toFixed(1)) >= 10) { e += 1; m /= 10; }
+    return m.toFixed(1) + '×10<sup>' + e + '</sup>';
+  }
+  const K = {};
+  function bind() {
+    document.querySelectorAll('[data-k]').forEach((el) => {
+      const v = K[el.dataset.k];
+      if (v === undefined) return;
+      if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v;
+    });
+  }
+  const S = (i) => PR.series(i);
+  const pts = (arr, j) => arr.map((p) => p[j]);
+
+  Promise.all(['cases', 'verification', 'trades', 'offdesign'].map((n) => PR.loadJSON('data/' + n + '.json')))
+    .then(([C, V, T, O]) => { build(C, V, T, O); })
+    .catch((e) => { const m = document.createElement('p'); m.className = 'note callout-warn'; m.textContent = 'Could not load data: ' + e.message; document.querySelector('main .wrap').prepend(m); });
+
+  function build(C, V, T, O) {
+    const byKey = {}; C.cases.forEach((c) => (byKey[c.key] = c));
+    const cfm = byKey.cfm56, leap = byKey.leap1a, ge = byKey.ge90, f100 = byKey.f100;
+    // ---------- key numbers ----------
+    K.cfm_S = fx(cfm.result.S_lb, 3); K.leap_S = fx(leap.result.S_lb, 3); K.ge_S = fx(ge.result.S_lb, 3); K.f100_S = fx(f100.result.S_lb, 3);
+    K.cfm_band = fx(cfm.band.S_lb[0], 3) + '–' + fx(cfm.band.S_lb[1], 3);
+    K.imp = pct(C.comparison.leap_vs_cfm, 1);
+    K.imp_rng = pct(C.comparison.leap_vs_cfm_range[0], 0).replace(' %', '') + '–' + pct(C.comparison.leap_vs_cfm_range[1], 0);
+    K.split_p = pct(C.comparison.split.propulsive, 0); K.split_t = pct(C.comparison.split.thermal, 0);
+    K.band = fx(C.TT4_BAND, 0);
+    K.f100_ratio = fx(f100.result.S_lb / cfm.result.S_lb, 1);
+    K.f100_Fs = fx(f100.result.Fs, 0); K.cfm_Fs = fx(cfm.result.Fs, 0);
+    K.f100_ep = fx(f100.result.eta_p, 2); K.cfm_ep = fx(cfm.result.eta_p, 2);
+    const civ = [cfm, leap, ge];
+    const rat = civ.map((c) => c.sizing.ratio);
+    K.Dratio_rng = pct(Math.min(...rat), 0).replace(' %', '') + '–' + pct(Math.max(...rat), 0);
+    const vr = civ.map((c) => c.V19_V9);
+    K.vr_rng = fx(Math.min(...vr), 2) + '–' + fx(Math.max(...vr), 2);
+    // verification
+    K.v_ideal = sci(Math.max(...V.ideal.map((r) => r.worst)));
+    K.v_tj = sci(V.turbojet.err);
+    K.v_energy = sci(Math.max(...V.balances.map((b) => b.energy)));
+    K.v_spool = sci(Math.max(...V.balances.map((b) => Math.max(b.hp, b.lp))));
+    const b0 = V.balances.find((b) => b.key === 'cfm56');
+    K.w_hpt = fx(b0.W_HPT / 1e3, 1); K.w_hpc = fx(b0.W_HPC / 1e3, 1); K.w_lpt = fx(b0.W_LPT / 1e3, 1); K.w_lp = fx(b0.W_LP / 1e3, 1);
+    K.v_optideal = sci(Math.max(...V.opt_ideal.map((o) => o.rel)));
+    K.v_optexact = sci(V.opt_real_exact_worst);
+    const ap = V.opt_curves.map((c) => c.err_approx);
+    K.v_optapprox = pct(Math.min(...ap), 1).replace(' %', '') + '–' + pct(Math.max(...ap), 1);
+    K.v_odrep = sci(Math.max(...V.od_reproduce.map((r) => r.err)));
+    K.v_odres = sci(V.od_residual.worst); K.v_odn = String(V.od_residual.n);
+    K.v_atm = sci(Math.max(...V.atmosphere.map((a) => a.rel)));
+    const js = V.js_check;
+    K.js_design = js.ran ? sci(Math.max(js.worst_design, js.worst_station)) : 'not run';
+    K.js_off = js.ran ? sci(js.worst_offdesign) : 'not run';
+    K.js_n = js.ran ? String(js.n_offdesign_points) : '0';
+    const ms = V.mattingly_style;
+    K.ms_Fs = fx(ms.Fs, 1); K.ms_Fsl = fx(ms.Fs_lbf, 2); K.ms_S = fx(ms.S_lb, 3); K.ms_Si = fx(ms.S_ideal, 3);
+    const bb = V.burner_bias.map((b) => b.excess);
+    K.bb_range = pct(Math.min(...bb), 1).replace(' %', '') + '–' + pct(Math.max(...bb), 1);
+    K.v_airpoly = pct(Math.max(...V.burner_bias.map((b) => Math.abs(b.air_poly_vs_nasa))), 2);
+    K.v_janaf = pct(V.thermo.janaf_worst, 1);
+    K.v_inv = sci(V.thermo.inversion_worst);
+    K.eps_pct = pct(V.thermo.eps_cool, 0); K.eps_frac = fx(V.thermo.eps_cool, 2);
+    K.ms_Sv = fx(ms.S_varcp, 3);
+    K.dS_gas = pct(1 - cfm.model_steps[1].S_lb / cfm.model_steps[0].S_lb, 1);
+    K.cfm_gap = pct((cfm.public.tsfc_range[0] - cfm.result.S_lb) / cfm.public.tsfc_range[0], 0);
+    // trades
+    const pen = T.install.penalty['1.0'];
+    K.cpen = fx(pen.c_pen, 1); K.cnac = fx(pen.c_nac, 1); K.cwt = fx(pen.c_wt, 1);
+    const cur = {}; T.install.curves.forEach((c) => (cur[c.mult] = c));
+    K.inst_opt = fx(cur[1].opt.alpha, 0); K.inst_pf = fx(cur[1].opt.pi_f, 2); K.inst_phi = pct(cur[1].opt.phi, 0);
+    K.inst_flat = fx(cur[1].flat_range[0], 1) + ' to ' + fx(cur[1].flat_range[1], 1);
+    K.inst_half = fx(cur[0.5].opt.alpha, 0); K.inst_dbl = fx(cur[2].opt.alpha, 0);
+    K.inst_band = fx(cur[2].opt.alpha, 0) + '–' + fx(cur[0.5].opt.alpha, 0);
+    K.unin_opt = fx(T.split.uninstalled_opt.alpha, 0); K.unin_pf = fx(T.split.uninstalled_opt.pi_f, 2);
+    const ob = T.opt_bpr_vs_tt4, oo = T.opt_bpr_vs_opr;
+    K.ob_t0 = fx(ob.alpha_inst[0], 1); K.ob_t1 = fx(ob.alpha_inst[ob.alpha_inst.length - 1], 1);
+    K.dalpha_tt4 = fx((ob.alpha_inst[ob.alpha_inst.length - 1] - ob.alpha_inst[0]) / ((ob.Tt4[ob.Tt4.length - 1] - ob.Tt4[0]) / 100), 1);
+    const sp = T.split, ia = (a) => sp.alpha.indexOf(a);
+    K.eth_0 = fx(sp.eta_th[ia(0)], 2); K.eth_15 = fx(sp.eta_th[ia(15)], 2); K.ep_0 = fx(sp.eta_p[ia(0)], 2); K.ep_15 = fx(sp.eta_p[ia(15)], 2);
+    const lines = T.carpet.lines, tj = lines.find((l) => l.alpha === 0), l15 = lines.find((l) => l.alpha === 15);
+    K.tj_S = fx(tj.S_lb[0], 3); K.tj_Fs = fx(tj.Fs[0], 0); K.b15_S = fx(l15.opt.S_lb, 3); K.b15_Fs = fx(l15.opt.Fs, 0);
+    K.tj_to_15 = pct(1 - l15.opt.S_lb / tj.S_lb[0], 0); K.fs_ratio = fx(tj.Fs[0] / l15.opt.Fs, 0);
+    const tt = T.tt4_opr, i1500 = tt.Tt4.indexOf(1600), io20 = tt.OPR.indexOf(20), io60 = tt.OPR.indexOf(60), io40 = tt.OPR.indexOf(40);
+    K.opr_gain = pct(1 - tt.S_lb[i1500][io60] / tt.S_lb[i1500][io20], 0);
+    const sA = tt.S_lb[0][io40], sB = tt.S_lb[tt.Tt4.length - 1][io40], fA = tt.Fs[0][io40], fB = tt.Fs[tt.Tt4.length - 1][io40];
+    K.tt4_dS = (sB >= sA ? '+' : '−') + pct(Math.abs(sB / sA - 1), 1);
+    K.tt4_dFs = pct(fB / fA - 1, 0);
+    // installation diameter at optimum relative to BPR 11
+    const un = T.install.uninstalled, c1 = cur[1];
+    const D11 = c1.D[c1.alpha.indexOf(11)];
+    K.d_rel = fx(c1.opt.D / D11, 2); K.d_abs = fx(c1.opt.D / D11 * 1.98, 2);
+    // off-design
+    K.dtmax = fx(O.DTmax, 0);
+    K.cr_sls = O.engines.map((e) => pct(e.cruise_over_sls, 0)).join(', ');
+    K.sls_S = O.engines.map((e) => fx(e.S_sls, 2)).join(', ');
+    K.hook = O.engines.map((e) => pct(e.throttle_min.F_rel, 0)).join(', ');
+    bind();
+
+    // ---------- verification table ----------
+    const vrow = (a, b, e, ok) => `<tr><td>${a}</td><td>${b}</td><td class="num">${e}</td><td class="${ok ? 'pass' : 'fail'}">${ok ? 'pass' : 'fail'}</td></tr>`;
+    const worstIdeal = Math.max(...V.ideal.map((r) => r.worst));
+    $('vvTable').querySelector('tbody').innerHTML = [
+      vrow('Ideal turbofan limit (5 input sets)', 'closed form, Mattingly', sci(worstIdeal), worstIdeal < 1e-12),
+      vrow('Ideal turbojet limit', 'independent closed form', sci(V.turbojet.err), V.turbojet.err < 1e-12),
+      vrow('Whole-engine energy balance', 'first law', sci(Math.max(...V.balances.map((b) => b.energy))), true),
+      vrow('HP / LP spool power balances', 'η<sub>m</sub>W<sub>t</sub> = W<sub>c</sub>', sci(Math.max(...V.balances.map((b) => Math.max(b.hp, b.lp)))), true),
+      vrow('Optimum π<sub>f</sub>, ideal cycle', 'analytic τ<sub>f</sub>*', sci(Math.max(...V.opt_ideal.map((o) => o.rel))), true),
+      vrow('Optimum π<sub>f</sub>, real cycle', 'exact marginal condition', sci(V.opt_real_exact_worst), V.opt_real_exact_worst < 1e-5),
+      vrow('Optimum π<sub>f</sub>, real cycle', 'Mattingly V<sub>19</sub>/V<sub>9</sub> ≈ η<sub>f</sub>η<sub>tL</sub> (approx.)', pct(V.opt_real_worst, 1), V.opt_real_worst < 0.1),
+      vrow('Off-design at design point', 'on-design result', sci(Math.max(...V.od_reproduce.map((r) => r.err))), true),
+      vrow('Off-design matching residuals (' + V.od_residual.n + ' pts)', 'LP power, ṁ<sub>4.5</sub>, ṁ<sub>8</sub>', sci(V.od_residual.worst), V.od_residual.worst < 1e-10),
+      vrow('1976 atmosphere layer-base pressures', 'tabulated standard', sci(Math.max(...V.atmosphere.map((a) => a.rel))), true),
+      vrow('Species c<sub>p</sub>, s°, ΔH (N<sub>2</sub>, O<sub>2</sub>, Ar, CO<sub>2</sub>, H<sub>2</sub>O)', 'JANAF tables', pct(V.thermo.janaf_worst, 2), V.thermo.janaf_worst < 3e-3),
+      vrow('T(h), T(s°) inversion; continuity at 1000 K', 'round trip', sci(V.thermo.inversion_worst), V.thermo.inversion_worst < 1e-12),
+      vrow('Air Δh across burner (T<sub>t3</sub>→T<sub>t4</sub>)', 'independent cubic c<sub>p</sub>(T) fit', pct(Math.max(...V.burner_bias.map((b) => Math.abs(b.air_poly_vs_nasa))), 2), true),
+      vrow('JS port vs Python (Node)', 'Python results', js.ran ? sci(Math.max(js.worst_design, js.worst_station, js.worst_offdesign)) : 'not run', js.ran),
+    ].join('');
+
+    // ---------- inputs & results tables ----------
+    const ft = (m) => Math.round(m / FTm).toLocaleString('en-US');
+    const inRows = [
+      ['Flight condition', (c) => 'M ' + c.inputs.M0 + ' / ' + ft(c.inputs.alt) + ' ft', 'chosen cruise point'],
+      ['Bypass ratio α', (c) => c.inputs.alpha, 'public spec (≈)'],
+      ['Public BPR', (c) => c.public.BPR, 'manufacturer spec'],
+      ['OPR (π<sub>cL</sub>·π<sub>cH</sub>)', (c) => fx(c.inputs.pi_cL * c.inputs.pi_cH, 1), 'public take-off OPR (≈), assumed at cruise'],
+      ['Public OPR', (c) => c.public.OPR, 'manufacturer spec'],
+      ['π<sub>cL</sub> / π<sub>cH</sub> split', (c) => fx(c.inputs.pi_cL, 2) + ' / ' + fx(c.inputs.pi_cH, 1), 'assumed'],
+      ['Fan pressure ratio π<sub>f</sub>', (c) => c.inputs.pi_f, 'estimate within public range: ' ],
+      ['Public fan PR', (c) => c.public.fanPR, 'public / estimate'],
+      ['T<sub>t4</sub> [K]', (c) => c.inputs.Tt4 + ' ± ' + C.TT4_BAND, 'assumed (combustor exit, cruise)'],
+      ['e<sub>f</sub> / e<sub>cL</sub> / e<sub>cH</sub>', (c) => [c.inputs.e_f, c.inputs.e_cL, c.inputs.e_cH].join(' / '), 'assumed, technology level'],
+      ['e<sub>tH</sub> / e<sub>tL</sub>', (c) => [c.inputs.e_tH, c.inputs.e_tL].join(' / '), 'assumed, technology level'],
+      ['π<sub>d,max</sub> / π<sub>b</sub> / π<sub>n</sub>', (c) => [c.inputs.pi_d_max, c.inputs.pi_b, c.inputs.pi_n].join(' / '), 'assumed, textbook-typical'],
+      ['η<sub>b</sub> / η<sub>m</sub>', (c) => c.inputs.eta_b + ' / ' + c.inputs.eta_mH, 'assumed'],
+      ['h<sub>PR</sub> [MJ/kg]', (c) => fx(c.inputs.hPR / 1e6, 1), 'Jet-A lower heating value'],
+      ['Cooling air ε (of core flow)', (c) => fx(c.inputs.eps_cool, 2), 'assumed'],
+      ['Gas model', (c) => c.inputs.thermo === 'varcp' ? 'NASA poly., CH<sub>1.92</sub>' : 'two-gas', 'NASA TM-4513 / GRI-Mech 3.0 data'],
+      ['Sizing aircraft', (c) => c.sizing ? `${c.sizing.aircraft.label}: ${fx(c.sizing.aircraft.mass / 1000, 0)} t, L/D ${c.sizing.aircraft.LoD}` : '—', 'assumed'],
+      ['Public fan diameter', (c) => c.public.fan_D_label || '—', 'manufacturer spec'],
+    ];
+    const inT = $('inTable');
+    inT.querySelector('thead').innerHTML = '<tr><th>Parameter</th>' + C.cases.map((c) => `<th>${c.name}</th>`).join('') + '<th>Source type</th></tr>';
+    inT.querySelector('tbody').innerHTML = inRows.map(([n, f, s]) =>
+      `<tr><td>${n}</td>${C.cases.map((c) => `<td class="num">${f(c)}</td>`).join('')}<td>${s.replace(/: $/, '')}</td></tr>`).join('');
+
+    const resRows = [
+      ['TSFC [lb/(lbf·h)]', (c) => fx(c.result.S_lb, 3), true],
+      ['TSFC at T<sub>t4</sub> ∓ ' + C.TT4_BAND + ' K', (c) => fx(c.band.S_lb[0], 3) + '–' + fx(c.band.S_lb[1], 3)],
+      ['TSFC [mg/(N·s)]', (c) => fx(c.result.S_mg, 2)],
+      ['Public cruise TSFC', (c) => c.public.tsfc_range ? '≈' + c.public.tsfc_range.join('–') : (c.public.improvement ? '≈15 % below CFM56 (claim)' : '—')],
+      ['Specific thrust F/ṁ<sub>0</sub> [N·s/kg]', (c) => fx(c.result.Fs, 1)],
+      ['Fuel–air ratio f (per core air) / f<sub>b</sub> (burner)', (c) => fx(c.result.f, 4) + ' / ' + fx(c.result.f_b, 4)],
+      ['η<sub>th</sub> / η<sub>p</sub> / η<sub>o</sub>', (c) => [c.result.eta_th, c.result.eta_p, c.result.eta_o].map((v) => fx(v, 3)).join(' / ')],
+      ['V<sub>9</sub> / V<sub>19</sub> [m/s] (choked?)', (c) => fx(c.result.V9, 0) + (c.result.core_choked ? '*' : '') + ' / ' + fx(c.result.V19, 0) + (c.result.fan_choked ? '*' : '')],
+      ['V<sub>19</sub>/V<sub>9</sub>', (c) => fx(c.V19_V9, 3)],
+      ['TSFC-optimal π<sub>f</sub> (TSFC)', (c) => c.key === 'f100' ? 'none below 8' : fx(c.opt.pi_f, 2) + ' (' + fx(c.opt.S_lb, 3) + ')'],
+      ['Ideal cycle, same inputs: TSFC', (c) => fx(c.ideal.S_lb, 3)],
+      ['Real turbojet, same core: TSFC', (c) => fx(c.turbojet.S_lb, 3)],
+      ['Cruise thrust / engine [kN]', (c) => c.sizing ? fx(c.sizing.F_cruise / 1e3, 1) : '—'],
+      ['Model fan dia. [m] / public', (c) => c.sizing ? fx(c.sizing.D_fan, 2) + ' / ' + fx(c.sizing.D_public, 2) + ' (' + pct(c.sizing.ratio, 0) + ')' : '—'],
+    ];
+    const sT = $('stepTable');
+    sT.querySelector('thead').innerHTML = '<tr><th>Model</th>' + C.cases.map((c) => `<th>${c.name}</th>`).join('') + '</tr>';
+    const stepNames = ['v1: two-gas (Mattingly modified cycle), no cooling, v1 Tt4', '+ variable cp(T, f) enthalpy-based burner, same Tt4',
+      '+ ' + pct(V.thermo.eps_cool, 0) + ' cooling air, same Tt4', 'v2: + Tt4 raised 100 K to combustor-exit value'];
+    sT.querySelector('tbody').innerHTML = stepNames.map((n, j) => `<tr><td>${n}</td>${C.cases.map((c) =>
+      `<td class="num${j === 3 ? ' hl' : ''}">${fx(c.model_steps[j].S_lb, 3)}</td>`).join('')}</tr>`).join('');
+    const rT = $('resTable');
+    rT.querySelector('thead').innerHTML = '<tr><th>Quantity</th>' + C.cases.map((c) => `<th>${c.name}</th>`).join('') + '</tr>';
+    rT.querySelector('tbody').innerHTML = resRows.map(([n, f, hl]) =>
+      `<tr><td>${n}</td>${C.cases.map((c) => `<td class="num${hl ? ' hl' : ''}">${f(c)}</td>`).join('')}</tr>`).join('') +
+      `<tr><td colspan="${C.cases.length + 1}" style="white-space:normal;font-size:12.5px;color:var(--ink-3)">* choked convergent nozzle (exit Mach 1, pressure thrust). F100-class: no interior TSFC optimum in π<sub>f</sub> before the turbine runs out of work.</td></tr>`;
+
+    // optimum BPR table
+    $('obTable').querySelector('tbody').innerHTML =
+      ob.Tt4.map((t, j) => `<tr><td>T<sub>t4</sub> = ${t} K, OPR 40</td><td class="num">${fx(ob.alpha_inst[j], 1)}</td><td class="num">${fx(ob.S_inst[j], 3)}</td><td class="num">${fx(ob.alpha_unin[j], 0)}</td></tr>`).join('') +
+      oo.OPR.map((o, j) => `<tr><td>OPR = ${o}, T<sub>t4</sub> 1600 K</td><td class="num">${fx(oo.alpha_inst[j], 1)}</td><td class="num">${fx(oo.S_inst[j], 3)}</td><td class="num">${fx(oo.alpha_unin[j], 0)}</td></tr>`).join('');
+
+    // ---------- figures ----------
+    const TSFC = 'TSFC [lb/(lbf·h)]';
+    // Fig 1
+    const t1 = [];
+    V.opt_curves.forEach((c, k) => {
+      t1.push({ x: c.pf, y: c.S_ideal, mode: 'lines', line: { color: S(k), dash: 'dash', width: 1.5 }, name: 'ideal, α=' + c.alpha, legendgroup: 'g' + k });
+      t1.push({ x: c.pf, y: c.S_real, mode: 'lines', line: { color: S(k), width: 2.2 }, name: 'real, α=' + c.alpha, legendgroup: 'g' + k });
+      t1.push({ x: [c.pf_opt_ideal_an], y: [c.S_opt_ideal], mode: 'markers', marker: { color: 'rgba(0,0,0,0)', size: 10, line: { color: S(k), width: 2 } }, showlegend: false, hovertemplate: 'analytic ideal optimum π<sub>f</sub>=%{x:.4f}<extra></extra>' });
+      t1.push({ x: [c.pf_opt_real], y: [c.S_opt_real], mode: 'markers', marker: { color: S(k), size: 9 }, showlegend: false, hovertemplate: 'real optimum π<sub>f</sub>=%{x:.3f}<extra></extra>' });
+    });
+    PR.plot('figOpt', t1, { xaxis: { title: 'fan pressure ratio π_f' }, yaxis: { title: TSFC, range: [0.3, 0.8] }, legend: { font: { size: 11 } } });
+
+    // Fig 2 T-s
+    const tsTr = [];
+    [[cfm, 0], [leap, 1]].forEach(([c, k]) => {
+      tsTr.push({ x: pts(c.ts.core, 0), y: pts(c.ts.core, 1), mode: 'lines', line: { color: S(k), width: 2.2 }, name: c.name + ' core' });
+      tsTr.push({ x: pts(c.ts.bypass, 0), y: pts(c.ts.bypass, 1), mode: 'lines', line: { color: S(k), width: 2, dash: 'dot' }, name: c.name + ' bypass' });
+      const idx = { '0': 0, '2': 2, '2.5': 14, '3': 26, '4': 38, '4.4': 50, '5': 63, '9': 64 };
+      tsTr.push({ x: Object.values(idx).map((j) => c.ts.core[j][0]), y: Object.values(idx).map((j) => c.ts.core[j][1]), mode: 'markers+text', text: Object.keys(idx), textposition: k ? 'bottom right' : 'top left', textfont: { size: 10, color: S(k) }, marker: { color: S(k), size: 5 }, showlegend: false, hoverinfo: 'skip' });
+    });
+    tsTr.push({ x: pts(cfm.ts.ambient, 0), y: pts(cfm.ts.ambient, 1), mode: 'lines', line: { color: PR.css('--ink-3'), dash: 'dash', width: 1 }, name: 'P₀ isobar (CFM)' });
+    PR.plot('figTS', tsTr, { xaxis: { title: 's − s₀ [J/(kg·K)]' }, yaxis: { title: 'T [K]' }, legend: { orientation: 'v', x: 0.02, y: 0.98, xanchor: 'left', yanchor: 'top', font: { size: 10.5 } } });
+
+    // Fig 3 audit
+    const labels = cfm.audit.map((a) => a.label);
+    PR.plot('figAudit', [
+      { type: 'bar', orientation: 'h', y: labels, x: cfm.audit.map((a) => a.S_lb), name: cfm.name, marker: { color: S(0) } },
+      { type: 'bar', orientation: 'h', y: labels, x: leap.audit.map((a) => a.S_lb), name: leap.name, marker: { color: S(1) } },
+    ], { barmode: 'group', xaxis: { title: TSFC, range: [0.35, 0.7] }, yaxis: { autorange: 'reversed', tickfont: { size: 10.5 } }, margin: { l: 10 } });
+
+    // Fig 4 carpet
+    const ct = [];
+    lines.forEach((L, k) => {
+      if (L.alpha === 0) { ct.push({ x: L.Fs, y: L.S_lb, mode: 'markers', marker: { size: 10, symbol: 'diamond', color: PR.css('--ink') }, name: 'turbojet (α=0)' }); return; }
+      ct.push({ x: L.Fs, y: L.S_lb, mode: 'lines', line: { color: S(k % 6), width: 1.8 }, name: 'α=' + L.alpha, hovertemplate: 'α=' + L.alpha + '<br>F/ṁ=%{x:.0f}<br>TSFC=%{y:.3f}<extra></extra>' });
+    });
+    T.carpet.cross.forEach((Cc) => ct.push({ x: Cc.Fs, y: Cc.S_lb, mode: 'lines', line: { color: PR.css('--ink-3'), width: 1, dash: 'dash' }, showlegend: false, hovertemplate: 'π_f=' + Cc.pi_f + '<extra></extra>' }));
+    T.carpet.cross.forEach((Cc) => { const j = Cc.alpha.indexOf(3); if (j < 0) return; ct.push({ x: [Cc.Fs[j]], y: [Cc.S_lb[j]], mode: 'text', text: ['π_f ' + Cc.pi_f], textposition: 'top right', textfont: { size: 10, color: PR.css('--ink-3') }, showlegend: false, hoverinfo: 'skip' }); });
+    const optL = lines.filter((l) => l.opt);
+    ct.push({ x: optL.map((l) => l.opt.Fs), y: optL.map((l) => l.opt.S_lb), mode: 'lines+markers', line: { color: PR.css('--ink'), width: 1.2 }, marker: { size: 7, color: PR.css('--ink') }, name: 'optimum π_f' });
+    PR.plot('figCarpet', ct, { xaxis: { title: 'specific thrust F/ṁ₀ [N·s/kg]', range: [0, 800] }, yaxis: { title: TSFC, range: [0.45, 1.2] }, legend: { font: { size: 11 } } });
+
+    // Fig 5
+    PR.plot('figSplit', [
+      { x: sp.alpha, y: sp.eta_th, mode: 'lines', name: 'η_th thermal', line: { color: S(0), width: 2.2 } },
+      { x: sp.alpha, y: sp.eta_p, mode: 'lines', name: 'η_p propulsive', line: { color: S(1), width: 2.2 } },
+      { x: sp.alpha, y: sp.eta_o, mode: 'lines', name: 'η_o overall', line: { color: S(2), width: 2.2 } },
+    ], { xaxis: { title: 'bypass ratio α' }, yaxis: { title: 'efficiency', range: [0, 1] } });
+    PR.plot('figSplit2', [
+      { x: sp.alpha, y: sp.pi_f.map((v, j) => (sp.alpha[j] === 0 || v > 7.9) ? null : v), mode: 'lines', name: 'optimal π_f', line: { color: S(3), width: 2.2 } },
+      { x: sp.alpha, y: sp.Fs, mode: 'lines', name: 'F/ṁ₀ [N·s/kg]', yaxis: 'y2', line: { color: S(4), width: 2.2 } },
+    ], { xaxis: { title: 'bypass ratio α' }, yaxis: { title: 'optimal π_f', rangemode: 'tozero' }, yaxis2: { title: 'F/ṁ₀ [N·s/kg]', overlaying: 'y', side: 'right', showgrid: false, rangemode: 'tozero' }, margin: { r: 64 } });
+
+    // Fig 6
+    PR.plot('figT4a', tt.Tt4.map((t, k) => ({ x: tt.OPR, y: tt.S_lb[k], mode: 'lines', name: 'Tt4 ' + t + ' K', line: { color: S(k), width: 2 } })),
+      { xaxis: { title: 'OPR' }, yaxis: { title: TSFC } });
+    PR.plot('figT4b', tt.Tt4.map((t, k) => ({ x: tt.OPR, y: tt.Fs[k], mode: 'lines', name: 'Tt4 ' + t + ' K', line: { color: S(k), width: 2 } })),
+      { xaxis: { title: 'OPR' }, yaxis: { title: 'F/ṁ₀ [N·s/kg]' } });
+
+    // Fig 7 off-design
+    const sel = $('odSel');
+    sel.innerHTML = O.engines.map((e, j) => `<option value="${j}">${e.name}</option>`).join('');
+    function drawOD() {
+      const e = O.engines[+sel.value];
+      PR.plot('figLapse', e.lapse_alt.map((L, k) => ({ x: L.alt.map((h) => h / FTm / 1000), y: L.F_rel, mode: 'lines', name: 'M ' + L.M0, line: { color: S(k), width: 2 } })),
+        { xaxis: { title: 'pressure altitude [kft]' }, yaxis: { title: 'F / F_SLS' } });
+      PR.plot('figLapseS', e.lapse_alt.map((L, k) => ({ x: L.alt.map((h) => h / FTm / 1000), y: L.S_lb, mode: 'lines', name: 'M ' + L.M0, line: { color: S(k), width: 2 } })),
+        { xaxis: { title: 'pressure altitude [kft]' }, yaxis: { title: TSFC } });
+      PR.plot('figMach', e.lapse_mach.map((L, k) => ({ x: L.M0, y: L.F_rel, mode: 'lines', name: fx(L.alt / FTm / 1000, 0) + ' kft', line: { color: S(k), width: 2 } })),
+        { xaxis: { title: 'flight Mach M₀' }, yaxis: { title: 'F / F_SLS' } });
+    }
+    sel.addEventListener('change', drawOD); drawOD();
+    PR.plot('figHook', O.engines.map((e, k) => ({ x: e.throttle.F_rel, y: e.throttle.S_lb, mode: 'lines', name: e.name, line: { color: S(k), width: 2 }, text: e.throttle.Tt4, hovertemplate: 'Tt4=%{text} K<br>F/F_des=%{x:.2f}<br>TSFC=%{y:.3f}<extra></extra>' })),
+      { xaxis: { title: 'F / F_design (cruise)' }, yaxis: { title: TSFC } });
+
+    // Fig 8 installation
+    const it = [{ x: un.alpha, y: un.S_lb, mode: 'lines', name: 'uninstalled', line: { color: PR.css('--ink-3'), width: 2 } }];
+    T.install.curves.forEach((c, k) => {
+      it.push({ x: c.alpha, y: c.S_inst, mode: 'lines', name: 'installed, penalty ×' + c.mult, line: { color: S(k), width: 2.2 } });
+      it.push({ x: [c.opt.alpha], y: [c.opt.S_inst], mode: 'markers', marker: { color: S(k), size: 10, symbol: 'star' }, showlegend: false, hovertemplate: 'optimum α=%{x:.1f}<extra></extra>' });
+    });
+    PR.plot('figInst', it, { xaxis: { title: 'bypass ratio α' }, yaxis: { title: TSFC } });
+    PR.plot('figDia', [
+      { x: c1.alpha, y: c1.D.map((d) => d / D11), mode: 'lines', name: 'D / D(α=11)', line: { color: S(0), width: 2.2 } },
+      { x: c1.alpha, y: c1.phi_nac.map((v) => 100 * v), mode: 'lines', name: 'φ nacelle [%]', yaxis: 'y2', line: { color: S(1), width: 2, dash: 'dot' } },
+      { x: c1.alpha, y: c1.phi_wt.map((v) => 100 * v), mode: 'lines', name: 'φ weight [%]', yaxis: 'y2', line: { color: S(2), width: 2.2, dash: 'dash' } },
+    ], { xaxis: { title: 'bypass ratio α' }, yaxis: { title: 'relative fan diameter' }, yaxis2: { title: 'penalty φ [% of thrust]', overlaying: 'y', side: 'right', showgrid: false, range: [0, 30] }, margin: { r: 64 } });
+
+    initTool(C, T);
+  }
+
+  // ======================= interactive tool =======================
+  function initTool(C, T) {
+    const box = $('toolBox');
+    const presets = {};
+    C.cases.forEach((c) => (presets[c.key] = { label: c.name, inp: Object.assign({}, c.inputs) }));
+    presets.base = { label: 'Trade-study baseline (OPR 40, Tt4 1600 K)', inp: Object.assign({}, T.base) };
+    const ps = $('preset');
+    ps.innerHTML = Object.keys(presets).map((k) => `<option value="${k}">${presets[k].label}</option>`).join('');
+    let inp = null, dT = 150;
+    const sliders = ['alpha', 'pi_f', 'opr', 'Tt4', 'M0', 'alt', 'eps', 'pi_cL', 'e_f', 'e_cL', 'e_cH', 'e_tH', 'e_tL', 'pi_b', 'pi_d_max', 'pi_n', 'eta_b', 'eta_m'];
+    const fmt = { alpha: 1, pi_f: 2, opr: 1, Tt4: 0, M0: 2, alt: 0, eps: 3, pi_cL: 2, e_f: 3, e_cL: 3, e_cH: 3, e_tH: 3, e_tL: 3, pi_b: 3, pi_d_max: 3, pi_n: 3, eta_b: 3, eta_m: 3 };
+    function toSliders() {
+      const v = { alpha: inp.alpha, pi_f: inp.pi_f, opr: inp.pi_cL * inp.pi_cH, Tt4: inp.Tt4, M0: inp.M0, alt: Math.round(inp.alt / FTm / 500) * 500, eps: inp.eps_cool,
+        pi_cL: inp.pi_cL, e_f: inp.e_f, e_cL: inp.e_cL, e_cH: inp.e_cH, e_tH: inp.e_tH, e_tL: inp.e_tL, pi_b: inp.pi_b, pi_d_max: inp.pi_d_max,
+        pi_n: inp.pi_n, eta_b: inp.eta_b, eta_m: inp.eta_mH };
+      sliders.forEach((k) => { $(k).value = v[k]; });
+      $('nozzle').value = inp.core_nozzle; $('thermo').value = inp.thermo;
+      outputs();
+    }
+    function outputs() {
+      sliders.forEach((k) => { const el = $('o_' + k); if (el) el.textContent = k === 'alt' ? Number($(k).value).toLocaleString('en-US') : k === 'eps' ? (100 * $(k).value).toFixed(1) : Number($(k).value).toFixed(fmt[k]); });
+      $('o_dT').textContent = $('dT').value;
+    }
+    function fromSliders() {
+      const g = (k) => parseFloat($(k).value);
+      inp.alpha = g('alpha'); inp.pi_f = g('pi_f'); inp.Tt4 = g('Tt4'); inp.M0 = g('M0'); inp.alt = g('alt') * FTm;
+      inp.pi_cL = Math.min(g('pi_cL'), g('opr')); inp.pi_cH = g('opr') / inp.pi_cL;
+      ['e_f', 'e_cL', 'e_cH', 'e_tH', 'e_tL', 'pi_b', 'pi_d_max', 'eta_b'].forEach((k) => (inp[k] = g(k)));
+      inp.pi_n = inp.pi_fn = g('pi_n'); inp.eta_mH = inp.eta_mL = g('eta_m');
+      inp.core_nozzle = inp.fan_nozzle = $('nozzle').value; inp.thermo = $('thermo').value; inp.eps_cool = g('eps');
+      inp.T0 = null; inp.P0 = null;
+      dT = g('dT');
+    }
+    function loadPreset() {
+      const p = presets[ps.value];
+      inp = Object.assign({}, TF.DEFAULTS, p.inp);
+      toSliders(); schedule();
+    }
+    let pending = false;
+    function schedule() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; compute(); }); }
+    const stNames = { '0': 'free stream (total)', '2': 'fan face', '13': 'fan exit (bypass)', '19': 'fan nozzle', '2.5': 'LPC exit', '3': 'HPC exit (coolant off-take)', '4': 'burner exit', '4.4': 'HPT exit', '4.5': 'LPT inlet (after coolant mix)', '5': 'LPT exit', '9': 'core nozzle' };
+    function stat(v, u, l) { return `<div class="stat"><div class="v">${v}${u ? '<small>' + u + '</small>' : ''}</div><div class="l">${l}</div></div>`; }
+    function compute() {
+      const msg = $('toolMsg');
+      const r = TF.design(inp);
+      if (!r.valid) {
+        msg.textContent = 'No valid cycle: ' + (r.reason || 'specific thrust ≤ 0') + '. Lower π_f or α, or raise Tt4.';
+        $('readout').innerHTML = ''; return;
+      }
+      msg.textContent = '';
+      const id = TF.idealTurbofan(inp.M0, r.T0, 1.4, 1004, inp.hPR, inp.Tt4, inp.pi_cL * inp.pi_cH, inp.pi_f, inp.alpha);
+      $('readout').innerHTML = [
+        stat(fx(r.S_lb, 4), 'lb/lbf·h', 'TSFC (' + fx(r.S_mg, 2) + ' mg/N·s)'),
+        stat(fx(r.Fs, 1), 'N·s/kg', 'specific thrust F/ṁ₀'),
+        stat(fx(r.eta_th, 3), '', 'thermal efficiency'),
+        stat(fx(r.eta_p, 3), '', 'propulsive efficiency'),
+        stat(fx(r.eta_o, 3), '', 'overall efficiency'),
+        stat(fx(r.f, 4), '', 'fuel–air ratio f'),
+        stat(fx(r.V9, 0) + ' / ' + fx(r.V19, 0), 'm/s', 'V₉ / V₁₉' + (r.core_choked || r.fan_choked ? ' (' + [r.core_choked ? 'core' : '', r.fan_choked ? 'fan' : ''].filter(Boolean).join(', ') + ' choked)' : '')),
+        stat(isFinite(id.S_lb) ? fx(id.S_lb, 4) : '—', 'lb/lbf·h', 'ideal-cycle TSFC, same α, π_f, OPR, Tt4'),
+      ].join('');
+      const st = r.stations;
+      $('stTable').querySelector('tbody').innerHTML = ['0', '2', '13', '19', '2.5', '3', '4', '4.4', '4.5', '5', '9'].map((k) =>
+        `<tr><td>${k}</td><td>${stNames[k]}</td><td class="num">${fx(st[k].Tt, 1)}</td><td class="num">${fx(st[k].Pt / 1000, 2)}</td></tr>`).join('') +
+        `<tr><td>9 static</td><td>core exit, M₉ = ${fx(r.M9, 3)}</td><td class="num">${fx(r.T9, 1)}</td><td class="num">${fx(r.P9 / 1000, 2)}</td></tr>` +
+        (inp.alpha > 0 ? `<tr><td>19 static</td><td>fan exit, M₁₉ = ${fx(r.M19, 3)}</td><td class="num">${fx(r.T19, 1)}</td><td class="num">${fx(r.P19 / 1000, 2)}</td></tr>` : '');
+      // T-s
+      const ts = TF.tsPath(r);
+      const tr = [
+        { x: pts(ts.core, 0), y: pts(ts.core, 1), mode: 'lines', name: 'core', line: { color: S(0), width: 2.2 } },
+        { x: pts(ts.ambient, 0), y: pts(ts.ambient, 1), mode: 'lines', name: 'P₀ isobar', line: { color: PR.css('--ink-3'), dash: 'dash', width: 1 } },
+      ];
+      if (inp.alpha > 0) tr.splice(1, 0, { x: pts(ts.bypass, 0), y: pts(ts.bypass, 1), mode: 'lines', name: 'bypass', line: { color: S(1), width: 2, dash: 'dot' } });
+      const idx = { '0': 0, '2': 2, '2.5': 14, '3': 26, '4': 38, '4.4': 50, '5': 63, '9': 64 };
+      tr.push({ x: Object.values(idx).map((j) => ts.core[j][0]), y: Object.values(idx).map((j) => ts.core[j][1]), mode: 'markers+text', text: Object.keys(idx), textposition: 'top left', textfont: { size: 10, color: S(0) }, marker: { color: S(0), size: 5 }, showlegend: false, hoverinfo: 'skip' });
+      PR.plot('tTS', tr, { xaxis: { title: 's − s₀ [J/(kg·K)]' }, yaxis: { title: 'T [K]' }, legend: { orientation: 'v', x: 0.02, y: 0.98, xanchor: 'left', yanchor: 'top' } });
+      // pi_f sweep
+      if (inp.alpha > 0) {
+        const hi = TF.piFMax(inp), xs = [], ys = [];
+        for (let k = 0; k <= 80; k++) { const pf = 1.05 + (Math.min(hi, 6) - 1.05) * k / 80; const q = TF.design(Object.assign({}, inp, { pi_f: pf })); if (q.valid) { xs.push(pf); ys.push(q.S_lb); } }
+        const o = TF.optimumFanPR(inp, 1e-6);
+        PR.plot('tSweep', [
+          { x: xs, y: ys, mode: 'lines', name: 'TSFC(π_f)', line: { color: S(1), width: 2.2 } },
+          { x: [inp.pi_f], y: [r.S_lb], mode: 'markers', name: 'current', marker: { color: S(0), size: 10 } },
+          { x: [o.pi_f], y: [o.result.S_lb], mode: 'markers', name: 'optimum ' + fx(o.pi_f, 3), marker: { color: 'rgba(0,0,0,0)', size: 12, line: { color: S(2), width: 2 } } },
+        ], { xaxis: { title: 'fan pressure ratio π_f' }, yaxis: { title: 'TSFC [lb/(lbf·h)]' } });
+      } else {
+        PR.plot('tSweep', [], { xaxis: { title: 'fan pressure ratio π_f' }, yaxis: { title: 'TSFC [lb/(lbf·h)]' }, annotations: [{ text: 'turbojet: no bypass stream', showarrow: false, xref: 'paper', yref: 'paper', x: 0.5, y: 0.5 }] });
+      }
+      // off-design
+      offDesign(r);
+    }
+    function offDesign(r) {
+      const lay = { xaxis: { title: 'pressure altitude [kft]' } };
+      if (inp.core_nozzle !== 'convergent' || inp.alpha <= 0) {
+        const note = inp.alpha <= 0 ? 'off-design panel needs α > 0' : 'off-design needs convergent (fixed-throat) nozzles';
+        PR.plot('tLapse', [], Object.assign({ yaxis: { title: 'F / F_SLS' }, annotations: [{ text: note, showarrow: false, xref: 'paper', yref: 'paper', x: 0.5, y: 0.5 }] }, lay));
+        PR.plot('tLapseS', [], Object.assign({ yaxis: { title: 'TSFC' } }, lay));
+        return;
+      }
+      let E;
+      try { E = TF.Engine(inp, 20000); } catch (e) { return; }
+      const sls = E.operate(0, 0, TF.schedule(E.inp, 0, 0, dT));
+      if (!sls.valid) return;
+      const Ms = [0, 0.3, 0.5, inp.M0].filter((m, j, a) => a.indexOf(m) === j && m <= 0.95);
+      const A = [], B = [];
+      Ms.forEach((M, k) => {
+        const x = [], y = [], z = [];
+        for (let j = 0; j <= 26; j++) {
+          const h = j * 500 * 1.0;
+          const o = E.operate(M, h * 1.0, TF.schedule(E.inp, M, h, dT));
+          if (o.valid) { x.push(h / FTm / 1000); y.push(o.F / sls.F); z.push(o.S_lb); }
+        }
+        const nm = 'M ' + fx(M, 2) + (M === inp.M0 ? ' (design)' : '');
+        A.push({ x, y, mode: 'lines', name: nm, line: { color: S(k), width: 2 } });
+        B.push({ x, y: z, mode: 'lines', name: nm, line: { color: S(k), width: 2 } });
+      });
+      PR.plot('tLapse', A, Object.assign({ yaxis: { title: 'F / F_SLS' } }, lay));
+      PR.plot('tLapseS', B, Object.assign({ yaxis: { title: 'TSFC [lb/(lbf·h)]' } }, lay));
+    }
+
+    sliders.concat(['dT']).forEach((k) => $(k).addEventListener('input', () => { outputs(); fromSliders(); schedule(); }));
+    $('nozzle').addEventListener('change', () => { fromSliders(); schedule(); });
+    $('thermo').addEventListener('change', () => { fromSliders(); schedule(); });
+    ps.addEventListener('change', loadPreset);
+    $('bReset').addEventListener('click', loadPreset);
+    $('bAdv').addEventListener('click', () => { const on = box.classList.toggle('show-adv'); $('bAdv').setAttribute('aria-expanded', on); $('bAdv').textContent = on ? 'Hide component efficiencies' : 'Show component efficiencies'; });
+    $('bOpt').addEventListener('click', () => {
+      if (inp.alpha <= 0) return;
+      const o = TF.optimumFanPR(inp, 1e-7);
+      inp.pi_f = Math.min(5, o.pi_f); $('pi_f').value = inp.pi_f; outputs(); $('o_pi_f').textContent = o.pi_f.toFixed(3); schedule();
+    });
+    // live cross-check against the Python results
+    let worst = 0;
+    C.cases.forEach((c) => { const r = TF.design(c.inputs); ['Fs', 'S', 'f', 'eta_th', 'eta_p', 'V9', 'V19'].forEach((k) => { worst = Math.max(worst, Math.abs(r[k] - c.result[k]) / Math.abs(c.result[k])); }); });
+    $('liveCheck').innerHTML = 'Live check in this browser: the JS port reproduces the Python design-point results for all four case engines with maximum relative difference ' + sci(worst) + '.';
+    loadPreset();
+  }
+
+  // KaTeX
+  function renderMath() {
+    if (window.renderMathInElement) renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }], throwOnError: false });
+    else setTimeout(renderMath, 50);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderMath); else renderMath();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+/* ═══════════════════════════════════════════════════════════════
+   Propulsion Research Series — shared paper stylesheet
+   Used by every page under projects/propulsion/.
+   Dark by default (matches the projects iframe shell), light when
+   the OS asks for it.
+═══════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap');
+
+:root {
+  --bg:        #0b0b0d;
+  --paper:     #121215;
+  --raised:    #18181c;
+  --line:      rgba(255,255,255,0.09);
+  --line-2:    rgba(255,255,255,0.16);
+  --ink:       rgba(255,255,255,0.90);
+  --ink-2:     rgba(255,255,255,0.62);
+  --ink-3:     rgba(255,255,255,0.40);
+  --accent:    #ff7a2f;             /* exhaust orange */
+  --accent-bg: rgba(255,122,47,0.12);
+  --blue:      #4ea1ff;
+  --good:      #3ddc84;
+  --warn:      #ffb020;
+  --bad:       #ff5a5f;
+  /* categorical series for plots (plot.js reads these) */
+  --s1: #ff7a2f; --s2: #4ea1ff; --s3: #3ddc84; --s4: #c77dff; --s5: #ffd166; --s6: #ef476f;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans:  'DM Sans', -apple-system, system-ui, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, monospace;
+  --measure: 760px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:        #f4f2ee;
+    --paper:     #fffdf9;
+    --raised:    #f7f4ef;
+    --line:      rgba(20,16,12,0.10);
+    --line-2:    rgba(20,16,12,0.20);
+    --ink:       #1c1813;
+    --ink-2:     #5a524a;
+    --ink-3:     #8a8178;
+    --accent:    #c85200;
+    --accent-bg: rgba(200,82,0,0.09);
+    --blue:      #1f6fd1;
+    --good:      #16884a;
+    --warn:      #a86a00;
+    --bad:       #c7323a;
+    --s1: #c85200; --s2: #1f6fd1; --s3: #16884a; --s4: #8a3fd1; --s5: #b08900; --s6: #c7324f;
+    color-scheme: light;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── layout ─────────────────────────────────────────────────── */
+.wrap { width: min(var(--measure), calc(100% - 32px)); margin: 0 auto; }
+.wide { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+
+.series-bar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+}
+.series-bar .wide { display: flex; align-items: center; gap: 14px; height: 42px; }
+.series-bar a { color: var(--ink-2); text-decoration: none; }
+.series-bar a:hover { color: var(--accent); }
+.series-bar .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 2px; transform: rotate(45deg); flex: none; }
+.series-bar .spacer { flex: 1; }
+
+/* ── title block ────────────────────────────────────────────── */
+header.paper-head { padding: 56px 0 28px; border-bottom: 1px solid var(--line); }
+.kicker {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 14px;
+}
+h1 {
+  font-family: var(--sans); font-weight: 500; letter-spacing: -0.02em;
+  font-size: clamp(28px, 5vw, 42px); line-height: 1.12; margin: 0 0 16px;
+}
+.byline { font-family: var(--sans); font-size: 14px; color: var(--ink-2); margin: 0; }
+.byline b { color: var(--ink); font-weight: 500; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.chip {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+  padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 99px; color: var(--ink-2);
+  text-decoration: none;
+}
+a.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.abstract {
+  margin: 28px 0 0; padding: 20px 22px;
+  background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 6px;
+}
+.abstract h2 { margin-top: 0; }
+.abstract p { margin: 0; }
+
+/* key-result tiles */
+.results-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px; margin: 22px 0 0;
+}
+.stat {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+}
+.stat .v { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--ink); line-height: 1.2; }
+.stat .v small { font-size: 12px; color: var(--ink-3); margin-left: 3px; }
+.stat .l { font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.35; }
+
+/* ── body text ──────────────────────────────────────────────── */
+main { padding-bottom: 80px; }
+section { margin-top: 48px; }
+h2 {
+  font-family: var(--sans); font-weight: 500; font-size: 13px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-2); margin: 0 0 14px;
+}
+h2 .num { color: var(--accent); margin-right: 8px; font-family: var(--mono); }
+h3 { font-family: var(--sans); font-weight: 500; font-size: 19px; margin: 32px 0 8px; letter-spacing: -0.01em; }
+p { margin: 0 0 14px; }
+a { color: var(--blue); }
+strong { font-weight: 600; }
+ul, ol { padding-left: 22px; margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+:not(pre) > code { background: var(--raised); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+pre {
+  font-family: var(--mono); font-size: 13px; line-height: 1.55;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; overflow-x: auto; margin: 0 0 16px;
+}
+.eq { overflow-x: auto; margin: 10px 0 18px; padding: 4px 0; }
+/* KaTeX's hidden MathML copy is position:absolute; anchor it so it can't widen the page. */
+.eq, .katex { position: relative; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+.note {
+  font-family: var(--sans); font-size: 14.5px; color: var(--ink-2);
+  background: var(--raised); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin: 0 0 16px;
+}
+.note b { color: var(--ink); }
+.callout-warn { border-left: 3px solid var(--warn); }
+
+/* ── tables ─────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 14px; }
+caption { caption-side: top; text-align: left; padding: 10px 12px 0; font-size: 13px; color: var(--ink-2); }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 500; color: var(--ink-2); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; background: var(--paper); }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 13px; }
+tr:last-child td { border-bottom: 0; }
+.pass { color: var(--good); } .fail { color: var(--bad); } .marg { color: var(--warn); }
+
+/* ── figures ────────────────────────────────────────────────── */
+figure { margin: 24px 0 28px; }
+figure.bleed { width: min(1080px, calc(100vw - 32px)); position: relative; left: 50%; transform: translateX(-50%); }
+.plot {
+  width: 100%; height: 380px; background: var(--paper);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+.plot.tall { height: 460px; }
+.plot.short { height: 300px; }
+figcaption { font-family: var(--sans); font-size: 13.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
+figcaption b { color: var(--ink); font-weight: 500; }
+.fig-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+
+/* ── interactive tool panel ─────────────────────────────────── */
+.tool {
+  background: var(--paper); border: 1px solid var(--line-2); border-radius: 10px;
+  padding: 18px; margin: 20px 0;
+}
+.tool-head { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.tool-head::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 18px; margin-bottom: 14px; }
+.ctl { font-family: var(--sans); font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
+.ctl .row { display: flex; justify-content: space-between; gap: 8px; }
+.ctl output, .ctl .val { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+.ctl select, .ctl input[type=number] {
+  font: inherit; font-family: var(--mono); font-size: 13px; color: var(--ink);
+  background: var(--raised); border: 1px solid var(--line-2); border-radius: 6px; padding: 6px 8px;
+}
+.btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  color: #fff; background: var(--accent); border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); }
+.btn:hover { filter: brightness(1.08); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 12px; }
+.readout .stat { padding: 9px 11px; }
+.readout .stat .v { font-size: 17px; }
+
+/* ── references / footer ────────────────────────────────────── */
+ol.refs { font-family: var(--sans); font-size: 14px; color: var(--ink-2); }
+ol.refs li { margin-bottom: 8px; }
+footer.paper-foot {
+  border-top: 1px solid var(--line); padding: 22px 0 40px;
+  font-family: var(--sans); font-size: 13px; color: var(--ink-3);
+}
+
+/* ── series hub cards ───────────────────────────────────────── */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 28px; }
+.card {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 20px;
+  color: inherit; text-decoration: none; transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card .kicker { margin: 0; }
+.card h3 { margin: 0; }
+.card p { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); margin: 0; }
+.card .finding { font-family: var(--sans); font-size: 13.5px; color: var(--ink); border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto; }
+
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  header.paper-head { padding-top: 36px; }
+  .plot { height: 300px; }
+  .plot.tall { height: 360px; }
+  th, td { padding: 7px 9px; }
+}

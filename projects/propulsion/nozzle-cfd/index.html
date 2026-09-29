@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quasi-1D Euler CFD of Rocket Nozzles · Propulsion Research No. 1 · Dulran</title>
+<meta name="description" content="A verified quasi-one-dimensional Euler solver (HLLC, MUSCL, SSP-RK3) for convergent-divergent rocket nozzles, used to track over-expansion, normal-shock back pressures and Summerfield separation risk for Merlin-, RS-25- and Raptor-class engines along an ascent through the 1976 US Standard Atmosphere.">
+<meta property="og:title" content="Quasi-1D Euler CFD of rocket nozzles: over-expansion and separation risk along an ascent">
+<meta property="og:description" content="Finite-volume nozzle solver verified against exact solutions (second-order convergence, sub-cell shock position), applied to three real engine classes with an in-browser port of the solver.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="../assets/paper.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  .tool canvas { display: block; width: 100%; height: 190px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; }
+  .tool .plot { height: 280px; }
+  .tool .plot.short { height: 200px; }
+  .tool .sub { font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); margin: 6px 0 12px; }
+  .ctl.hidden { display: none; }
+  .flag-ok { color: var(--good); } .flag-risk { color: var(--bad); } .flag-na { color: var(--ink-3); }
+  .ctl label.inline { flex-direction: row; align-items: center; gap: 8px; display: flex; }
+  td.c, th.c { text-align: center; }
+  .eqn-label { font-family: var(--sans); font-size: 13px; color: var(--ink-3); }
+  .katex-display { margin: 0.6em 0; }
+  td.wrapcell { white-space: normal; min-width: 260px; font-size: 13px; color: var(--ink-2); }
+  .tool .readout .stat .v { font-size: 15px; }
+</style>
+</head>
+<body>
+
+<nav class="series-bar">
+  <div class="wide">
+    <span class="dot"></span>
+    <a href="../../index.html" target="_top">← Projects</a>
+    <a href="../index.html">Propulsion Research Series</a>
+    <span class="spacer"></span>
+    <a href="https://github.com/Dula20000/website/tree/main/projects/propulsion/nozzle-cfd/code" target="_blank" rel="noopener">Code ↗</a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+<header class="paper-head">
+  <p class="kicker">Propulsion Research · No. 1</p>
+  <h1>Quasi-1D Euler CFD of rocket nozzles: shock position, over-expansion and separation risk along an ascent trajectory</h1>
+  <p class="byline"><b>Dulran</b> · September 2026</p>
+  <div class="meta-row">
+    <span class="chip">Finite volume · HLLC · MUSCL</span>
+    <span class="chip">SSP-RK3</span>
+    <span class="chip">Exact normal-shock-in-nozzle solution</span>
+    <span class="chip">US Standard Atmosphere 1976</span>
+    <span class="chip">Summerfield criterion</span>
+    <a class="chip" href="#tool">Interactive solver ↓</a>
+  </div>
+
+  <div class="abstract">
+    <h2>Abstract</h2>
+    <p>I wrote a quasi-one-dimensional Euler solver for convergent-divergent nozzles (cell-centred finite volumes, HLLC Riemann solver, van Albada-limited MUSCL reconstruction, third-order SSP Runge-Kutta, reservoir inflow and a back-pressure outflow that switches between subsonic and supersonic exits) and an exact solver for the same problem (isentropic area-Mach relation plus the normal shock in the divergent section). Against the exact solution the scheme converges at an observed order of <span data-v="sum.order_L1_M_finest" data-d="2"></span> in the L1 Mach error, conserves mass to round-off, and places a captured normal shock within <span data-v="sum.shock_err_cells_N200" data-d="2"></span> of a cell of the exact position. I then applied it to representative Merlin 1D-, RS-25- and Raptor-class sea-level nozzles (chamber pressure and expansion ratio from public sources, exhaust γ = 1.2) along a 0–50 km ascent. The inviscid normal shock would need a back pressure at least <span data-v="sum.min_pnse_over_pa" data-d="1"></span> times sea-level ambient to reach the exit plane of any of the three, so inviscid theory alone never predicts a shock inside these nozzles. The practical limit is flow separation, which a quasi-1D inviscid model cannot compute. I flag it with the empirical Summerfield criterion (p<sub>e</sub>/p<sub>a</sub> &lt; 0.4). The Merlin- and Raptor-class nozzles sit on the safe side at lift-off. The RS-25-class nozzle, at p<sub>e</sub>/p<sub>a</sub> ≈ <span data-v="E.rs25.pe_pa_sl" data-d="2"></span>, does not, even though it has more than twice the Merlin's chamber pressure.</p>
+  </div>
+
+  <div class="results-strip">
+    <div class="stat"><div class="v" data-v="sum.order_L1_M_finest" data-d="2"></div><div class="l">observed order of accuracy, L1 Mach error (N = 400 → 800)</div></div>
+    <div class="stat"><div class="v"><span data-v="sum.shock_err_cells_N200" data-d="2"></span><small>cells</small></div><div class="l">captured shock position error vs exact (N = 200)</div></div>
+    <div class="stat"><div class="v" data-v="E.rs25.pe_pa_sl" data-d="2"></div><div class="l">RS-25-class p<sub>e</sub>/p<sub>a</sub> at sea level (Summerfield flag below 0.4)</div></div>
+    <div class="stat"><div class="v"><span data-v="sum.min_pnse_over_pa" data-d="1"></span><small>× p<sub>SL</sub></small></div><div class="l">lowest back pressure (of the three engines) that puts an inviscid normal shock at the exit</div></div>
+  </div>
+</header>
+
+<!-- ============================================================ 1 -->
+<section id="motivation">
+  <h2><span class="num">1</span>Motivation</h2>
+  <p>A first-stage engine fires from sea level into near-vacuum. A larger expansion ratio ε = A<sub>e</sub>/A<sub>*</sub> gives more thrust at altitude. At lift-off, though, the exit pressure p<sub>e</sub> of a large nozzle falls well below ambient. An over-expanded nozzle loses pressure thrust, and if it is far enough over-expanded the boundary layer separates from the wall. The asymmetric separation line that results produces side loads, which have damaged nozzles and test stands. Designers therefore trade ε against chamber pressure p<sub>c</sub>: for a fixed ε, a higher p<sub>c</sub> raises p<sub>e</sub> in proportion.</p>
+  <p>This study builds the simplest CFD tool that can say something quantitative about that trade: a quasi-1D Euler solver, verified properly, plus a standard atmosphere. For each engine I ask four questions. How far over-expanded is the nozzle along the ascent? Where would an inviscid normal shock have to stand? At what altitude does p<sub>e</sub> = p<sub>a</sub>? And how much margin in ε or p<sub>c</sub> does each design have against a common empirical separation criterion?</p>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="method">
+  <h2><span class="num">2</span>Method</h2>
+  <h3>Governing equations</h3>
+  <p>For a duct of slowly varying area A(x), the quasi-1D Euler equations in conservation form are</p>
+  <div class="eq">$$\frac{\partial (\mathbf{Q}A)}{\partial t} + \frac{\partial (\mathbf{F}A)}{\partial x} = \mathbf{S},\qquad
+  \mathbf{Q}=\begin{pmatrix}\rho\\ \rho u\\ E\end{pmatrix},\;
+  \mathbf{F}=\begin{pmatrix}\rho u\\ \rho u^2+p\\ (E+p)u\end{pmatrix},\;
+  \mathbf{S}=\begin{pmatrix}0\\ p\,\dfrac{dA}{dx}\\ 0\end{pmatrix},$$</div>
+  <p>with \(E = p/(\gamma-1) + \tfrac12\rho u^2\) for a calorically perfect gas. I set γ = 1.2 for the rocket cases, a typical frozen value for hydrocarbon or hydrogen combustion products, and γ = 1.4 for the air benchmarks. Everything is non-dimensionalised by the reservoir state (p<sub>0</sub> = ρ<sub>0</sub> = 1, so RT<sub>0</sub> = 1). The solution therefore depends only on γ, the area law and p<sub>b</sub>/p<sub>0</sub>. R and T<sub>0</sub> only rescale dimensional velocities and mass flow, and they drop out of the thrust coefficient.</p>
+
+  <h3>Finite-volume discretisation</h3>
+  <ul>
+    <li><b>Cells.</b> N uniform cells with volume \(V_i = A(x_i)\,\Delta x\) and face areas \(A_{i\pm1/2}\). The update is
+    <div class="eq">$$V_i\frac{d\mathbf{Q}_i}{dt} = -\big(\hat{\mathbf{F}}_{i+1/2}A_{i+1/2} - \hat{\mathbf{F}}_{i-1/2}A_{i-1/2}\big) + \begin{pmatrix}0\\ p_i\,(A_{i+1/2}-A_{i-1/2})\\ 0\end{pmatrix}.$$</div>
+    Writing the pressure source with the same face areas as the flux makes a gas at rest an exact discrete steady state in any duct. A unit test checks this to 10<sup>−13</sup>.</li>
+    <li><b>Riemann solver.</b> HLLC (Toro, Spruce &amp; Speares) with wave-speed bounds \(S_L = \min(u_L-c_L,\,u_R-c_R,\,\tilde u-\tilde c)\) and the mirror-image \(S_R\), where tildes are Roe averages. The Roe-average (Einfeldt) bounds let the transonic rarefaction at the throat through without an explicit entropy fix. Adding the Davis bounds made the solver robust when a strong back pressure first meets supersonic exit flow.</li>
+    <li><b>Reconstruction.</b> MUSCL on the primitive variables (ρ, u, p) with the van Albada limiter. I use it rather than minmod or van Leer because it is smooth: with minmod and van Leer the residual stalled in limit cycles on the shock cases, while van Albada converges to 10<sup>−11</sup>. There is a first-order fallback at any face where the reconstructed ρ or p would be non-positive.</li>
+    <li><b>Time marching.</b> Three-stage, third-order strong-stability-preserving Runge-Kutta (Shu &amp; Osher) at CFL 0.8. To reach the steady state faster I use local time stepping (Δt<sub>i</sub> = CFL·Δx/(|u|+c)<sub>i</sub>). The browser tool can also run a global, time-accurate step so the start-up transient looks physical. Iteration stops when the RMS density residual has fallen by 11 orders of magnitude.</li>
+    <li><b>Initial condition.</b> Reservoir gas at rest fills the nozzle, and the back pressure is applied at the exit at t = 0, which is the physical start-up. A start from a supersonic Mach ramp can leave a shock that belongs just inside the exit stuck on the outflow boundary as a spurious discrete steady state. Starting from rest avoids this.</li>
+  </ul>
+
+  <h3>Boundary conditions</h3>
+  <ul>
+    <li><b>Inflow (subsonic reservoir).</b> Two ghost cells take the velocity extrapolated from the interior (minmod-limited linear extrapolation, clipped below Mach 0.95). Static T, p and ρ then follow from the prescribed p<sub>0</sub>, T<sub>0</sub> through \(c_pT + u^2/2 = c_pT_0\) and isentropic relations.</li>
+    <li><b>Outflow.</b> The exit-face state is extrapolated from the interior. If it is supersonic <i>and</i> p<sub>b</sub> is below the pressure behind a normal shock at that Mach number, every variable is extrapolated, because nothing from outside can enter. Otherwise ρ and u are extrapolated and p = p<sub>b</sub> is imposed, so a subsonic exit sees the back pressure and a strong back pressure drives a shock into the nozzle. A last check handles a captured shock that sits in the final cells when p<sub>b</sub> is too low for any steady shock there: the exit is then treated as supersonic from the upstream state, which lets a start-up shock leave the nozzle.</li>
+  </ul>
+
+  <h3>Exact reference solution</h3>
+  <p>For choked flow, the isentropic branch is the area-Mach relation</p>
+  <div class="eq">$$\frac{A}{A^*}=\frac{1}{M}\left[\frac{2}{\gamma+1}\left(1+\frac{\gamma-1}{2}M^2\right)\right]^{\frac{\gamma+1}{2(\gamma-1)}},$$</div>
+  <p>which I invert on the subsonic or supersonic branch with a bracketed root solve. For a back pressure between the "shock at exit" value p<sub>NSE</sub> and the "subsonic isentropic" value p<sub>sub</sub>, the exit Mach number follows in closed form from \(p_eA_e/(p_{01}A^*)\). That fixes the stagnation-pressure ratio \(p_{02}/p_{01}\), which is inverted for the upstream shock Mach number M<sub>1</sub>, and hence for the shock area ratio A<sub>s</sub>/A<sup>*</sup> (Anderson, <i>Modern Compressible Flow</i>, ch. 5). Downstream of the shock the flow is subsonic-isentropic with \(A_2^* = A^*\,p_{01}/p_{02}\). The same module gives the critical back pressures p<sub>sub</sub>, p<sub>NSE</sub> and p<sub>sup</sub>, and the inverse map from shock station to back pressure.</p>
+
+  <h3>Performance and separation flags</h3>
+  <p>The thrust coefficient is taken from the CFD exit-face flux, not from the isentropic formula:</p>
+  <div class="eq">$$C_F=\frac{\dot m\,u_e + (p_e-p_a)A_e}{p_c A^*} = \underbrace{\frac{(\rho u^2+p)_eA_e}{p_cA^*}}_{C_{F,\mathrm{vac}}\;\text{(CFD face flux)}} - \frac{p_a}{p_c}\,\varepsilon .$$</div>
+  <p>While the exit is supersonic the internal flow cannot feel p<sub>a</sub>, so a single converged solution per engine gives C<sub>F</sub>(h) for every altitude. I checked this by re-running each engine at the 10 km and 30 km ambient pressures (section 5). Ambient pressure comes from the 1976 US Standard Atmosphere, using its first five layers (troposphere, tropopause, two stratospheric lapse layers and the 47–51 km isothermal layer) with the geometric-to-geopotential altitude conversion.</p>
+  <p>Separation is <b>not</b> computed. The model is inviscid and one-dimensional, so the flow in it cannot separate. Instead I flag separation <i>risk</i> with the Summerfield criterion, p<sub>e</sub>/p<sub>a</sub> &lt; 0.4. This is an empirical rule of thumb from 1950s conical-nozzle tests, and values from about 0.25 to 0.4 are quoted in the literature, so 0.4 is the conservative end. For comparison I also evaluate Schmucker's correlation, \(p_{\mathrm{sep}}/p_a = (1.88\,M_e - 1)^{-0.64}\), which falls with exit Mach number. Other criteria exist (e.g. Kalt–Badal, Stark). Real separated flow, whether free-shock (FSS) or restricted-shock (RSS), is two-dimensional, viscous and often unsteady.</p>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="vv">
+  <h2><span class="num">3</span>Verification &amp; validation</h2>
+  <p>Every check below compares the solver with the exact quasi-1D solution computed by my own exact module, which is itself unit-tested against standard isentropic and normal-shock table values (e.g. γ = 1.4, M = 2: A/A* = 1.6875, p<sub>2</sub>/p<sub>1</sub> = 4.5, p<sub>02</sub>/p<sub>01</sub> = 0.7209) and against the 1976 standard atmosphere's layer-base pressures.</p>
+
+  <h3>3.1 Anderson's CD nozzle (isentropic, supersonic exit)</h3>
+  <p>The recognisable benchmark is the nozzle from Anderson's <i>Computational Fluid Dynamics: The Basics with Applications</i> (ch. 7), A(x) = 1 + 2.2(x − 1.5)<sup>2</sup> on 0 ≤ x ≤ 3, with γ = 1.4. Its exit area ratio is <span data-v="V.anderson.eps" data-d="2"></span>. I run it with a low back pressure (p<sub>b</sub>/p<sub>0</sub> = <span data-v="V.anderson.pb" data-d="2"></span>) so that the whole divergent section is supersonic.</p>
+  <figure>
+    <div class="fig-grid"><div id="fig-iso-M" class="plot short"></div><div id="fig-iso-p" class="plot short"></div></div>
+    <figcaption><b>Figure 1.</b> Anderson nozzle, N = 100 cells (markers) against the exact isentropic solution (line). Left: Mach number; right: p/p<sub>0</sub>.</figcaption>
+  </figure>
+  <div class="table-wrap"><table id="tab-anderson">
+    <caption>Table 1. Anderson nozzle exit state and mass flow, N = 100.</caption>
+    <thead><tr><th>Quantity</th><th class="num">CFD (N = 100)</th><th class="num">Exact</th><th class="num">Rel. error</th></tr></thead><tbody></tbody>
+  </table></div>
+
+  <h3>3.2 Grid convergence</h3>
+  <p>I ran the same case on five grids (N = 50 to 800, each refinement halving Δx). The observed order between successive grids is \(p = \log_2(e_{2h}/e_h)\). With the limiter active it approaches 2, the design order of MUSCL. The limiter does not clip here because ρ, u and p are monotone through an isentropic nozzle. Switching reconstruction off gives first order, as it should.</p>
+  <figure><div id="fig-grid" class="plot"></div>
+  <figcaption><b>Figure 2.</b> L1 error of the Mach number vs cell size for the second-order scheme and its first-order variant, with slope-2 and slope-1 reference lines.</figcaption></figure>
+  <div class="table-wrap"><table id="tab-grid">
+    <caption>Table 2. Grid-convergence study, Anderson nozzle, γ = 1.4.</caption>
+    <thead><tr><th class="num">N</th><th class="num">L1(M)</th><th class="num">order</th><th class="num">L1(p/p<sub>0</sub>)</th><th class="num">order</th><th class="num">|ṁ/ṁ*−1|</th><th class="num">order</th><th class="num">L1(M) 1st-order</th><th class="num">order</th><th class="num">iterations</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p>The same behaviour holds for a γ = 1.2 rocket nozzle with ε = 16. Using Richardson extrapolation on the exit Mach number alone, without the exact solution, grids of 100–800 cells give observed orders of <span data-v="V.richardson_bell16.observed_order.0" data-d="2"></span> and <span data-v="V.richardson_bell16.observed_order.1" data-d="2"></span>. The extrapolated exit Mach number <span data-v="V.richardson_bell16.M_exit_extrapolated" data-d="5"></span> agrees with the exact <span data-v="V.richardson_bell16.M_exit_exact" data-d="5"></span> to the fifth decimal.</p>
+
+  <h3>3.3 Normal shock in the divergent section</h3>
+  <p>For the shock test I keep Anderson's convergent section and use his gentler divergent section, A = 1 + 0.2223(x − 1.5)<sup>2</sup> (A<sub>e</sub>/A<sup>*</sup> = <span data-v="V.shock_case.eps" data-d="3"></span>). With the exact module I choose the back pressure that places the shock exactly at x = 2.25, halfway down the divergent section: p<sub>b</sub>/p<sub>0</sub> = <span data-v="V.shock_case.pb" data-d="4"></span>.</p>
+  <figure>
+    <div class="fig-grid"><div id="fig-sh-M" class="plot short"></div><div id="fig-sh-p" class="plot short"></div></div>
+    <figcaption><b>Figure 3.</b> Shock case at N = 200 (markers) against the exact solution (line). The shock is captured in about two cells with no visible oscillation.</figcaption>
+  </figure>
+  <div class="table-wrap"><table id="tab-shock">
+    <caption>Table 3. Shock position (sonic crossing, linearly interpolated), mass conservation and exit-pressure error. Exact x<sub>s</sub> = 2.25.</caption>
+    <thead><tr><th class="num">N</th><th class="num">x<sub>s</sub> CFD</th><th class="num">|error|</th><th class="num">error / Δx</th><th class="num">order</th><th class="num">|ṁ/ṁ*−1|</th><th class="num">ṁ spread in/out</th><th class="num">|p<sub>e</sub>/p<sub>b</sub>−1|</th><th class="num">iterations</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p>The shock position converges at first order, the expected rate for any shock-capturing scheme. The error stays at a nearly constant fraction of a cell (about <span data-v="sum.shock_err_cells_N200" data-d="2"></span> Δx), which is as good as the sonic-crossing position estimate allows. The discrete mass flow is identical through every face to about 10<sup>−12</sup>, i.e. to the convergence tolerance, because the scheme is conservative. Its offset from the exact choked value ṁ* is a discretisation error that falls at second order. At Anderson's own back pressure, p<sub>b</sub>/p<sub>0</sub> = 0.6784, the exact shock station on this nozzle is x = <span data-v="V.anderson_shock.x_shock_exact" data-d="4"></span> and the N = 200 solution gives <span data-v="V.anderson_shock.x_shock_cfd" data-d="4"></span>.</p>
+  <figure><div id="fig-sweep" class="plot"></div>
+  <figcaption><b>Figure 4.</b> Shock station vs back pressure between p<sub>NSE</sub> (shock at the exit) and p<sub>sub</sub> (shock collapsing into the throat): exact curve and N = 200 CFD. At the point closest to p<sub>NSE</sub> the exact shock lies within half a cell of the exit plane. There the captured shock merges with the outflow boundary and no interior position is reported.</figcaption></figure>
+
+  <h3>3.4 Convergence history</h3>
+  <figure><div id="fig-res" class="plot short"></div>
+  <figcaption><b>Figure 5.</b> RMS density residual (normalised by its first value) vs iteration, local time stepping, CFL 0.8, starting from gas at rest. Shock-free cases converge in a few thousand iterations. The shock case takes longer because the starting shock has to travel to its equilibrium station, but the residual still falls monotonically to the 10<sup>−11</sup> tolerance with no limiter-induced stall.</figcaption></figure>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="cases">
+  <h2><span class="num">4</span>Case studies</h2>
+  <p>The three engines span the lift-off design space for current sea-level boosters. The inputs are <b>representative values from public sources, and they are approximate</b>. The exhaust is modelled as a calorically perfect gas with γ = 1.2 for all three, which ignores the real differences in mixture composition and shifting equilibrium between LOX/RP-1, LOX/LH<sub>2</sub> and LOX/CH<sub>4</sub>. Section 5 gives a γ sensitivity check. In quasi-1D inviscid flow the exit state depends only on ε and γ, not on the contour, so each engine uses the same smooth bell-like area law (a parabolic convergent section with contraction ratio 4 and a cubic divergent section with zero slope at throat and exit) scaled to its ε, on N = <span data-v="Eng.N" data-d="0"></span> cells.</p>
+  <div class="table-wrap"><table id="tab-inputs">
+    <caption>Table 4. Engine inputs (representative values from public sources).</caption>
+    <thead><tr><th>Engine class</th><th>Propellants</th><th class="num">p<sub>c</sub> (MPa)</th><th class="num">ε</th><th class="num">γ</th><th>Source type / note</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p class="note">Atmosphere: 1976 US Standard Atmosphere, 0–50 km geometric altitude, sea-level p<sub>a</sub> = 101 325 Pa. The Raptor figures in particular are not officially published in detail. Expansion ratios of roughly 34 to 40 are quoted for the sea-level variant, so the Raptor-class results should be read as illustrating a high-p<sub>c</sub> design point rather than describing a specific engine.</p>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="results">
+  <h2><span class="num">5</span>Results &amp; discussion</h2>
+
+  <h3>5.1 CFD exit states</h3>
+  <p>All three engine runs converged with a supersonic exit. Table 5 compares the CFD exit state with the exact isentropic values. The errors are at the level expected from section 3 on a 400-cell grid. Re-running each engine at the 10 km and 30 km ambient pressures changed the exit momentum flux by at most <span data-v="maxInv" data-s="2"></span> (relative), i.e. not at all, which confirms that one solution per engine covers the whole ascent. I also raised the back pressure of each nozzle to the value that puts the shock halfway up its area ratio, A<sub>s</sub> = (1+ε)/2. The captured shock landed within <span data-v="maxAsErr" data-x="100" data-d="2"></span> % of that area in all three cases.</p>
+  <div class="table-wrap"><table id="tab-engcfd">
+    <caption>Table 5. Engine CFD vs exact (N = 400).</caption>
+    <thead><tr><th>Engine</th><th class="num">M<sub>e</sub> CFD</th><th class="num">M<sub>e</sub> err</th><th class="num">p<sub>e</sub>/p<sub>c</sub> err</th><th class="num">C<sub>F,vac</sub> CFD</th><th class="num">C<sub>F,vac</sub> err</th><th class="num">ṁ err</th><th class="num">A<sub>s</sub> check err</th><th class="num">iterations</th></tr></thead><tbody></tbody>
+  </table></div>
+
+  <h3>5.2 Expansion state and thrust along the ascent</h3>
+  <figure><div id="fig-pepa" class="plot tall"></div>
+  <figcaption><b>Figure 6.</b> Exit-to-ambient pressure ratio vs altitude (the Merlin- and Raptor-class curves nearly coincide because their exit pressures are within a few percent; Raptor dashed). Above the p<sub>e</sub>/p<sub>a</sub> = 1 line the nozzle is under-expanded; below it, over-expanded. The dashed line is the Summerfield separation-risk threshold (0.4). The dotted segments on the left axis mark each engine's Schmucker threshold.</figcaption></figure>
+  <figure><div id="fig-cf" class="plot"></div>
+  <figcaption><b>Figure 7.</b> Thrust coefficient vs altitude from the CFD exit flux (lines) and the ideal isentropic C<sub>F</sub> (markers). The segment where the Summerfield flag is raised is drawn thicker and red-shaded. There the attached-flow C<sub>F</sub> shown is not what a real nozzle would produce: separated flow typically recovers some of the over-expansion loss.</figcaption></figure>
+  <div class="table-wrap"><table id="tab-eng">
+    <caption>Table 6. Performance and separation margins at sea level (p<sub>a</sub> = 101.325 kPa).</caption>
+    <thead><tr><th>Engine</th><th class="num">p<sub>e</sub> (kPa)</th><th class="num">p<sub>e</sub>/p<sub>a</sub> SL</th><th class="c">Summerfield</th><th class="num">Schmucker limit</th><th class="c">Schmucker</th><th class="num">z(p<sub>e</sub>=p<sub>a</sub>) km</th><th class="num">flag clears, km</th><th class="num">C<sub>F</sub> SL</th><th class="num">C<sub>F</sub> vac</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p>The Merlin- and Raptor-class nozzles leave the pad over-expanded (p<sub>e</sub>/p<sub>a</sub> ≈ <span data-v="E.merlin.pe_pa_sl" data-d="2"></span> and <span data-v="E.raptor.pe_pa_sl" data-d="2"></span>) but well clear of the 0.4 line. They reach perfect expansion at about <span data-v="E.merlin.z_opt_km" data-d="1"></span> km and <span data-v="E.raptor.z_opt_km" data-d="1"></span> km, which is typical of a sea-level booster nozzle optimised for the low-altitude part of the trajectory. The RS-25-class nozzle reaches p<sub>e</sub> = p<sub>a</sub> only at <span data-v="E.rs25.z_opt_km" data-d="1"></span> km, as a Shuttle main engine that also had to work in near-vacuum would. It starts from p<sub>e</sub>/p<sub>a</sub> ≈ <span data-v="E.rs25.pe_pa_sl" data-d="2"></span>, below both Summerfield's 0.4 and Schmucker's <span data-v="E.rs25.schmucker_ratio" data-d="2"></span>. By these criteria the risk clears at <span data-v="E.rs25.z_summerfield_clear_km" data-d="1"></span> km (Summerfield) and <span data-v="E.rs25.z_schmucker_clear_km" data-d="1"></span> km (Schmucker).</p>
+
+  <h3>5.3 Where would the normal shock stand?</h3>
+  <p>Textbook quasi-1D theory puts a normal shock inside an over-expanded nozzle once p<sub>b</sub> &gt; p<sub>NSE</sub>. For these engines that threshold is far above any real ambient pressure.</p>
+  <div class="table-wrap"><table id="tab-crit">
+    <caption>Table 7. Characteristic back pressures from the exact solver, in absolute terms and relative to sea-level ambient.</caption>
+    <thead><tr><th>Engine</th><th class="num">p<sub>NSE</sub> shock at exit (MPa)</th><th class="num">p<sub>NSE</sub>/p<sub>SL</sub></th><th class="num">shock at A=(1+ε)/2 (MPa)</th><th class="num">p<sub>sub</sub> shock at throat (MPa)</th><th class="num">Summerfield onset ambient p<sub>e</sub>/0.4 (kPa)</th></tr></thead><tbody></tbody>
+  </table></div>
+  <figure><div id="fig-shockeng" class="plot"></div>
+  <figcaption><b>Figure 8.</b> Exact inviscid shock station (A<sub>s</sub>/ε, 1 = exit plane) vs back pressure normalised by sea-level ambient. Diamonds mark the ambient pressure at which the Summerfield criterion would first flag each nozzle, and the vertical line is actual sea-level pressure. Inviscid theory needs roughly <span data-v="minPnse" data-d="0"></span>–<span data-v="maxPnse" data-d="0"></span> times sea-level pressure before a shock enters the nozzle. Separation is expected long before that, which is why the separation criterion and not the normal-shock solution governs nozzle design.</figcaption></figure>
+  <p>The quasi-1D normal shock is therefore the wrong model for real over-expansion. In a real nozzle the adverse pressure gradient of an oblique shock system separates the boundary layer long before a normal shock could stand in the core. What the inviscid solution does provide is the attached-flow exit state that the empirical criteria take as input, and it does that accurately.</p>
+
+  <h3>5.4 Design space: how much ε can a given p<sub>c</sub> carry at sea level?</h3>
+  <p>For fixed γ and a supersonic exit, p<sub>e</sub>/p<sub>c</sub> depends only on ε. The Summerfield limit p<sub>e</sub> ≥ 0.4 p<sub>a</sub> therefore gives a maximum sea-level-safe expansion ratio for each chamber pressure, and equivalently a minimum p<sub>c</sub> for each ε. That minimum is also the lowest throttle setting at which the nozzle stays clear of the flag at lift-off.</p>
+  <figure><div id="fig-design" class="plot tall"></div>
+  <figcaption><b>Figure 9.</b> Maximum sea-level expansion ratio vs chamber pressure under the Summerfield criterion (γ = 1.2 solid; γ = 1.15 and 1.25 dotted), under Schmucker's correlation (dashed), and the perfect-expansion ratio (thin). Engines are marked at their representative (p<sub>c</sub>, ε).</figcaption></figure>
+  <div class="table-wrap"><table id="tab-margin">
+    <caption>Table 8. Margins against the Summerfield criterion at sea level (γ = 1.2).</caption>
+    <thead><tr><th>Engine</th><th class="num">ε</th><th class="num">ε<sub>max</sub> at its p<sub>c</sub></th><th class="num">ε / ε<sub>max</sub></th><th class="num">ε<sub>max</sub> Schmucker</th><th class="num">ε for p<sub>e</sub>=p<sub>a</sub></th><th class="num">p<sub>c,min</sub> (MPa)</th><th class="num">p<sub>c,min</sub>/p<sub>c</sub></th></tr></thead><tbody></tbody>
+  </table></div>
+  <p><b>Why the RS-25 can have ε = 69 at all.</b> For a fixed ε, p<sub>e</sub> scales with p<sub>c</sub>. The same ε = 69 nozzle fed at the Merlin-class 9.7 MPa would give p<sub>e</sub>/p<sub>a</sub> ≈ <span data-v="E.rs25.pe_pa_sl_at_ref_pc" data-d="2"></span> at lift-off, deep in the separated regime by any criterion. The RS-25's roughly doubled chamber pressure is what brings it to the edge of the envelope. Even so, in this model it sits beyond the Summerfield line: at its p<sub>c</sub> the criterion allows ε ≈ <span data-v="E.rs25.eps_max_summerfield" data-d="0"></span>, and meeting it at ε = 69 would take p<sub>c</sub> ≈ <span data-v="E.rs25.pc_min_summerfield_MPa" data-d="0"></span> MPa. The real engine has a long record of sea-level operation, so I read this as a limit of the criteria and of the model, not as a prediction of separation. There are three reasons. The 0.4 threshold comes from low-Mach conical nozzles, and the exit-Mach-dependent Schmucker limit is already less restrictive. The quasi-1D exit pressure is a one-dimensional average of a contoured bell's wall pressure. And the frozen-γ exit pressure is sensitive to γ (Table 9). The robust conclusion is comparative: the RS-25-class design has by far the least sea-level margin of the three and relies on high p<sub>c</sub> to be viable. The Merlin- and Raptor-class nozzles could stay above the line down to about <span data-v="E.merlin.throttle_margin" data-x="100" data-d="0"></span> % and <span data-v="E.raptor.throttle_margin" data-x="100" data-d="0"></span> % of their nominal p<sub>c</sub>, respectively. Start-up and shut-down, when p<sub>c</sub> passes through low values, are therefore when all three are exposed. That matches the well-documented concern with transient side loads in large sea-level nozzles.</p>
+  <div class="table-wrap"><table id="tab-gamma">
+    <caption>Table 9. Sensitivity of the sea-level expansion state to the assumed exhaust γ (exact isentropic, same p<sub>c</sub> and ε).</caption>
+    <thead><tr><th>Engine</th><th class="num">γ</th><th class="num">M<sub>e</sub></th><th class="num">p<sub>e</sub> (kPa)</th><th class="num">p<sub>e</sub>/p<sub>a</sub></th><th class="c">Summerfield</th><th class="num">Schmucker limit</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p>Over a plausible γ range of 1.15–1.3, the Merlin- and Raptor-class verdicts do not change. The RS-25-class p<sub>e</sub>/p<sub>a</sub> moves by a factor of about two, which is a reminder that for this engine a real-gas (shifting-equilibrium) exhaust model matters more than any refinement of the flow solver.</p>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="tool">
+  <h2><span class="num">6</span>Interactive tool</h2>
+  <p>The panel below runs a JavaScript port of the solver in your browser: the same HLLC/MUSCL/SSP-RK3 scheme, boundary conditions and exact solver, time-marched live from gas at rest. <span id="xc-text">Loading cross-check…</span></p>
+
+  <div class="tool" id="nz-tool">
+    <div class="tool-head">Quasi-1D nozzle solver · live time march</div>
+    <div class="controls">
+      <div class="ctl"><div class="row"><span>Preset</span></div>
+        <select id="c-preset">
+          <option value="merlin">Merlin 1D-class (sea level)</option>
+          <option value="rs25">RS-25-class</option>
+          <option value="raptor">Raptor-class (sea level)</option>
+          <option value="anderson">Anderson CD nozzle (γ 1.4)</option>
+          <option value="andshock">Anderson shock case (ε 1.5, pb/p0 0.6784)</option>
+        </select></div>
+      <div class="ctl"><div class="row"><span>Geometry</span></div>
+        <select id="c-geom"><option value="bell">bell-like (cubic divergent)</option><option value="anderson">Anderson parabolic family</option></select></div>
+      <div class="ctl"><div class="row"><span>Area ratio ε</span><output id="o-eps"></output></div><input id="c-eps" type="range" min="1.2" max="100" step="0.1"></div>
+      <div class="ctl"><div class="row"><span>γ</span><output id="o-gamma"></output></div><input id="c-gamma" type="range" min="1.1" max="1.67" step="0.01"></div>
+      <div class="ctl"><div class="row"><span>Back pressure set by</span></div>
+        <select id="c-bmode"><option value="alt">altitude (US Std. Atm. 1976) and pc</option><option value="ratio">pb/p0 directly</option></select></div>
+      <div class="ctl" id="w-pc"><div class="row"><span>Chamber pressure p<sub>c</sub></span><output id="o-pc"></output></div><input id="c-pc" type="range" min="1" max="35" step="0.1"></div>
+      <div class="ctl" id="w-alt"><div class="row"><span>Altitude</span><output id="o-alt"></output></div><input id="c-alt" type="range" min="0" max="50" step="0.5"></div>
+      <div class="ctl" id="w-pb"><div class="row"><span>p<sub>b</sub>/p<sub>0</sub></span><output id="o-pb"></output></div><input id="c-pb" type="range" min="-3.5" max="-0.005" step="0.005"></div>
+      <div class="ctl"><div class="row"><span>Grid cells N</span><output id="o-N"></output></div><input id="c-N" type="range" min="40" max="400" step="10"></div>
+      <div class="ctl"><div class="row"><span>Speed (iterations / frame)</span><output id="o-speed"></output></div><input id="c-speed" type="range" min="1" max="200" step="1" value="12"></div>
+      <div class="ctl"><div class="row"><span>Time stepping</span></div>
+        <select id="c-dt"><option value="global">global Δt (time-accurate start-up)</option><option value="local">local Δt (fast to steady state)</option></select></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="b-run">Pause</button>
+      <button class="btn ghost" id="b-restart">Restart from rest</button>
+      <button class="btn ghost" id="b-converge">Jump to steady state</button>
+    </div>
+    <div class="readout">
+      <div class="stat"><div class="v" id="r-iter">–</div><div class="l">iteration</div></div>
+      <div class="stat"><div class="v" id="r-res">–</div><div class="l">residual (rel.)</div></div>
+      <div class="stat"><div class="v" id="r-Me">–</div><div class="l">exit Mach (exact)</div></div>
+      <div class="stat"><div class="v" id="r-pepa">–</div><div class="l" id="r-pepa-l">p<sub>e</sub>/p<sub>a</sub></div></div>
+      <div class="stat"><div class="v" id="r-cf">–</div><div class="l">C<sub>F</sub> at this back pressure</div></div>
+      <div class="stat"><div class="v" id="r-shock">–</div><div class="l">shock A<sub>s</sub>/A* CFD (exact)</div></div>
+      <div class="stat"><div class="v" id="r-mdot">–</div><div class="l">ṁ<sub>out</sub>/ṁ* − 1</div></div>
+      <div class="stat"><div class="v" id="r-flag">–</div><div class="l">Summerfield flag (p<sub>e</sub>/p<sub>a</sub> &lt; 0.4)</div></div>
+    </div>
+    <p class="sub" id="r-regime"></p>
+    <canvas id="nz-canvas" aria-label="Nozzle contour coloured by Mach number"></canvas>
+    <p class="sub">Nozzle contour (radius ∝ √A) coloured by the current CFD Mach number. The white tick marks a captured shock.</p>
+    <div class="fig-grid">
+      <div id="t-M" class="plot"></div>
+      <div id="t-p" class="plot"></div>
+    </div>
+    <div id="t-res" class="plot short" style="margin-top:14px"></div>
+  </div>
+  <p class="note">Notes. In "altitude" mode p<sub>b</sub> = p<sub>a</sub>(h)/p<sub>c</sub>. In "p<sub>b</sub>/p<sub>0</sub>" mode the slider is logarithmic. Try the Merlin preset and raise p<sub>b</sub>/p<sub>0</sub> above the p<sub>NSE</sub> shown in the status line: the shock walks into the nozzle and settles where the exact solution (dashed) puts it. The Summerfield flag is an empirical risk indicator. The solver itself stays attached and inviscid whatever the flag says.</p>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="limits">
+  <h2><span class="num">7</span>Limitations &amp; future work</h2>
+  <ul>
+    <li><b>No separation physics.</b> The model is inviscid and quasi-1D, so it cannot represent boundary-layer separation, free- vs restricted-shock separation, or side loads. Separation appears here only as an empirical flag, and the Summerfield threshold carries large scatter (≈ 0.25–0.4 in the literature). Resolving it needs at least axisymmetric RANS with a validated turbulence model.</li>
+    <li><b>Quasi-1D flow.</b> Real bell nozzles have radial pressure gradients and internal shocks from the contour. The wall pressure that matters for separation is not the 1-D mean. Divergence losses (≈ 1–2 % in C<sub>F</sub> for a bell) are not included.</li>
+    <li><b>Frozen, calorically perfect exhaust.</b> One γ for the whole expansion, with no shifting equilibrium, condensation or two-phase effects. Table 9 shows the RS-25-class conclusion is sensitive to this.</li>
+    <li><b>Inputs.</b> The engine parameters are approximate public values, and the Raptor figures are uncertain. No combustion-chamber losses (Rayleigh heating, c* efficiency) or film cooling are modelled, and ambient p<sub>a</sub> is the static pressure of a standard day with no plume–freestream interaction or base flow.</li>
+    <li><b>Numerics.</b> The shock position is first-order, as for any capturing scheme. Within about 1 % of p<sub>NSE</sub> the choice between "shock just inside the exit" and "supersonic exit" is only resolved to discretisation accuracy.</li>
+    <li><b>Next steps:</b> an axisymmetric Euler/RANS solver on a method-of-characteristics bell contour, a shifting-equilibrium exhaust from a chemical-equilibrium code, and a check of the separation flag against published cold-flow separation data.</li>
+  </ul>
+</section>
+
+<section id="refs">
+  <h2>References</h2>
+  <ol class="refs">
+    <li>J. D. Anderson, <i>Modern Compressible Flow: With Historical Perspective</i>, 3rd ed., McGraw-Hill, 2003 (quasi-1D nozzle flow and normal shocks in nozzles).</li>
+    <li>J. D. Anderson, <i>Computational Fluid Dynamics: The Basics with Applications</i>, McGraw-Hill, 1995 (ch. 7, quasi-1D nozzle benchmark).</li>
+    <li>E. F. Toro, <i>Riemann Solvers and Numerical Methods for Fluid Dynamics</i>, 3rd ed., Springer, 2009 (HLLC, MUSCL).</li>
+    <li>E. F. Toro, M. Spruce, W. Speares, "Restoration of the contact surface in the HLL-Riemann solver," <i>Shock Waves</i> 4, 1994.</li>
+    <li>B. Einfeldt, "On Godunov-type methods for gas dynamics," <i>SIAM J. Numer. Anal.</i> 25, 1988.</li>
+    <li>G. D. van Albada, B. van Leer, W. W. Roberts, "A comparative study of computational methods in cosmic gas dynamics," <i>Astron. Astrophys.</i> 108, 1982.</li>
+    <li>C.-W. Shu, S. Osher, "Efficient implementation of essentially non-oscillatory shock-capturing schemes," <i>J. Comput. Phys.</i> 77, 1988.</li>
+    <li>G. P. Sutton, O. Biblarz, <i>Rocket Propulsion Elements</i>, 9th ed., Wiley, 2017 (thrust coefficient, nozzle separation, engine data).</li>
+    <li>P. Hill, C. Peterson, <i>Mechanics and Thermodynamics of Propulsion</i>, 2nd ed., Addison-Wesley, 1992.</li>
+    <li>NOAA, NASA, USAF, <i>U.S. Standard Atmosphere, 1976</i>, U.S. Government Printing Office, 1976.</li>
+    <li>M. Summerfield, C. R. Foster, W. C. Swan, "Flow separation in overexpanded supersonic exhaust nozzles," <i>Jet Propulsion</i> 24, 1954.</li>
+    <li>G. Hagemann, M. Frey, et al., "Advanced rocket nozzles," <i>J. Propulsion and Power</i> 14(5), 1998 (review including separation criteria such as Schmucker's).</li>
+    <li>Engine parameters: manufacturer and NASA public material and widely reported figures, used as approximate representative values (Table 4).</li>
+  </ol>
+</section>
+
+</div>
+</main>
+
+<footer class="paper-foot">
+  <div class="wrap">Propulsion Research Series · No. 1 · Dulran, September 2026. All numbers on this page are read from <code>data/*.json</code>, generated by <code>code/run_study.py</code>.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="../assets/plot.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})"></script>
+<script src="js/nozzle-solver.js"></script>
+<script src="js/page.js"></script>
+</body>
+</html>

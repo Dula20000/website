@@ -1,0 +1,465 @@
+{
+ "thermo": [
+  {
+   "species": "H2",
+   "hf": 1.328177e-08,
+   "hf_ref": 0.0,
+   "dhf": 1.328177e-08,
+   "s": 130.68027,
+   "s_ref": 130.68,
+   "ds": 0.00026977641,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 3.1699719e-09,
+   "jump_h": 2.7585546e-09,
+   "jump_s": 9.2487246e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "O2",
+   "hf": 1.6343332e-08,
+   "hf_ref": 0.0,
+   "dhf": 1.6343332e-08,
+   "s": 205.1483,
+   "s_ref": 205.15,
+   "ds": -0.001701941,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 8.1040015e-10,
+   "jump_h": 3.0379574e-09,
+   "jump_s": 1.0504346e-09,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "H",
+   "hf": 217.99719,
+   "hf_ref": 217.998,
+   "dhf": -0.00081444376,
+   "s": 114.71721,
+   "s_ref": 114.72,
+   "ds": -0.0027906221,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 4.990218e-10,
+   "jump_h": 9.5878842e-11,
+   "jump_s": 5.1269198e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "O",
+   "hf": 249.17364,
+   "hf_ref": 249.18,
+   "dhf": -0.0063571892,
+   "s": 161.05954,
+   "s_ref": 161.06,
+   "ds": -0.00046027652,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 3.095439e-09,
+   "jump_h": 1.5790219e-09,
+   "jump_s": 1.2954026e-09,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "OH",
+   "hf": 37.299958,
+   "hf_ref": 37.3,
+   "dhf": -4.2081028e-05,
+   "s": 183.73679,
+   "s_ref": 183.7,
+   "ds": 0.036792557,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 1.3544298e-09,
+   "jump_h": 3.1657336e-11,
+   "jump_s": 1.4341904e-10,
+   "source": "Burcat (ATcT-based) update of GRI-Mech OH"
+  },
+  {
+   "species": "H2O",
+   "hf": -241.82462,
+   "hf_ref": -241.826,
+   "dhf": 0.0013783791,
+   "s": 188.82804,
+   "s_ref": 188.83,
+   "ds": -0.0019605049,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 8.4564626e-10,
+   "jump_h": 2.5134741e-09,
+   "jump_s": 9.4309972e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "HO2",
+   "hf": 12.551928,
+   "hf_ref": 12.0,
+   "dhf": 0.55192848,
+   "s": 229.1044,
+   "s_ref": 229.0,
+   "ds": 0.10439656,
+   "tol_hf": 1.5,
+   "tol_s": 2.0,
+   "jump_cp": 7.5958272e-09,
+   "jump_h": 1.9483315e-09,
+   "jump_s": 1.0526149e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "H2O2",
+   "hf": -135.87923,
+   "hf_ref": -136.1,
+   "dhf": 0.22077407,
+   "s": 234.52555,
+   "s_ref": 232.9,
+   "ds": 1.6255534,
+   "tol_hf": 1.5,
+   "tol_s": 2.0,
+   "jump_cp": 9.9809403e-10,
+   "jump_h": 4.3457171e-09,
+   "jump_s": 1.1632332e-09,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "CO",
+   "hf": -110.52937,
+   "hf_ref": -110.53,
+   "dhf": 0.00063023932,
+   "s": 197.65632,
+   "s_ref": 197.66,
+   "ds": -0.0036825333,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 1.0028644e-10,
+   "jump_h": 1.1405478e-09,
+   "jump_s": 7.1283693e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "CO2",
+   "hf": -393.50776,
+   "hf_ref": -393.51,
+   "dhf": 0.0022423368,
+   "s": 213.78627,
+   "s_ref": 213.79,
+   "ds": -0.0037332641,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 1.4693955e-09,
+   "jump_h": 3.851183e-10,
+   "jump_s": 1.5890651e-09,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "CH4",
+   "hf": -74.599574,
+   "hf_ref": -74.6,
+   "dhf": 0.0004255264,
+   "s": 186.37023,
+   "s_ref": 186.3,
+   "ds": 0.070228531,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 5.6471275e-10,
+   "jump_h": 1.1602974e-08,
+   "jump_s": 1.9710067e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "CH3",
+   "hf": 146.89916,
+   "hf_ref": 146.0,
+   "dhf": 0.89916322,
+   "s": 194.00782,
+   "s_ref": 194.0,
+   "ds": 0.0078200882,
+   "tol_hf": 1.5,
+   "tol_s": 2.0,
+   "jump_cp": 2.059981e-09,
+   "jump_h": 2.2472581e-09,
+   "jump_s": 6.6498438e-11,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "HCO",
+   "hf": 41.999761,
+   "hf_ref": 42.0,
+   "dhf": -0.0002393155,
+   "s": 224.3344,
+   "s_ref": 224.6,
+   "ds": -0.26560035,
+   "tol_hf": 1.5,
+   "tol_s": 2.0,
+   "jump_cp": 9.1860811e-09,
+   "jump_h": 2.8841313e-09,
+   "jump_s": 1.3617933e-09,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "CH2O",
+   "hf": -108.57938,
+   "hf_ref": -108.6,
+   "dhf": 0.020618423,
+   "s": 218.76296,
+   "s_ref": 218.8,
+   "ds": -0.037043286,
+   "tol_hf": 1.5,
+   "tol_s": 2.0,
+   "jump_cp": 4.5600065e-09,
+   "jump_h": 1.1867997e-09,
+   "jump_s": 1.9987102e-10,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "N2",
+   "hf": 0.001429902,
+   "hf_ref": 0.0,
+   "dhf": 0.001429902,
+   "s": 191.51224,
+   "s_ref": 191.61,
+   "ds": -0.09775936,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 3.6265755e-07,
+   "jump_h": 2.4211619e-07,
+   "jump_s": 6.5792051e-08,
+   "source": "Chemkin 121286 (as shipped in GRI-Mech 3.0)"
+  },
+  {
+   "species": "NO",
+   "hf": 91.264481,
+   "hf_ref": 90.3,
+   "dhf": 0.96448111,
+   "s": 210.74425,
+   "s_ref": 210.76,
+   "ds": -0.015746252,
+   "tol_hf": 1.5,
+   "tol_s": 2.0,
+   "jump_cp": 1.0296079e-07,
+   "jump_h": 2.1835128e-08,
+   "jump_s": 3.3030055e-08,
+   "source": "GRI-Mech 3.0"
+  },
+  {
+   "species": "Ar",
+   "hf": 0.0,
+   "hf_ref": 0.0,
+   "dhf": 0.0,
+   "s": 154.73209,
+   "s_ref": 154.85,
+   "ds": -0.11791064,
+   "tol_hf": 0.05,
+   "tol_s": 0.2,
+   "jump_cp": 0.0,
+   "jump_h": 0.0,
+   "jump_s": 0.0,
+   "source": "GRI-Mech 3.0"
+  }
+ ],
+ "conservation": [
+  {
+   "case": "LOX/LH2 O/F=6.0 Pc=20.6 MPa",
+   "elem_rel": 5.4143544e-15,
+   "mass_action": 2.0428104e-14,
+   "energy_rel": 7.9081021e-15,
+   "iterations": 9
+  },
+  {
+   "case": "LOX/LCH4 O/F=3.6 Pc=30 MPa",
+   "elem_rel": 5.636733e-15,
+   "mass_action": 8.8817842e-15,
+   "energy_rel": 2.9037508e-15,
+   "iterations": 9
+  },
+  {
+   "case": "LOX/RP-1 O/F=2.36 Pc=9.7 MPa",
+   "elem_rel": 6.3362226e-15,
+   "mass_action": 2.0428104e-14,
+   "energy_rel": 2.4817249e-14,
+   "iterations": 9
+  },
+  {
+   "case": "LOX/LH2 O/F=3.0 Pc=1 MPa",
+   "elem_rel": 3.4376853e-15,
+   "mass_action": 7.9936058e-15,
+   "energy_rel": 1.1626526e-14,
+   "iterations": 10
+  },
+  {
+   "case": "LOX/RP-1 O/F=3.5 Pc=1 MPa",
+   "elem_rel": 7.2577738e-15,
+   "mass_action": 2.1316282e-14,
+   "energy_rel": 1.0677382e-14,
+   "iterations": 9
+  }
+ ],
+ "gibbs_min": {
+  "min_dG_over_RT": 2.9558578e-12,
+  "order": 1.9239455,
+  "samples": 200,
+  "case": "LOX/LCH4 O/F 3.6, 10 MPa, T = T_ad"
+ },
+ "scipy": {
+  "max_rel_diff_major": 4.2799039e-06,
+  "G_rpl311": -1561.3072,
+  "G_slsqp": -1561.3072
+ },
+ "flame": {
+  "H2_O2_stoich_1atm": 3074.4642,
+  "CH4_air_stoich_1atm": 2223.8995
+ },
+ "newton_history": [
+  2.6319887,
+  1.3199604,
+  0.6143972,
+  0.11362682,
+  0.034299741,
+  0.0086855405,
+  0.00033155963,
+  4.5920133e-07,
+  8.7438587e-13
+ ],
+ "argon": {
+  "shifting": {
+   "Tc": 3000.0,
+   "cstar": 1088.1363,
+   "cstar_exact": 1088.1363,
+   "pr": 0.0036281105,
+   "pr_exact": 0.0036281105,
+   "CF": 1.5719073,
+   "CF_exact": 1.5719073,
+   "err_cstar": 1.1946e-13,
+   "err_pr": 4.9471538e-13,
+   "err_CF": 1.1934898e-13,
+   "err_Tc": 8.8817842e-16
+  },
+  "frozen": {
+   "Tc": 3000.0,
+   "cstar": 1088.1363,
+   "cstar_exact": 1088.1363,
+   "pr": 0.0036281105,
+   "pr_exact": 0.0036281105,
+   "CF": 1.5719073,
+   "CF_exact": 1.5719073,
+   "err_cstar": 5.3290705e-15,
+   "err_pr": 4.9293902e-13,
+   "err_CF": 5.2180482e-15,
+   "err_Tc": 8.8817842e-16
+  }
+ },
+ "cstar": {
+  "shifting": {
+   "cstar": 1830.2257,
+   "cstar_ideal": 1828.9973,
+   "gamma": 1.1305173,
+   "rel": 0.00067165571
+  },
+  "frozen": {
+   "cstar": 1792.1904,
+   "cstar_ideal": 1793.0162,
+   "gamma": 1.1942746,
+   "rel": -0.00046055791
+  }
+ },
+ "published": {
+  "lh2_of6_eps69_isp_vac": 462.85018,
+  "lh2_of6_eps69_Tc": 3598.4309,
+  "rp1_Tc_peak_1000psia": 3699.9702,
+  "rp1_Tc_peak_of": 3.0
+ },
+ "frozen_vs_shifting": [
+  {
+   "pair": "LOX/LH2",
+   "of": 6.0,
+   "shift": 452.07923,
+   "froz": 432.68646,
+   "diff_pct": 4.4819437
+  },
+  {
+   "pair": "LOX/LCH4",
+   "of": 3.6,
+   "shift": 368.78611,
+   "froz": 342.22062,
+   "diff_pct": 7.7626774
+  },
+  {
+   "pair": "LOX/RP-1",
+   "of": 2.36,
+   "shift": 353.32234,
+   "froz": 335.07038,
+   "diff_pct": 5.4472027
+  }
+ ],
+ "py_ms_per_case": 2.1667084,
+ "js": {
+  "available": true,
+  "max_rel_diff": 2.6934011e-13,
+  "rows": [
+   {
+    "id": "merlin1d-shifting",
+    "py_isp_vac": 336.49557,
+    "js_isp_vac": 336.49557,
+    "py_Tc": 3643.7847,
+    "js_Tc": 3643.7847,
+    "max_rel_diff": 1.0991208e-13
+   },
+   {
+    "id": "merlin1d-frozen",
+    "py_isp_vac": 321.21109,
+    "js_isp_vac": 321.21109,
+    "py_Tc": 3643.7847,
+    "js_Tc": 3643.7847,
+    "max_rel_diff": 3.8857806e-15
+   },
+   {
+    "id": "rs25-shifting",
+    "py_isp_vac": 462.85018,
+    "js_isp_vac": 462.85018,
+    "py_Tc": 3598.4309,
+    "js_Tc": 3598.4309,
+    "max_rel_diff": 1.2256862e-13
+   },
+   {
+    "id": "rs25-frozen",
+    "py_isp_vac": 445.45683,
+    "js_isp_vac": 445.45683,
+    "py_Tc": 3598.4309,
+    "js_Tc": 3598.4309,
+    "max_rel_diff": 1.4099832e-14
+   },
+   {
+    "id": "raptor-shifting",
+    "py_isp_vac": 371.09183,
+    "js_isp_vac": 371.09183,
+    "py_Tc": 3762.883,
+    "js_Tc": 3762.883,
+    "max_rel_diff": 2.6934011e-13
+   },
+   {
+    "id": "raptor-frozen",
+    "py_isp_vac": 348.36629,
+    "js_isp_vac": 348.36629,
+    "py_Tc": 3762.883,
+    "js_Tc": 3762.883,
+    "max_rel_diff": 5.1070259e-15
+   },
+   {
+    "id": "rd180-shifting",
+    "py_isp_vac": 358.62882,
+    "js_isp_vac": 358.62882,
+    "py_Tc": 3890.4052,
+    "js_Tc": 3890.4052,
+    "max_rel_diff": 1.1213253e-13
+   },
+   {
+    "id": "rd180-frozen",
+    "py_isp_vac": 336.50879,
+    "js_isp_vac": 336.50879,
+    "py_Tc": 3890.4052,
+    "js_Tc": 3890.4052,
+    "max_rel_diff": 1.8984814e-14
+   }
+  ],
+  "node_ms": 24
+ }
+}

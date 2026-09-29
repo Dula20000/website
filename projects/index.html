@@ -546,11 +546,15 @@ a.tl-red:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
    PROJECT DATA
 ═══════════════════════════════════════════ */
 const projects = [
+  { title: "Propulsion Research Series", slug: "propulsion_research", desc: "Four propulsion studies: solvers built from scratch, validated, then run on real engine data.", emoji: "🧪", badge: "new", color: "#3a1a06", src: "propulsion/index.html" },
+  { title: "Nozzle CFD Tool",        slug: "nozzle_cfd_tool",    desc: "Quasi-1D Euler CFD of Merlin, RS-25 and Raptor-class nozzles along an ascent trajectory.", emoji: "🔥", badge: "new", color: "#2a1a0a", src: "propulsion/nozzle-cfd/index.html" },
+  { title: "Combustion Equilibrium Solver", slug: "combustion_equilibrium", desc: "Gibbs-minimisation chemistry for kerolox, methalox and hydrolox: Isp vs mixture ratio.", emoji: "⚗️", badge: "new", color: "#1a0a2a", src: "propulsion/combustion-equilibrium/index.html" },
+  { title: "Solid Motor Ballistics", slug: "srm_ballistics",     desc: "Level-set grain regression, chamber ballistics and Monte Carlo MEOP for solid motors.", emoji: "🧨", badge: "new", color: "#2a0a0a", src: "propulsion/srm-ballistics/index.html" },
+  { title: "Turbofan Cycle Analysis", slug: "turbofan_cycle",    desc: "On- and off-design cycle study of bypass ratio, fan pressure ratio and turbine temperature.", emoji: "🌀", badge: "new", color: "#0a1a2a", src: "propulsion/turbofan-cycle/index.html" },
   { title: "Hypertrophy Tracker",    slug: "hypertrophy_log",    desc: "A lifting app. Weekly training log with progressive overload analytics.",            emoji: "💪",    badge: "live",           color: "#2a2a0a", src: "https://www.dulran.com/lift.html" },
   { title: "No Internet Visual Data Transfer",    slug: "visual_transfer",    desc: "Use this to trasnfer data from device to device through QR codes instead of over internet",            emoji: "📲",      badge: "live",         color: "#bb3dd4", src: "https://dulran.com/visual-transfer/public/" },
   { title: "UT Class Registration Bot",  slug: "UTcourse_reg_bot",   desc: "Registers all desired classes within 5 seconds affording a competitve advantage",       emoji: "🤖", badge: "🤫 top secret",  color: "#0a2a4a", src:"../utregbot.html" },
   { title: "Classroom Chat App",     slug: "classroom_chat",     desc: "Covert real-time chat via Cloudflare Workers + Ably WebSockets.",     emoji: "💬",       badge: "live",        color: "#1a2a1a", src:"https://www.dulran.com/messages.html" },
-  { title: "Nozzle CFD Tool",        slug: "nozzle_cfd_tool",    desc: "Convergent-divergent nozzle flow analysis using quasi-1D Euler.",     emoji: "🔥",               color: "#2a1a0a", src:"a.html" },
   { title: "White Dwarf Model",      slug: "white_dwarf_model",  desc: "Stellar structure via degenerate EOS and Euler integration.",         emoji: "⭐",               color: "#1a1a2a", src:"a.html" },
   { title: "Flight Controller",      slug: "flight_controller",  desc: "PID + Kalman filter HIL-tested attitude control system.",             emoji: "✈️", badge: "wip",  color: "#0a2a1a", src:"a.html" },
   { title: "Sensor Fusion IMU",      slug: "sensor_fusion_imu",  desc: "Gyro + baro fusion in Simulink with Monte Carlo noise model.",        emoji: "📡",               color: "#1a0a2a", src:"a.html" },

@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chemical-Equilibrium Solver for Bipropellants · Propulsion Research No. 2 · Dulran</title>
+<meta name="description" content="A from-scratch Gibbs-minimisation equilibrium code (NASA RP-1311 formulation) for LOX/LH2, LOX/CH4 and LOX/RP-1: chamber temperature, c*, frozen and shifting Isp, density impulse, and why engines run at the mixture ratios they do.">
+<meta property="og:title" content="Why rocket engines run at the mixture ratios they do — a from-scratch equilibrium solver">
+<meta property="og:description" content="Gibbs free-energy minimisation for methalox, kerolox and hydrolox, verified against exact solutions and textbook flame temperatures, applied to Merlin-, RS-25-, Raptor- and RD-180-class engines. Includes an in-browser port of the solver.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="../assets/paper.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  .d { font-family: var(--mono); font-size: .9em; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+  .seg .btn.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .tool .status { font-family: var(--sans); font-size: 13px; color: var(--ink-2); margin-top: 10px; min-height: 1.4em; }
+  .tool .warn { color: var(--warn); }
+  .tool .err { color: var(--bad); }
+  .ctl .row input[type=number] { width: 92px; padding: 3px 6px; }
+  .readout .stat .l { font-size: 11.5px; }
+  .eq .katex-display { margin: .4em 0; }
+  td.l { white-space: normal; min-width: 180px; }
+</style>
+</head>
+<body>
+
+<nav class="series-bar"><div class="wide">
+  <span class="dot"></span>
+  <a href="../../index.html" target="_top">← Projects</a>
+  <a href="../index.html">Propulsion Research Series</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/Dula20000/website/tree/main/projects/propulsion/combustion-equilibrium/code" target="_blank" rel="noopener">Code ↗</a>
+</div></nav>
+
+<main class="wrap">
+<header class="paper-head">
+  <p class="kicker">Propulsion Research · No. 2</p>
+  <h1>A from-scratch chemical-equilibrium solver for liquid bipropellants: why methalox, kerolox and hydrolox engines run at the mixture ratios they do</h1>
+  <p class="byline"><b>Dulran</b> · September 2026</p>
+  <div class="meta-row">
+    <span class="chip">Gibbs minimisation</span>
+    <span class="chip">NASA RP-1311 formulation</span>
+    <span class="chip">frozen &amp; shifting Isp</span>
+    <span class="chip">Python + JS port</span>
+    <a class="chip" href="#tool">Interactive tool ↓</a>
+  </div>
+
+  <div class="abstract">
+    <h2>Abstract</h2>
+    <p>I wrote a small CEA-style chemical-equilibrium code for the C–H–O system: Gibbs free-energy minimisation with the element-potential Newton iteration of Gordon &amp; McBride (NASA RP-1311), NASA 7-coefficient thermodynamic data for 14 gas species, adiabatic (HP) combustion, and isentropic (SP) nozzle expansion with frozen or shifting composition. The code conserves elements to <span class="d" data-k="v.elem_max" data-f="e"></span> relative error, reproduces a calorically perfect nozzle to <span class="d" data-k="v.argon_max" data-f="e"></span>, and gives stoichiometric flame temperatures of <span class="d" data-k="v.flame.H2_O2_stoich_1atm" data-f="0"></span> K (H<sub>2</sub>–O<sub>2</sub>) and <span class="d" data-k="v.flame.CH4_air_stoich_1atm" data-f="0"></span> K (CH<sub>4</sub>–air) against textbook values of ≈3080 K and ≈2226 K. Sweeps at 10 MPa show vacuum-Isp peaks at O/F ≈ <span class="d" data-k="s.optimum.LOX/LH2.isp_vac_shift.of" data-f="2"></span> (LOX/LH2), <span class="d" data-k="s.optimum.LOX/LCH4.isp_vac_shift.of" data-f="2"></span> (LOX/CH<sub>4</sub>) and <span class="d" data-k="s.optimum.LOX/RP-1.isp_vac_shift.of" data-f="2"></span> (LOX/RP-1), all fuel-rich of stoichiometric because a lighter exhaust beats a hotter one. Real engines sit off these peaks for reasons outside the Isp curve: tank volume and density impulse push hydrogen engines towards O/F ≈ 6, while turbine and wall temperatures keep kerosene engines on the fuel-rich side. For four representative engines, the publicly quoted delivered vacuum Isp is <span class="d" data-k="v.eta_min" data-f="p1"></span>–<span class="d" data-k="v.eta_max" data-f="p1"></span> % of the shifting-equilibrium ideal, and lies close to the frozen-flow value.</p>
+  </div>
+
+  <div class="results-strip">
+    <div class="stat"><div class="v"><span data-k="s.optimum.LOX/LH2.isp_vac_shift.value" data-f="1"></span><small>s</small></div><div class="l">peak theoretical vacuum Isp, LOX/LH2 (10 MPa, ε = 40, shifting)</div></div>
+    <div class="stat"><div class="v"><span data-k="c.engines.1.eta_vac_shift" data-f="p1"></span><small>%</small></div><div class="l">RS-25-class delivered ÷ ideal vacuum Isp (≈452 s quoted)</div></div>
+    <div class="stat"><div class="v"><span data-k="v.fs_min" data-f="1"></span>–<span data-k="v.fs_max" data-f="1"></span><small>%</small></div><div class="l">shifting over frozen vacuum Isp at 10 MPa, ε = 40</div></div>
+    <div class="stat"><div class="v"><span data-k="v.js.max_rel_diff" data-f="e"></span></div><div class="l">max relative difference, in-browser JS port vs Python</div></div>
+  </div>
+</header>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="motivation">
+  <h2><span class="num">1</span>Motivation</h2>
+  <p>A liquid rocket engine's mixture ratio O/F (oxidiser mass flow over fuel mass flow) is one of the first numbers fixed in a design, and it is rarely the stoichiometric value or the one that maximises chamber temperature. The ideal-rocket result
+  \(c^* \propto \sqrt{T_c/\mathcal{M}}\) already shows why: running fuel-rich lowers the chamber temperature a little but lowers the exhaust molar mass \(\mathcal{M}\) a lot, especially when the excess fuel is hydrogen. Putting numbers on this needs the equilibrium composition of a 3500–3900 K gas that is partly dissociated into H, O and OH, which is what codes such as NASA CEA compute.</p>
+  <p>The purpose of this study is to build that capability from first principles, verify it carefully, and then use it to answer three concrete questions: where the theoretical Isp peaks for each propellant pair; how much chamber pressure matters through dissociation; and why real engines (Merlin, RS-25, Raptor, RD-180 classes) operate where they do, including how far their delivered Isp falls short of the ideal number.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="method">
+  <h2><span class="num">2</span>Method</h2>
+  <h3>Equilibrium by Gibbs minimisation</h3>
+  <p>For an ideal-gas mixture of species \(j\) with \(n_j\) moles per kilogram of propellant, equilibrium at fixed \(T,P\) is the minimum of</p>
+  <div class="eq">$$G=\sum_j n_j\mu_j,\qquad \frac{\mu_j}{RT}=\frac{h_j^\circ(T)}{RT}-\frac{s_j^\circ(T)}{R}+\ln\frac{n_j}{n}+\ln\frac{P}{P^\circ}$$</div>
+  <p>subject to element conservation \(\sum_j a_{ij}n_j=b_i^\circ\). Introducing element potentials \(\pi_i\) (scaled Lagrange multipliers), stationarity gives \(\mu_j/RT=\sum_i a_{ij}\pi_i\). Following RP-1311 [1], the Newton corrections for every species are written in terms of a few scalar unknowns,</p>
+  <div class="eq">$$\Delta\ln n_j=-\frac{\mu_j}{RT}+\sum_i a_{ij}\pi_i+\Delta\ln n+\frac{H_j^\circ}{RT}\,\Delta\ln T,$$</div>
+  <p>which, substituted into the linearised element balances, the total-mole identity and (for HP problems) the energy equation, leaves a symmetric system of size (elements + 2) whatever the number of species. For C–H–O that is a 5×5 solve per iteration. The element rows and the enthalpy row are</p>
+  <div class="eq">$$\sum_i\Big(\sum_j a_{kj}a_{ij}n_j\Big)\pi_i+\Big(\sum_j a_{kj}n_j\Big)\Delta\ln n+\Big(\sum_j a_{kj}n_j\tfrac{H_j^\circ}{RT}\Big)\Delta\ln T=b_k^\circ-b_k+\sum_j a_{kj}n_j\tfrac{\mu_j}{RT}$$</div>
+  <div class="eq">$$\sum_i\Big(\sum_j a_{ij}n_j\tfrac{H_j^\circ}{RT}\Big)\pi_i+\Big(\sum_j n_j\tfrac{H_j^\circ}{RT}\Big)\Delta\ln n+\Big(\sum_j n_j\tfrac{c_{p,j}^\circ}{R}+\sum_j n_j\tfrac{(H_j^\circ)^2}{(RT)^2}\Big)\Delta\ln T=\frac{h_0-h}{RT}+\sum_j n_j\tfrac{H_j^\circ}{RT}\tfrac{\mu_j}{RT}$$</div>
+  <p>For SP (isentropic) problems the enthalpy row is replaced by the corresponding entropy row. Steps are damped as in RP-1311 §3.3: \(\lambda=\min(1,\lambda_1,\lambda_2)\) with \(\lambda_1=2/\max(5|\Delta\ln T|,5|\Delta\ln n|,|\Delta\ln n_j|)\) over the major species, and \(\lambda_2\) stopping a trace species from jumping past a mole fraction of ≈10<sup>−4</sup> in one step. Iteration stops when the weighted corrections fall below 10<sup>−11</sup> with a full Newton step, several orders tighter than CEA's default, so that conservation errors are at round-off level.</p>
+  <p>Equilibrium derivatives \((\partial\ln V/\partial\ln T)_P\) and \((\partial\ln V/\partial\ln P)_T\) come from the same matrix with two new right-hand sides, giving the equilibrium \(c_p\), and</p>
+  <div class="eq">$$c_v=c_p+\frac{nR\,(\partial\ln V/\partial\ln T)_P^2}{(\partial\ln V/\partial\ln P)_T},\qquad \gamma_s=-\frac{c_p/c_v}{(\partial\ln V/\partial\ln P)_T},\qquad a^2=nRT\gamma_s .$$</div>
+
+  <h3>Thermodynamic data</h3>
+  <p>Each species uses NASA 7-coefficient polynomials in two ranges joined at 1000 K. I typed the coefficients in from the GRI-Mech 3.0 thermo file [3] (itself compiled from Burcat/TPIS/JANAF), with one substitution: OH uses the later Burcat fit [4], because the GRI fit carries \(\Delta h_f^\circ\approx+39\) kJ/mol against the currently accepted ≈+37.3 kJ/mol. The set is H<sub>2</sub>, O<sub>2</sub>, H, O, OH, H<sub>2</sub>O, HO<sub>2</sub>, H<sub>2</sub>O<sub>2</sub>, CO, CO<sub>2</sub>, CH<sub>4</sub>, CH<sub>3</sub>, HCO, CH<sub>2</sub>O, plus N<sub>2</sub>, NO and Ar for the air and exact-solution checks. Because the coefficients were typed by hand, every species is tested (Section 3) for its 298 K heat of formation and entropy and for continuity at 1000 K. Condensed carbon is not included: at the lowest O/F studied the oxygen-to-carbon atom ratio is still <span class="d" data-k="s.optimum.LOX/RP-1.oc_min" data-f="2"></span> (RP-1) and <span class="d" data-k="s.optimum.LOX/LCH4.oc_min" data-f="2"></span> (CH<sub>4</sub>), so all carbon can leave as CO and soot is not an equilibrium product in the chamber.</p>
+
+  <h3>Propellants</h3>
+  <p>Reactants enter only through their element content and an assigned enthalpy at storage temperature (Table 1). RP-1 is a single-formula surrogate, CH<sub>1.9423</sub>, as in CEA; real kerosene is a mixture, and the surrogate fixes only its H/C ratio and heat of formation.</p>
+  <div class="table-wrap"><table id="tab-prop">
+    <caption>Table 1. Propellant inputs: representative values from public sources, all approximate.</caption>
+    <thead><tr><th>Propellant</th><th>Formula</th><th class="num">T (K)</th><th class="num">h (kJ/mol)</th><th class="num">ρ (kg/m³)</th><th>Source type</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+
+  <h3>Rocket performance</h3>
+  <p>The combustor is treated as infinite-area (no Rayleigh loss). The chamber state is an HP equilibrium at \(P_c\) with the reactant enthalpy \(h_0\). Expansion is isentropic, \(s=s_c\), and the velocity is \(u=\sqrt{2(h_0-h)}\). The throat is the pressure at which \(u=a\) (Newton on \(\ln P_c/P\)); the exit is the supersonic pressure giving the area ratio \(\varepsilon=\rho_t u_t/(\rho_e u_e)\), found by a safeguarded Newton iteration with slope \(d\ln\varepsilon/d\ln(P_c/P)=(1-M^{-2})/\gamma\). Then</p>
+  <div class="eq">$$c^*=\frac{P_c}{\rho_t u_t},\qquad I_{\rm vac}=\frac{u_e}{g_0}+\frac{P_e\varepsilon}{g_0\rho_t u_t},\qquad I_{\rm SL}=I_{\rm vac}-\frac{P_a\varepsilon}{g_0\rho_t u_t},\qquad C_F=\frac{g_0 I}{c^*}.$$</div>
+  <p><b>Shifting</b> expansion re-equilibrates at every pressure; <b>frozen</b> expansion keeps the chamber composition. These bracket the real, kinetically limited nozzle. Density impulse uses the bulk density \(\rho_b=(1+r)/(r/\rho_o+1/\rho_f)\) with \(r=\) O/F: \(I_d=\rho_b I_{\rm sp}\), reported in s·g/cm³.</p>
+  <p>The Python package (<code>code/eqsolver</code>) is the reference implementation; <code>js/eqsolver.js</code> is a line-by-line port used by the interactive tool, reading the same coefficient table from <code>data/thermo.json</code>.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="vv">
+  <h2><span class="num">3</span>Verification &amp; validation</h2>
+  <h3>Thermodynamic data</h3>
+  <p>Table 2 compares every typed-in polynomial at 298.15 K with handbook values (JANAF/ATcT, rounded). Major species pass a ±0.05 kJ/mol tolerance on \(\Delta h_f^\circ\); minor intermediates get ±1.5 kJ/mol, which is the real scatter between compilations for radicals such as CH<sub>3</sub> or NO. The largest relative jump in \(c_p\), \(h\) or \(s\) at the 1000 K breakpoint is <span class="d" data-k="v.jump_max" data-f="e"></span>, i.e. the two ranges were entered consistently. No species had to be dropped.</p>
+  <div class="table-wrap"><table id="tab-thermo">
+    <caption>Table 2. Thermo-data checks at 298.15 K and at the 1000 K breakpoint.</caption>
+    <thead><tr><th>Species</th><th class="num">Δh<sub>f</sub> fit</th><th class="num">ref.</th><th class="num">diff</th><th class="num">s° fit</th><th class="num">ref.</th><th class="num">max jump @1000 K</th><th>check</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+
+  <h3>Solver checks</h3>
+  <p>Table 3 lists the chamber states used for the conservation checks. Element balances close to round-off, the HP energy balance likewise, and the law of mass action for six independent reactions (H<sub>2</sub>O ⇌ H<sub>2</sub> + ½O<sub>2</sub>, H<sub>2</sub>O ⇌ OH + H, H<sub>2</sub> ⇌ 2H, O<sub>2</sub> ⇌ 2O, CO<sub>2</sub> ⇌ CO + O, HO<sub>2</sub> ⇌ H + O<sub>2</sub>) holds to the residual shown. That is an exact check: the equilibrium constants come from the same thermo data, independently of the Newton machinery.</p>
+  <div class="table-wrap"><table id="tab-cons">
+    <caption>Table 3. Conservation and mass-action residuals at converged chamber states.</caption>
+    <thead><tr><th>Case</th><th class="num">elements (rel.)</th><th class="num">energy (rel.)</th><th class="num">max |ln K − ln Q|</th><th class="num">iterations</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p>Three further checks establish that the answer is the minimum of \(G\), not just a stationary point of the algorithm:</p>
+  <ul>
+    <li><b>Perturbation.</b> At the LOX/CH<sub>4</sub> chamber state, 200 random element-preserving perturbations of the composition all raise \(G/RT\) (smallest increase <span class="d" data-k="v.gibbs_min.min_dG_over_RT" data-f="e"></span>), and halving the perturbation divides the increase by \(2^{p}\) with median \(p=\)<span class="d" data-k="v.gibbs_min.order" data-f="2"></span>, the quadratic behaviour of a smooth minimum.</li>
+    <li><b>Independent optimiser.</b> Minimising \(G\) directly with SciPy's SLSQP (a general constrained optimiser, not RP-1311) gives major-species mole fractions within <span class="d" data-k="v.scipy.max_rel_diff_major" data-f="e"></span> relative of this code, and no lower \(G\).</li>
+    <li><b>Newton convergence.</b> Figure 1 shows the convergence of the HP solve for LOX/LH2. After the damped start the error falls quadratically, e.g. <span class="d" data-k="v.nh_3" data-f="e"></span> → <span class="d" data-k="v.nh_2" data-f="e"></span> → <span class="d" data-k="v.nh_1" data-f="e"></span>. Chamber states converge in about 9–10 iterations from a cold start.</li>
+  </ul>
+  <figure>
+    <div id="fig-newton" class="plot short"></div>
+    <figcaption><b>Figure 1.</b> Convergence measure (RP-1311 weighted correction) against iteration, HP problem for LOX/LH2 at O/F = 6, 20 MPa, cold start from equal mole numbers at 3800 K.</figcaption>
+  </figure>
+
+  <h3>Exact solution for the nozzle</h3>
+  <p>A monatomic gas has exactly \(c_p=\tfrac52R\) in the NASA fit, so a "rocket" burning hot argon must reproduce the closed-form ideal-rocket relations with \(\gamma=5/3\). With \(T_c=3000\) K, \(P_c=5\) MPa and \(\varepsilon=10\), the solver matches the exact \(c^*\), \(P_e/P_c\) and \(C_F\) to <span class="d" data-k="v.argon_max" data-f="e"></span> relative (both frozen and shifting paths). This validates the throat and area-ratio iterations independently of the chemistry.</p>
+
+  <h3>Validation against textbook and CEA-type values</h3>
+  <div class="table-wrap"><table id="tab-val">
+    <caption>Table 4. Validation. Reference values are well-known textbook or CEA-type figures, quoted approximately.</caption>
+    <thead><tr><th>Quantity</th><th class="num">this code</th><th class="num">reference</th><th>comment</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p>The H<sub>2</sub>–O<sub>2</sub> flame temperature is about 5 K below the usual ≈3080 K; CH<sub>4</sub>–air lands within a few kelvin of ≈2226 K. The ideal-rocket formula \(c^*=\sqrt{\gamma RT_c/\mathcal{M}}/\Gamma(\gamma)\), with \(\Gamma=\gamma\,(2/(\gamma+1))^{(\gamma+1)/(2(\gamma-1))}\), reproduces the computed frozen and shifting \(c^*\) to better than 0.1 % when it is given the matching chamber \(\gamma\) (frozen or \(\gamma_s\)), which is a useful sanity check on the throat solution with real gases.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="cases">
+  <h2><span class="num">4</span>Case studies</h2>
+  <p>Table 5 lists four engine classes with representative public inputs. These are not the manufacturers' design points: chamber pressure, mixture ratio and area ratio vary between versions and throttle settings, and some figures are rounded press numbers. They are used only to place the theoretical curves in context. Delivered Isp values are publicly quoted figures and are given as ≈.</p>
+  <div class="table-wrap"><table id="tab-inputs">
+    <caption>Table 5. Engine inputs: representative values from public sources (approximate).</caption>
+    <thead><tr><th>Engine class</th><th>Propellants</th><th>Cycle</th><th class="num">P<sub>c</sub> (MPa)</th><th class="num">ε</th><th class="num">O/F</th><th class="num">Isp SL (s)</th><th class="num">Isp vac (s)</th><th>Source type</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p>The O/F sweeps in Section 5 use a common condition so that the propellant pairs can be compared directly: \(P_c=\)<span class="d" data-k="s.conditions.Pc_MPa" data-f="0"></span> MPa, vacuum Isp at \(\varepsilon=\)<span class="d" data-k="s.conditions.eps_vac" data-f="0"></span>, and sea-level Isp at \(\varepsilon=\)<span class="d" data-k="s.conditions.eps_sl" data-f="0"></span> (close to optimum expansion at this pressure), \(P_a=101.325\) kPa.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="results">
+  <h2><span class="num">5</span>Results &amp; discussion</h2>
+
+  <h3>5.1 Isp against mixture ratio</h3>
+  <figure class="bleed">
+    <div class="fig-grid">
+      <div id="fig-isp-vac" class="plot"></div>
+      <div id="fig-isp-sl" class="plot"></div>
+    </div>
+    <figcaption><b>Figure 2.</b> Theoretical specific impulse against O/F at 10 MPa. Left: vacuum, ε = 40. Right: sea level, ε = 12. Solid lines are shifting equilibrium, dashed are frozen at the chamber composition. Stoichiometric O/F is 7.94 (H<sub>2</sub>), 3.99 (CH<sub>4</sub>) and ≈3.4 (RP-1 surrogate).</figcaption>
+  </figure>
+  <p>Every pair peaks fuel-rich of stoichiometric. The shifting vacuum optimum is at O/F <span class="d" data-k="s.optimum.LOX/LH2.isp_vac_shift.of" data-f="2"></span> for hydrogen (<span class="d" data-k="s.optimum.LOX/LH2.isp_vac_shift.value" data-f="1"></span> s), <span class="d" data-k="s.optimum.LOX/LCH4.isp_vac_shift.of" data-f="2"></span> for methane (<span class="d" data-k="s.optimum.LOX/LCH4.isp_vac_shift.value" data-f="1"></span> s) and <span class="d" data-k="s.optimum.LOX/RP-1.isp_vac_shift.of" data-f="2"></span> for RP-1 (<span class="d" data-k="s.optimum.LOX/RP-1.isp_vac_shift.value" data-f="1"></span> s). The frozen optimum is further fuel-rich still (<span class="d" data-k="s.optimum.LOX/LH2.isp_vac_froz.of" data-f="2"></span>, <span class="d" data-k="s.optimum.LOX/LCH4.isp_vac_froz.of" data-f="2"></span>, <span class="d" data-k="s.optimum.LOX/RP-1.isp_vac_froz.of" data-f="2"></span>): near stoichiometric much of the chemical energy is held in dissociated H, O and OH, which a frozen nozzle never gets back. The hydrogen curve is very flat, losing only a few seconds between O/F 4 and 6, so the Isp penalty of running at O/F 6 is small.</p>
+  <p>The gap between shifting and frozen is largest for methane at this condition (<span class="d" data-k="v.frozen_vs_shifting.1.diff_pct" data-f="1"></span> % at O/F 3.6) and smallest for hydrogen at O/F 6 (<span class="d" data-k="v.frozen_vs_shifting.0.diff_pct" data-f="1"></span> %). It measures how much recombination energy is available, and it bounds what finite-rate chemistry can do in a real nozzle.</p>
+
+  <h3>5.2 Chamber temperature and molar mass</h3>
+  <figure class="bleed">
+    <div class="fig-grid">
+      <div id="fig-tc" class="plot"></div>
+      <div id="fig-mw" class="plot"></div>
+    </div>
+    <figcaption><b>Figure 3.</b> Adiabatic chamber temperature (left) and chamber molar mass (right) against O/F at 10 MPa. Markers show the O/F of peak shifting vacuum Isp.</figcaption>
+  </figure>
+  <p>\(T_c\) peaks at O/F <span class="d" data-k="s.optimum.LOX/LH2.Tc.of" data-f="2"></span> (<span class="d" data-k="s.optimum.LOX/LH2.Tc.value" data-f="0"></span> K) for hydrogen, <span class="d" data-k="s.optimum.LOX/LCH4.Tc.of" data-f="2"></span> (<span class="d" data-k="s.optimum.LOX/LCH4.Tc.value" data-f="0"></span> K) for methane and <span class="d" data-k="s.optimum.LOX/RP-1.Tc.of" data-f="2"></span> (<span class="d" data-k="s.optimum.LOX/RP-1.Tc.value" data-f="0"></span> K) for RP-1, slightly fuel-rich of stoichiometric because dissociation caps the temperature. The Isp peaks are well to the left of these points. Moving fuel-rich from the \(T_c\) peak loses little temperature at first, but the molar mass falls steeply, most of all for hydrogen, where the extra H<sub>2</sub> (2 g/mol) replaces H<sub>2</sub>O (18 g/mol). Since \(c^*\propto\sqrt{T_c/\mathcal{M}}\), the optimum sits where the fractional drop in \(T_c\) starts to outpace the fractional drop in \(\mathcal{M}\).</p>
+
+  <h3>5.3 Exhaust composition</h3>
+  <div class="seg" id="comp-seg" role="group" aria-label="Propellant pair"></div>
+  <figure>
+    <div id="fig-comp" class="plot tall"></div>
+    <figcaption><b>Figure 4.</b> Equilibrium chamber mole fractions against O/F at 10 MPa (log scale; species above 10<sup>−6</sup> somewhere in the range). Use the buttons to change propellant pair.</figcaption>
+  </figure>
+  <p>On the fuel-rich side the chamber gas is H<sub>2</sub>O and H<sub>2</sub> (plus CO and CO<sub>2</sub> for the hydrocarbons), with a few per cent of H and OH. Towards and past stoichiometric, OH, O and O<sub>2</sub> rise by orders of magnitude, which is where frozen and shifting results diverge most. CH<sub>4</sub>, HCO and CH<sub>2</sub>O stay at trace level throughout. Including them costs nothing and confirms that no hydrocarbon survives in the chamber at these O/F.</p>
+
+  <h3>5.4 Chamber pressure and dissociation</h3>
+  <figure class="bleed">
+    <div class="fig-grid">
+      <div id="fig-pc-t" class="plot"></div>
+      <div id="fig-pc-isp" class="plot"></div>
+    </div>
+    <figcaption><b>Figure 5.</b> Effect of chamber pressure at fixed O/F (LH2 6.0, CH<sub>4</sub> 3.6, RP-1 2.6) and fixed ε = 40. Left: T<sub>c</sub> and the dissociated fraction x<sub>H</sub>+x<sub>O</sub>+x<sub>OH</sub>+x<sub>HO₂</sub>. Right: vacuum Isp, shifting (solid) and frozen (dashed).</figcaption>
+  </figure>
+  <p>Raising \(P_c\) from 0.5 to 30 MPa suppresses dissociation (Le Chatelier: dissociation increases the mole number) and raises \(T_c\) by <span class="d" data-k="v.pc_dT_lh2" data-f="0"></span> K for LOX/LH2 and <span class="d" data-k="v.pc_dT_rp1" data-f="0"></span> K for LOX/RP-1. At a fixed area ratio, shifting vacuum Isp rises only modestly (<span class="d" data-k="v.pc_dI_lh2_s" data-f="1"></span> s for LH2) because a shifting nozzle recovers most of the dissociation energy anyway. Frozen Isp rises much more (<span class="d" data-k="v.pc_dI_lh2_f" data-f="1"></span> s), because at high pressure less energy is locked in radicals to begin with. The practical value of high chamber pressure is therefore less the ideal Isp at fixed ε than the smaller, lighter engine for a given thrust and the larger area ratio it permits at sea level. The chemical benefit is that real, partly frozen nozzles lose less.</p>
+
+  <h3>5.5 Density impulse: why hydrogen engines run at O/F ≈ 6</h3>
+  <figure>
+    <div id="fig-rhoisp" class="plot"></div>
+    <figcaption><b>Figure 6.</b> Density impulse ρ<sub>b</sub>·Isp<sub>vac</sub> (shifting, 10 MPa, ε = 40) against O/F. Open circles: peak Isp; filled diamonds: peak density impulse (for LOX/LH2 it increases across the whole range plotted).</figcaption>
+  </figure>
+  <p>Liquid hydrogen has a density of about 71 kg/m³, so at the Isp optimum most of the tank volume holds fuel. Raising O/F from the Isp optimum (<span class="d" data-k="s.optimum.LOX/LH2.isp_vac_shift.of" data-f="2"></span>) to 6 costs <span class="d" data-k="v.lh2_dI" data-f="1"></span> s of vacuum Isp but raises the bulk propellant density by <span class="d" data-k="v.lh2_drho" data-f="0"></span> %. In Figure 6 hydrogen's density impulse is still climbing at O/F 10. The chosen O/F ≈ 6 of RS-25-class and upper-stage hydrolox engines is a vehicle-level compromise between Isp and tank mass and drag. For methane, density impulse peaks at O/F ≈ <span class="d" data-k="s.optimum.LOX/LCH4.rho_isp_vac.of" data-f="2"></span>, fuel-lean of the Isp peak, and Raptor-class engines run near 3.6, between the two. For RP-1 the density impulse peaks at <span class="d" data-k="s.optimum.LOX/RP-1.rho_isp_vac.of" data-f="2"></span>, yet Merlin-class engines run at ≈2.36, fuel-rich of both peaks. The reasons are not in the Isp curve: a fuel-rich gas generator or preburner needs turbine-inlet temperatures far below \(T_c\), a cooler and more reducing gas protects the chamber wall and film-cooled throat, and and at O/F 2.36 the chamber runs about <span class="d" data-k="v.rp1_dT" data-f="0"></span> K cooler than at the \(T_c\) peak (Figure 3) for a small Isp penalty. The RD-180 class, at ≈2.72, sits close to the Isp peak. Its oxygen-rich preburner means the turbine limit does not push the main chamber fuel-rich in the same way.</p>
+
+  <h3>5.6 Theoretical against delivered performance</h3>
+  <div class="table-wrap"><table id="tab-results">
+    <caption>Table 6. Computed ideal performance at the Table 5 inputs, and the ratio of the publicly quoted (≈) delivered Isp to the shifting ideal.</caption>
+    <thead><tr><th>Engine class</th><th class="num">T<sub>c</sub> (K)</th><th class="num">𝓜 (g/mol)</th><th class="num">γ<sub>s</sub></th><th class="num">c* (m/s)</th><th class="num">C<sub>F,vac</sub></th><th class="num">Isp vac shift / frozen</th><th class="num">Isp SL shift / frozen</th><th class="num">P<sub>e</sub> (kPa)</th><th class="num">η vac</th><th class="num">η SL</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <figure class="bleed">
+    <div class="fig-grid">
+      <div id="fig-eng-vac" class="plot"></div>
+      <div id="fig-eng-sl" class="plot"></div>
+    </div>
+    <figcaption><b>Figure 7.</b> Ideal frozen and shifting Isp compared with publicly quoted delivered Isp (≈), vacuum (left) and sea level (right).</figcaption>
+  </figure>
+  <p>The delivered vacuum Isp is <span class="d" data-k="v.eta_min" data-f="p1"></span>–<span class="d" data-k="v.eta_max" data-f="p1"></span> % of the shifting ideal and, for the staged-combustion engines, within about ±1.5 % of the frozen ideal. An overall efficiency \(\eta_{I}=\eta_{c^*}\,\eta_{C_F}\) combines combustion efficiency (mixing, incomplete reaction; \(\eta_{c^*}\) typically ≈0.97–0.99 for well-developed engines [6]) with nozzle losses: divergence, boundary-layer drag, and chemical non-equilibrium in the expansion, which on its own moves the result from shifting towards frozen. I cannot split \(\eta_I\) into those factors without measured chamber pressure and flow rates, so the ratios in Table 6 are overall figures.</p>
+  <p>The RS-25-class engine shows the highest ratio (<span class="d" data-k="c.engines.1.eta_vac_shift" data-f="p1"></span> %): a large, bell-contoured, staged-combustion hydrogen engine, where low exhaust molar mass and high pressure keep the frozen–shifting gap small. The Merlin-class figure (<span class="d" data-k="c.engines.0.eta_vac_shift" data-f="p1"></span> %) is lowest, and below even the frozen ideal, as expected for an open gas-generator cycle: a few per cent of the propellant drives the turbine and is dumped at low Isp, which the quoted engine Isp includes. The sea-level ratios also absorb over-expansion effects, and the ideal model does not include flow separation.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="tool">
+  <h2><span class="num">6</span>Interactive tool</h2>
+  <p>This is the JavaScript port of the solver running in your browser: a fresh HP equilibrium, throat search and area-ratio iteration every time an input changes. Presets load the Table 5 inputs. "Sweep O/F" runs the full calculation across the O/F range in small chunks per animation frame so the page stays responsive.</p>
+  <div class="tool">
+    <div class="tool-head">Equilibrium rocket performance · in-browser</div>
+    <div class="controls">
+      <label class="ctl"><span>Preset</span>
+        <select id="in-preset">
+          <option value="">Custom</option>
+          <option value="merlin1d">Merlin 1D-class (LOX/RP-1)</option>
+          <option value="rs25" selected>RS-25-class (LOX/LH2)</option>
+          <option value="raptor">Raptor-class (LOX/CH4)</option>
+          <option value="rd180">RD-180-class (LOX/RP-1)</option>
+        </select></label>
+      <label class="ctl"><span>Propellant pair</span>
+        <select id="in-pair">
+          <option value="LOX/LH2">LOX / LH2</option>
+          <option value="LOX/LCH4">LOX / CH4 (liquid)</option>
+          <option value="LOX/RP-1">LOX / RP-1 (CH1.9423)</option>
+        </select></label>
+      <label class="ctl"><span>Expansion</span>
+        <select id="in-mode">
+          <option value="shifting">Shifting equilibrium</option>
+          <option value="frozen">Frozen (at chamber)</option>
+        </select></label>
+      <div class="ctl"><div class="row"><span>O/F</span><input type="number" id="num-of" step="0.01" aria-label="O/F value"></div>
+        <input type="range" id="in-of" step="0.01" aria-label="O/F"></div>
+      <div class="ctl"><div class="row"><span>P<sub>c</sub> (MPa)</span><input type="number" id="num-pc" min="0.3" max="40" step="0.1" aria-label="Chamber pressure value"></div>
+        <input type="range" id="in-pc" min="0.3" max="40" step="0.1" aria-label="Chamber pressure"></div>
+      <div class="ctl"><div class="row"><span>Area ratio ε</span><input type="number" id="num-eps" min="1.5" max="250" step="0.5" aria-label="Area ratio value"></div>
+        <input type="range" id="in-eps" min="1.5" max="250" step="0.5" aria-label="Area ratio"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btn-sweep" type="button">Sweep O/F</button>
+      <button class="btn ghost" id="btn-reset" type="button">Reset to preset</button>
+    </div>
+    <div class="readout" id="readout"></div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="fig-grid" style="margin-top:14px">
+      <div id="tool-comp" class="plot"></div>
+      <div id="tool-sweep" class="plot"></div>
+    </div>
+    <div class="status" id="xcheck"></div>
+  </div>
+  <p class="note"><b>Consistency with the Python code.</b> Run under Node.js by <code>run_study.py</code>, the port reproduces the Python results for all eight engine cases (four engines, frozen and shifting) to a maximum relative difference of <span class="d" data-k="v.js.max_rel_diff" data-f="e"></span> in T<sub>c</sub>, 𝓜, c*, C<sub>F</sub> and Isp. The line under the plots above repeats the check live in your browser for the RS-25-class case.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────── -->
+<section id="limits">
+  <h2><span class="num">7</span>Limitations &amp; future work</h2>
+  <ul>
+    <li><b>Thermo data range.</b> The GRI-Mech fits are nominally valid to 3500 K. The Raptor- and RD-180-class chambers (≈3760 K and ≈3890 K) extrapolate the high-range polynomials by a few hundred kelvin. The fits are smooth there, but a CEA run with its 200–6000 K data would be the right cross-check. Replacing the table with NASA Glenn 9-coefficient data [8] is the obvious next step.</li>
+    <li><b>Species set.</b> 14 C–H–O gases. No condensed phases (soot, ice) and no ions. Graphite could in principle become stable at the cold end of a shifting expansion at the most fuel-rich RP-1 points; I did not test that.</li>
+    <li><b>RP-1 surrogate.</b> A single formula with an approximate heat of formation. Real RP-1 varies by batch, and small changes in \(\Delta h_f\) move \(T_c\) by tens of kelvin.</li>
+    <li><b>Ideal nozzle.</b> Infinite-area combustor, 1-D isentropic flow, no divergence, boundary-layer or kinetic losses, and no flow separation at sea level. A finite-area combustor and a one-dimensional finite-rate kinetics (Bray-type freezing-point) model would sit between the frozen and shifting curves.</li>
+    <li><b>Engine inputs.</b> Public, rounded figures. The delivered-Isp comparisons use publicly quoted numbers that differ between sources and engine versions, so the efficiencies are good to perhaps ±1 %.</li>
+  </ul>
+</section>
+
+<section id="refs">
+  <h2>References</h2>
+  <ol class="refs">
+    <li>Gordon, S. and McBride, B. J., <i>Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications. I. Analysis</i>, NASA RP-1311, 1994.</li>
+    <li>McBride, B. J. and Gordon, S., <i>… II. Users Manual and Program Description</i>, NASA RP-1311, 1996.</li>
+    <li>Smith, G. P., Golden, D. M., Frenklach, M., et al., GRI-Mech 3.0 (reaction mechanism and thermodynamic data file), Gas Research Institute, c. 1999.</li>
+    <li>Burcat, A. and Ruscic, B., <i>Third Millennium Ideal Gas and Condensed Phase Thermochemical Database for Combustion with Updates from Active Thermochemical Tables</i>, Argonne National Laboratory report ANL-05/20, 2005.</li>
+    <li>Chase, M. W., <i>NIST-JANAF Thermochemical Tables</i>, 4th ed., J. Phys. Chem. Ref. Data, Monograph 9, 1998.</li>
+    <li>Sutton, G. P. and Biblarz, O., <i>Rocket Propulsion Elements</i>, 9th ed., Wiley, 2017.</li>
+    <li>Hill, P. G. and Peterson, C. R., <i>Mechanics and Thermodynamics of Propulsion</i>, 2nd ed., Addison-Wesley, 1992.</li>
+    <li>McBride, B. J., Zehe, M. J. and Gordon, S., <i>NASA Glenn Coefficients for Calculating Thermodynamic Properties of Individual Species</i>, NASA/TP-2002-211556, 2002.</li>
+    <li>Turns, S. R., <i>An Introduction to Combustion</i>, 3rd ed., McGraw-Hill, 2012 (adiabatic flame temperatures).</li>
+    <li>Engine figures: public specifications and statements from SpaceX, NASA / Aerojet Rocketdyne, NPO Energomash and ULA (approximate; see Table 5).</li>
+  </ol>
+</section>
+</main>
+
+<footer class="paper-foot"><div class="wrap">
+  Propulsion Research Series · No. 2 · Dulran, September 2026. All computed numbers on this page are loaded from <code>data/*.json</code>, generated by <code>code/run_study.py</code>.
+</div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="../assets/plot.js"></script>
+<script src="js/eqsolver.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})"></script>
+<script>
+(function () {
+  'use strict';
+  const PAIRS = ['LOX/LH2', 'LOX/LCH4', 'LOX/RP-1'];
+  const LABEL = { 'LOX/LH2': 'LOX/LH2', 'LOX/LCH4': 'LOX/CH4', 'LOX/RP-1': 'LOX/RP-1' };
+  const COL = (p) => PR.series(PAIRS.indexOf(p));
+  const $ = (id) => document.getElementById(id);
+
+  function get(obj, path) {
+    // keys may contain '/', so split on '.' only
+    return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+  }
+  function fmt(v, f) {
+    if (v == null || !isFinite(v)) return '–';
+    if (f === 'e') { const e = Math.floor(Math.log10(Math.abs(v))); const m = v / Math.pow(10, e);
+      return (Math.abs(m - 1) < 0.05 ? '' : m.toFixed(1) + '×') + '10' + sup(e); }
+    if (f === 'p1') return (v * 100).toFixed(1);
+    return Number(v).toFixed(parseInt(f, 10));
+  }
+  function sup(e) { const m = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+    return String(e).split('').map((c) => m[c]).join(''); }
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const chem = (s) => esc(s).replace(/(\d+(\.\d+)?)/g, '<sub>$1</sub>');
+
+  Promise.all(['data/cases.json', 'data/sweeps.json', 'data/verification.json', 'data/thermo.json'].map(PR.loadJSON))
+    .then(([c, s, v, th]) => { derive(c, s, v); fill({ c, s, v }); tables(c, s, v, th); figures(c, s, v); tool(c, th); })
+    .catch((e) => { console.warn(e); document.querySelectorAll('[data-k]').forEach((el) => { el.textContent = '?'; }); });
+
+  function derive(c, s, v) {
+    v.elem_max = Math.max(...v.conservation.map((r) => r.elem_rel));
+    v.argon_max = Math.max(...['shifting', 'frozen'].flatMap((m) => ['err_cstar', 'err_pr', 'err_CF'].map((k) => v.argon[m][k])));
+    const et = c.engines.map((e) => e.eta_vac_shift);
+    v.eta_min = Math.min(...et); v.eta_max = Math.max(...et);
+    const fs = v.frozen_vs_shifting.map((r) => r.diff_pct);
+    v.fs_min = Math.min(...fs); v.fs_max = Math.max(...fs);
+    v.jump_max = Math.max(...v.thermo.map((r) => Math.max(r.jump_cp, r.jump_h, r.jump_s)));
+    const nh = v.newton_history; v.nh_1 = nh[nh.length - 1]; v.nh_2 = nh[nh.length - 2]; v.nh_3 = nh[nh.length - 3];
+    const H = s.of['LOX/LH2'], oH = s.optimum['LOX/LH2'].isp_vac_shift, i6 = H.of.findIndex((o) => Math.abs(o - 6) < 1e-6);
+    v.lh2_dI = oH.value - H.isp_vac_shift[i6];
+    const rhoAt = (x) => { const i = H.of.findIndex((o) => o >= x); const t = (x - H.of[i - 1]) / (H.of[i] - H.of[i - 1]); return H.rho_bulk[i - 1] + t * (H.rho_bulk[i] - H.rho_bulk[i - 1]); };
+    v.lh2_drho = 100 * (H.rho_bulk[i6] / rhoAt(oH.of) - 1);
+    const K = s.of['LOX/RP-1'], j = K.of.findIndex((o) => o >= 2.36), tk = (2.36 - K.of[j - 1]) / (K.of[j] - K.of[j - 1]);
+    v.rp1_dT = s.optimum['LOX/RP-1'].Tc.value - (K.Tc[j - 1] + tk * (K.Tc[j] - K.Tc[j - 1]));
+    const P = s.pc, last = (a) => a[a.length - 1];
+    v.pc_dT_lh2 = last(P['LOX/LH2'].Tc) - P['LOX/LH2'].Tc[0];
+    v.pc_dT_rp1 = last(P['LOX/RP-1'].Tc) - P['LOX/RP-1'].Tc[0];
+    v.pc_dI_lh2_s = last(P['LOX/LH2'].isp_vac_shift) - P['LOX/LH2'].isp_vac_shift[0];
+    v.pc_dI_lh2_f = last(P['LOX/LH2'].isp_vac_froz) - P['LOX/LH2'].isp_vac_froz[0];
+  }
+
+  function fill(root) {
+    document.querySelectorAll('[data-k]').forEach((el) => { el.textContent = fmt(get(root, el.dataset.k), el.dataset.f); });
+  }
+
+  function rows(id, arr) { $(id).querySelector('tbody').innerHTML = arr.map((r) => '<tr>' + r.join('') + '</tr>').join(''); }
+  const td = (x, cls) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + x + '</td>';
+
+  function tables(c, s, v, th) {
+    const P = th.propellants;
+    const names = { LOX: 'O2', LH2: 'H2', LCH4: 'CH4', 'RP-1': 'C1H1.9423' };
+    rows('tab-prop', ['LOX', 'LH2', 'LCH4', 'RP-1'].map((k) => [td(k), td(chem(names[k])), td(P[k].T.toFixed(1), 'num'),
+      td((P[k].h / 1000).toFixed(2), 'num'), td(P[k].density.toFixed(1), 'num'), td(esc(P[k].note) + '; density: public handbook value', 'l')]));
+    rows('tab-thermo', v.thermo.map((r) => {
+      const ok = Math.abs(r.dhf) <= r.tol_hf && Math.abs(r.ds) <= r.tol_s && Math.max(r.jump_cp, r.jump_h, r.jump_s) < 1e-5;
+      return [td(chem(r.species)), td(r.hf.toFixed(3), 'num'), td(r.hf_ref.toFixed(2), 'num'), td((r.dhf >= 0 ? '+' : '') + r.dhf.toFixed(3), 'num'),
+        td(r.s.toFixed(2), 'num'), td(r.s_ref.toFixed(2), 'num'), td(Math.max(r.jump_cp, r.jump_h, r.jump_s).toExponential(1), 'num'),
+        td(ok ? 'pass (±' + r.tol_hf + ')' : 'fail', ok ? 'pass' : 'fail')];
+    }));
+    rows('tab-cons', v.conservation.map((r) => [td(esc(r.case)),
+      td(r.elem_rel.toExponential(1), 'num'), td(r.energy_rel.toExponential(1), 'num'), td(r.mass_action.toExponential(1), 'num'), td(r.iterations, 'num')]));
+    const pb = v.published, cs = v.cstar;
+    rows('tab-val', [
+      [td('H<sub>2</sub>–O<sub>2</sub> stoich., 1 atm, 298 K: T<sub>ad</sub>'), td(v.flame.H2_O2_stoich_1atm.toFixed(0) + ' K', 'num'), td('≈3080 K', 'num'), td('textbook [6,9]; Δ = ' + (v.flame.H2_O2_stoich_1atm - 3080).toFixed(0) + ' K', 'l')],
+      [td('CH<sub>4</sub>–air stoich., 1 atm, 298 K: T<sub>ad</sub>'), td(v.flame.CH4_air_stoich_1atm.toFixed(0) + ' K', 'num'), td('≈2226 K', 'num'), td('textbook [9]; air as O<sub>2</sub> + 3.76 N<sub>2</sub>, N<sub>2</sub>/NO included', 'l')],
+      [td('Argon nozzle: c*, P<sub>e</sub>/P<sub>c</sub>, C<sub>F</sub>'), td(fmt(v.argon_max, 'e') + ' rel.', 'num'), td('exact', 'num'), td('closed-form ideal rocket, γ = 5/3', 'l')],
+      [td('c* vs √(γRT<sub>c</sub>/𝓜)/Γ(γ), frozen'), td(cs.frozen.cstar.toFixed(1) + ' m/s', 'num'), td(cs.frozen.cstar_ideal.toFixed(1) + ' m/s', 'num'), td('Δ = ' + (cs.frozen.rel * 100).toFixed(2) + ' %; LOX/CH<sub>4</sub>, 3.6, 10 MPa', 'l')],
+      [td('c* vs √(γ<sub>s</sub>RT<sub>c</sub>/𝓜)/Γ(γ<sub>s</sub>), shifting'), td(cs.shifting.cstar.toFixed(1) + ' m/s', 'num'), td(cs.shifting.cstar_ideal.toFixed(1) + ' m/s', 'num'), td('Δ = ' + (cs.shifting.rel * 100).toFixed(2) + ' %', 'l')],
+      [td('LOX/LH2, O/F 6, ε 69, 20.6 MPa: Isp<sub>vac</sub>'), td(pb.lh2_of6_eps69_isp_vac.toFixed(1) + ' s', 'num'), td('≈450+ s', 'num'), td('CEA-type theoretical figure, shifting', 'l')],
+      [td('LOX/RP-1 peak T<sub>c</sub>, 1000 psia (6.9 MPa)'), td(pb.rp1_Tc_peak_1000psia.toFixed(0) + ' K @ O/F ' + pb.rp1_Tc_peak_of.toFixed(2), 'num'), td('≈3600–3700 K', 'num'), td('CEA-type / Sutton &amp; Biblarz tables [6]', 'l')],
+      [td('Frozen &lt; shifting Isp (10 MPa, ε 40)'), td(v.frozen_vs_shifting.map((r) => r.diff_pct.toFixed(1)).join(' / ') + ' %', 'num'), td('few %', 'num'), td('LH2 / CH<sub>4</sub> / RP-1', 'l')],
+      [td('SciPy SLSQP direct minimisation'), td(fmt(v.scipy.max_rel_diff_major, 'e') + ' rel.', 'num'), td('same minimum', 'num'), td('major-species mole fractions', 'l')],
+    ]);
+    rows('tab-inputs', c.engines.map((e) => [td(esc(e.name)), td(e.pair.replace('LCH4', 'CH4')), td(esc(e.cycle), 'l'), td(e.Pc_MPa.toFixed(1), 'num'), td(e.eps.toFixed(1), 'num'),
+      td(e.of.toFixed(2), 'num'), td('≈' + e.isp_sl_pub.toFixed(0), 'num'), td('≈' + e.isp_vac_pub.toFixed(0), 'num'), td(esc(e.source), 'l')]));
+    rows('tab-results', c.engines.map((e) => { const S = e.shifting, F = e.frozen;
+      return [td(esc(e.name)), td(S.Tc.toFixed(0), 'num'), td(S.M_c.toFixed(2), 'num'), td(S.gamma_s_c.toFixed(3), 'num'), td(S.cstar.toFixed(0), 'num'),
+        td(S.CF_vac.toFixed(3), 'num'), td(S.Isp_vac.toFixed(1) + ' / ' + F.Isp_vac.toFixed(1), 'num'), td(S.Isp_sl.toFixed(1) + ' / ' + F.Isp_sl.toFixed(1), 'num'),
+        td(S.Pe_kPa.toFixed(1), 'num'), td((e.eta_vac_shift * 100).toFixed(1) + ' %', 'num'), td((e.eta_sl_shift * 100).toFixed(1) + ' %', 'num')]; }));
+  }
+
+  function figures(c, s, v) {
+    PR.plot('fig-newton', [{ x: v.newton_history.map((_, i) => i + 1), y: v.newton_history, mode: 'lines+markers', line: { color: PR.series(0) }, name: 'error' }],
+      { xaxis: { title: 'iteration', dtick: 1 }, yaxis: { title: 'max weighted correction', type: 'log', exponentformat: 'power' }, showlegend: false });
+
+    function ofPlot(id, key1, key2, ytitle) {
+      const tr = [];
+      PAIRS.forEach((p) => { const d = s.of[p];
+        tr.push({ x: d.of, y: d[key1], name: LABEL[p] + ' shifting', mode: 'lines', line: { color: COL(p), width: 2.2 } });
+        if (key2) tr.push({ x: d.of, y: d[key2], name: LABEL[p] + ' frozen', mode: 'lines', line: { color: COL(p), dash: 'dash', width: 1.6 } });
+      });
+      PR.plot(id, tr, { xaxis: { title: 'O/F (mass)' }, yaxis: { title: ytitle }, legend: { font: { size: 10.5 } } });
+    }
+    ofPlot('fig-isp-vac', 'isp_vac_shift', 'isp_vac_froz', 'Isp vacuum (s), ε = ' + s.conditions.eps_vac);
+    ofPlot('fig-isp-sl', 'isp_sl_shift', 'isp_sl_froz', 'Isp sea level (s), ε = ' + s.conditions.eps_sl);
+
+    function markerAt(p, key) {  // interpolate at optimum O/F of shifting vac Isp
+      const d = s.of[p], x = s.optimum[p].isp_vac_shift.of; let i = d.of.findIndex((o) => o >= x); if (i < 1) i = 1;
+      const t = (x - d.of[i - 1]) / (d.of[i] - d.of[i - 1]); return { x, y: d[key][i - 1] + t * (d[key][i] - d[key][i - 1]) };
+    }
+    ['Tc', 'M_c'].forEach((key, k) => {
+      const tr = PAIRS.map((p) => ({ x: s.of[p].of, y: s.of[p][key], name: LABEL[p], mode: 'lines', line: { color: COL(p), width: 2.2 } }));
+      PAIRS.forEach((p) => { const m = markerAt(p, key); tr.push({ x: [m.x], y: [m.y], mode: 'markers', marker: { color: COL(p), size: 9, symbol: 'circle-open', line: { width: 2 } }, showlegend: false, hovertemplate: 'peak-Isp O/F %{x:.2f}<extra></extra>' }); });
+      PR.plot(k ? 'fig-mw' : 'fig-tc', tr, { xaxis: { title: 'O/F (mass)' }, yaxis: { title: k ? 'chamber molar mass (g/mol)' : 'T<sub>c</sub> (K)' } });
+    });
+
+    // composition
+    const seg = $('comp-seg');
+    function comp(p) {
+      const d = s.of[p]; const sp = Object.keys(d.composition);
+      const tr = sp.map((n, i) => ({ x: d.of, y: d.composition[n].map((x) => (x > 1e-9 ? x : null)), name: n, mode: 'lines',
+        line: { color: PR.series(i), width: 2, dash: ['solid', 'dash', 'dot'][Math.floor(i / 6) % 3] } }));
+      PR.plot('fig-comp', tr, { xaxis: { title: 'O/F (mass) — ' + LABEL[p] + ', ' + s.conditions.Pc_MPa + ' MPa' },
+        yaxis: { title: 'mole fraction', type: 'log', range: [-6, 0], exponentformat: 'power' }, legend: { font: { size: 10.5 } } });
+      seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.p === p ? 'true' : 'false'));
+    }
+    PAIRS.forEach((p) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.p = p; b.textContent = LABEL[p];
+      b.addEventListener('click', () => comp(p)); seg.appendChild(b); });
+    comp('LOX/LCH4');
+
+    // Pc sweep
+    const trT = [], trI = [];
+    PAIRS.forEach((p) => { const d = s.pc[p];
+      trT.push({ x: d.Pc_MPa, y: d.Tc, name: LABEL[p] + ' T<sub>c</sub>', mode: 'lines+markers', line: { color: COL(p) }, marker: { size: 5 } });
+      trT.push({ x: d.Pc_MPa, y: d.x_dissoc, name: LABEL[p] + ' dissociated', yaxis: 'y2', mode: 'lines', line: { color: COL(p), dash: 'dot' } });
+      trI.push({ x: d.Pc_MPa, y: d.isp_vac_shift, name: LABEL[p] + ' shifting', mode: 'lines+markers', line: { color: COL(p) }, marker: { size: 5 } });
+      trI.push({ x: d.Pc_MPa, y: d.isp_vac_froz, name: LABEL[p] + ' frozen', mode: 'lines', line: { color: COL(p), dash: 'dash' } });
+    });
+    PR.plot('fig-pc-t', trT, { xaxis: { title: 'P<sub>c</sub> (MPa)', type: 'log' }, yaxis: { title: 'T<sub>c</sub> (K)' },
+      yaxis2: { title: 'x<sub>H+O+OH+HO₂</sub>', overlaying: 'y', side: 'right', showgrid: false, rangemode: 'tozero' }, legend: { font: { size: 10 } }, margin: { r: 60 } });
+    PR.plot('fig-pc-isp', trI, { xaxis: { title: 'P<sub>c</sub> (MPa)', type: 'log' }, yaxis: { title: 'Isp vacuum (s), ε = ' + s.conditions.eps_vac }, legend: { font: { size: 10 } } });
+
+    // density impulse
+    const tr = [];
+    PAIRS.forEach((p) => { const d = s.of[p], o = s.optimum[p];
+      tr.push({ x: d.of, y: d.rho_isp_vac, name: LABEL[p], mode: 'lines', line: { color: COL(p), width: 2.2 } });
+      const m = markerAt(p, 'rho_isp_vac');
+      tr.push({ x: [m.x], y: [m.y], mode: 'markers', marker: { color: COL(p), size: 9, symbol: 'circle-open', line: { width: 2 } }, showlegend: false, hovertemplate: 'peak Isp, O/F %{x:.2f}<extra></extra>' });
+      if (!o.rho_isp_vac_at_edge) tr.push({ x: [o.rho_isp_vac.of], y: [o.rho_isp_vac.value], mode: 'markers', marker: { color: COL(p), size: 10, symbol: 'diamond' }, showlegend: false, hovertemplate: 'peak ρIsp, O/F %{x:.2f}<extra></extra>' });
+    });
+    PR.plot('fig-rhoisp', tr, { xaxis: { title: 'O/F (mass)' }, yaxis: { title: 'ρ<sub>b</sub>·Isp<sub>vac</sub> (s·g/cm³)' } });
+
+    // engines
+    ['vac', 'sl'].forEach((m) => {
+      const names = c.engines.map((e) => e.name.replace('-class', '').replace(' (sea-level)', ''));
+      const key = m === 'vac' ? 'Isp_vac' : 'Isp_sl';
+      PR.plot('fig-eng-' + m, [
+        { type: 'bar', x: names, y: c.engines.map((e) => e.frozen[key]), name: 'ideal frozen', marker: { color: PR.series(1) } },
+        { type: 'bar', x: names, y: c.engines.map((e) => e.shifting[key]), name: 'ideal shifting', marker: { color: PR.series(0) } },
+        { type: 'bar', x: names, y: c.engines.map((e) => e['isp_' + m + '_pub']), name: 'delivered (≈, public)', marker: { color: PR.series(2) } },
+      ], { barmode: 'group', yaxis: { title: 'Isp ' + (m === 'vac' ? 'vacuum' : 'sea level') + ' (s)', range: m === 'vac' ? [250, 480] : [200, 400] }, xaxis: { tickfont: { size: 10 } } });
+    });
+  }
+
+  // ───────────────────────────── interactive tool ─────────────────────────────
+  function tool(c, th) {
+    const S = EqSolver.create(th);
+    const RANGE = { 'LOX/LH2': [2.5, 10], 'LOX/LCH4': [2.0, 5.0], 'LOX/RP-1': [1.6, 3.8] };
+    const presets = {}; c.engines.forEach((e) => { presets[e.id] = e; });
+    const el = { preset: $('in-preset'), pair: $('in-pair'), mode: $('in-mode'), of: $('in-of'), nof: $('num-of'),
+      pc: $('in-pc'), npc: $('num-pc'), eps: $('in-eps'), neps: $('num-eps') };
+    let sweepData = null, sweepToken = 0, pending = false;
+
+    function setRange(pair) { const [a, b] = RANGE[pair]; el.of.min = el.nof.min = a; el.of.max = el.nof.max = b; }
+    function apply(id) {
+      const e = presets[id]; if (!e) return;
+      el.pair.value = e.pair; setRange(e.pair);
+      el.of.value = el.nof.value = e.of; el.pc.value = el.npc.value = e.Pc_MPa; el.eps.value = el.neps.value = e.eps;
+    }
+    function link(r, n) {
+      r.addEventListener('input', () => { n.value = r.value; el.preset.value = ''; schedule(); });
+      n.addEventListener('change', () => { const v = Math.min(Math.max(parseFloat(n.value) || +r.min, +r.min), +r.max); n.value = v; r.value = v; el.preset.value = ''; schedule(); });
+    }
+    link(el.of, el.nof); link(el.pc, el.npc); link(el.eps, el.neps);
+    el.preset.addEventListener('change', () => { apply(el.preset.value); sweepData = null; schedule(); });
+    $('btn-reset').addEventListener('click', () => { apply(el.preset.value || 'rs25'); if (!el.preset.value) el.preset.value = 'rs25'; schedule(); });
+    el.pair.addEventListener('change', () => { el.preset.value = ''; setRange(el.pair.value); const [a, b] = RANGE[el.pair.value];
+      const v = Math.min(Math.max(+el.of.value, a), b); el.of.value = el.nof.value = v; sweepData = null; schedule(); });
+    el.mode.addEventListener('change', schedule);
+    $('btn-sweep').addEventListener('click', sweep);
+
+    function inputs() {
+      const pair = el.pair.value, p = th.pairs[pair];
+      return { pair, fuel: p.fuel, ox: p.ox, of: +el.of.value, Pc: +el.pc.value * 1e6, eps: +el.eps.value, frozen: el.mode.value === 'frozen' };
+    }
+    function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; run(); }); } }
+
+    const stat = (v, u, l) => '<div class="stat"><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div><div class="l">' + l + '</div></div>';
+    function run() {
+      const q = inputs(), st = $('status');
+      let r, t0 = performance.now();
+      try { r = S.performance(q.fuel, q.ox, q.of, q.Pc, q.eps, { frozen: q.frozen }); }
+      catch (e) { st.innerHTML = '<span class="err">Solver did not converge for these inputs (' + esc(e.message) + ').</span>'; return; }
+      const ms = performance.now() - t0;
+      $('readout').innerHTML = [
+        stat(r.Tc.toFixed(0), 'K', 'chamber temperature'), stat(r.M_c.toFixed(2), 'g/mol', 'chamber molar mass'),
+        stat(r.gamma_s_c.toFixed(3), '', 'γ<sub>s</sub> chamber (frozen ' + r.gamma_fr_c.toFixed(3) + ')'),
+        stat(r.cstar.toFixed(0), 'm/s', 'c*'), stat(r.CF_vac.toFixed(3), '', 'C<sub>F</sub> vacuum (SL ' + r.CF_sl.toFixed(3) + ')'),
+        stat(r.Isp_vac.toFixed(1), 's', 'Isp vacuum, ' + r.mode), stat(r.Isp_sl.toFixed(1), 's', 'Isp sea level, ' + r.mode),
+        stat(r.Pe_kPa.toFixed(1), 'kPa', 'exit pressure'), stat(r.Te.toFixed(0), 'K', 'exit temperature'),
+      ].join('');
+      const sep = r.Pe_kPa < 0.35 * 101.325;
+      st.innerHTML = 'Solved in ' + ms.toFixed(1) + ' ms (' + r.chamber.iterations + ' chamber iterations). ' +
+        (sep ? '<span class="warn">P<sub>e</sub> is far below ambient: a real nozzle would likely separate at sea level (Summerfield criterion ≈ 0.25–0.4 P<sub>a</sub>), so the SL value is optimistic.</span>' : '') +
+        (r.Tc > 3500 ? ' <span class="warn">T<sub>c</sub> &gt; 3500 K: thermo fits extrapolated.</span>' : '');
+      // composition bars (chamber and exit)
+      const xc = S.moleFractions(r.chamber, 1e-6), xe = S.moleFractions(r.exit, 1e-6);
+      const sp = Object.keys(xc).sort((a, b) => xc[b] - xc[a]);
+      PR.plot('tool-comp', [
+        { type: 'bar', orientation: 'h', y: sp, x: sp.map((k) => xc[k]), name: 'chamber', marker: { color: PR.series(0) } },
+        { type: 'bar', orientation: 'h', y: sp, x: sp.map((k) => xe[k] || null), name: 'exit (' + r.mode + ')', marker: { color: PR.series(1) } },
+      ], { barmode: 'group', xaxis: { title: 'mole fraction', type: 'log', range: [-6, 0], exponentformat: 'power' },
+        yaxis: { autorange: 'reversed', tickfont: { size: 11 } }, margin: { l: 58 } });
+      drawSweep(q);
+    }
+
+    function drawSweep(q) {
+      const tr = [];
+      if (sweepData && sweepData.pair === q.pair) {
+        const d = sweepData;
+        tr.push({ x: d.of, y: d.vs, name: 'vac shifting', mode: 'lines', line: { color: PR.series(0), width: 2.2 } });
+        tr.push({ x: d.of, y: d.vf, name: 'vac frozen', mode: 'lines', line: { color: PR.series(0), dash: 'dash' } });
+        tr.push({ x: d.of, y: d.ss, name: 'SL shifting', mode: 'lines', line: { color: PR.series(1), width: 2.2 } });
+        tr.push({ x: d.of, y: d.sf, name: 'SL frozen', mode: 'lines', line: { color: PR.series(1), dash: 'dash' } });
+      }
+      const [a, b] = RANGE[q.pair];
+      PR.plot('tool-sweep', tr, { xaxis: { title: 'O/F — ' + LABEL[q.pair] + (sweepData ? ', ' + sweepData.label : ''), range: [a, b] },
+        yaxis: { title: 'Isp (s)', showticklabels: tr.length > 0, showgrid: tr.length > 0 }, showlegend: tr.length > 0, legend: { font: { size: 10 } },
+        shapes: [{ type: 'line', x0: q.of, x1: q.of, yref: 'paper', y0: 0, y1: 1, line: { color: PR.css('--ink-3'), dash: 'dot', width: 1 } }],
+        annotations: tr.length ? [] : [{ text: 'Press “Sweep O/F”', showarrow: false, xref: 'paper', yref: 'paper', x: 0.5, y: 0.5, font: { color: PR.css('--ink-3') } }] });
+    }
+
+    function sweep() {
+      const q = inputs(), token = ++sweepToken, [a, b] = RANGE[q.pair], N = 45;
+      const d = { pair: q.pair, of: [], vs: [], vf: [], ss: [], sf: [], label: (q.Pc / 1e6).toFixed(1) + ' MPa, ε = ' + q.eps };
+      sweepData = d; let i = 0, prev = null;
+      const btn = $('btn-sweep'); btn.disabled = true;
+      function step() {
+        if (token !== sweepToken) return;
+        const t0 = performance.now();
+        while (i < N && performance.now() - t0 < 12) {
+          const of = a + (b - a) * i / (N - 1);
+          try {
+            const ch = S.chamber(q.fuel, q.ox, of, q.Pc, prev); prev = ch;
+            const rs = S.nozzle(ch, q.eps), rf = S.nozzle(ch, q.eps, { frozen: true });
+            d.of.push(of); d.vs.push(rs.Isp_vac); d.vf.push(rf.Isp_vac); d.ss.push(rs.Isp_sl); d.sf.push(rf.Isp_sl);
+          } catch (e) { /* skip non-converged point */ }
+          i++;
+        }
+        drawSweep(inputs());
+        $('status').textContent = 'Sweeping O/F … ' + i + '/' + N;
+        if (i < N) requestAnimationFrame(step);
+        else { btn.disabled = false; let k = 0; d.vs.forEach((v, j) => { if (v > d.vs[k]) k = j; });
+          $('status').textContent = 'Sweep done: peak shifting vacuum Isp ' + d.vs[k].toFixed(1) + ' s at O/F ≈ ' + d.of[k].toFixed(2) + ' (grid spacing ' + ((b - a) / (N - 1)).toFixed(3) + ').'; }
+      }
+      requestAnimationFrame(step);
+    }
+
+    // live cross-check with the Python value for the RS-25-class case
+    try {
+      const e = presets.rs25, p = th.pairs[e.pair];
+      const r = S.performance(p.fuel, p.ox, e.of, e.Pc_MPa * 1e6, e.eps, {});
+      const rel = Math.abs(r.Isp_vac / e.shifting.Isp_vac - 1);
+      $('xcheck').innerHTML = 'Live check, RS-25-class shifting: this browser gives Isp<sub>vac</sub> = ' + r.Isp_vac.toFixed(3) + ' s; Python (data/cases.json, rounded to 6 significant figures) gives ' +
+        e.shifting.Isp_vac.toFixed(3) + ' s; relative difference ' + rel.toExponential(1) + '.';
+    } catch (err) { $('xcheck').textContent = 'Live cross-check failed: ' + err.message; }
+
+    apply('rs25'); run();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SRM Internal Ballistics with Level-Set Grain Regression · Propulsion Research No. 3</title>
+<meta name="description" content="A level-set (fast-marching) grain regression and lumped internal-ballistics solver for solid rocket motors, verified against exact solutions and applied to KNSB, APCP and an SRB-class booster: thrust-curve shaping, BATES trades and Monte Carlo MEOP dispersion.">
+<meta property="og:title" content="Solid rocket motor internal ballistics with level-set grain regression">
+<meta property="og:description" content="Fast-marching grain regression, quasi-steady and transient chamber ballistics, thrust-curve shaping, and Monte Carlo pressure dispersion with a browser-side solver.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="../assets/paper.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: start; }
+  .xsec-wrap { position: relative; width: 100%; max-width: 380px; margin: 0 auto; }
+  .xsec-wrap canvas { width: 100%; aspect-ratio: 1 / 1; display: block; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; }
+  .xsec-cap { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); text-align: center; margin-top: 6px; }
+  .ctl-check { flex-direction: row; align-items: center; gap: 8px; }
+  .ctl-check input { accent-color: var(--accent); }
+  .status { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  .status.warn { color: var(--warn); }
+  input[type=range].scrub { flex: 1; min-width: 120px; accent-color: var(--accent); }
+  .geo-ctls { display: contents; }
+  .small { font-size: 13.5px; color: var(--ink-2); font-family: var(--sans); }
+  td.wrap-cell { white-space: normal; min-width: 220px; }
+  .eqn-note { font-family: var(--sans); font-size: 14px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<nav class="series-bar"><div class="wide">
+  <span class="dot"></span>
+  <a href="../../index.html" target="_top">← Projects</a>
+  <a href="../index.html">Propulsion Research Series</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/Dula20000/website/tree/main/projects/propulsion/srm-ballistics/code" target="_blank" rel="noopener">Code ↗</a>
+</div></nav>
+
+<main>
+<header class="paper-head"><div class="wrap">
+  <p class="kicker">Propulsion Research · No. 3</p>
+  <h1>Solid rocket motor internal ballistics with level-set grain regression: thrust-curve shaping and Monte Carlo pressure dispersion</h1>
+  <p class="byline"><b>Dulran</b> · September 2026</p>
+  <div class="meta-row">
+    <span class="chip">fast-marching level set</span>
+    <span class="chip">lumped ballistics · ODE + quasi-steady</span>
+    <span class="chip">KNSB · APCP · SRB-class</span>
+    <span class="chip">Monte Carlo MEOP</span>
+    <a class="chip" href="#tool">interactive solver ↓</a>
+    <a class="chip" href="data/thrust_apcp.csv">thrust curves (CSV)</a>
+  </div>
+
+  <div class="abstract">
+    <h2>Abstract</h2>
+    <p>I built a solid rocket motor (SRM) design tool that regresses an arbitrary two-dimensional grain cross-section with a second-order fast-marching level-set method, assembles the burning area of a segmented grain, and solves the lumped chamber ballistics both in the quasi-steady equilibrium form and as a transient mass-balance ODE. The circular-port perimeter converges at order <span data-v="v.circle.order.3|f2"></span> to the exact \(2\pi(r_0+w)\); star grains converge at first order because of their corners. The solver reproduces the four textbook thrust-curve shapes at equal propellant mass, recovers the BATES rule \(L\approx(3D+d)/2\), and qualitatively reproduces the two-hump "thrust bucket" of an SRB-class booster. For a 98&nbsp;mm-class APCP motor (<span data-v="r.cases.apcp.metrics.designation|s"></span>, <span data-v="r.cases.apcp.metrics.I_total|int"></span>&nbsp;N·s), a <span data-v="mc.n_samples|int"></span>-sample Monte Carlo over burn-rate coefficient, exponent, throat diameter and density gives a 99.865th-percentile peak pressure (the 3σ-equivalent MEOP) of <span data-v="mc.MEOP|mpa2"></span>&nbsp;MPa, <span data-v="mc.MEOP_factor|f3"></span>× the nominal peak. Every tolerance is amplified by \(1/(1-n)\), and the exponent's own uncertainty is the largest single contributor to the spread. The browser tool is a line-by-line JavaScript port that matches the Python results to <span data-v="js.max_rel_diff|e1"></span>.</p>
+  </div>
+
+  <div class="results-strip">
+    <div class="stat"><div class="v"><span data-v="v.circle.order.3|f2"></span></div><div class="l">observed order, circular-port perimeter vs exact \(2\pi(r_0+w)\)</div></div>
+    <div class="stat"><div class="v"><span data-v="mc.MEOP_factor|f3"></span><small>×</small></div><div class="l">3σ-equivalent MEOP / nominal peak Pc, APCP motor</div></div>
+    <div class="stat"><div class="v"><span data-v="x.share_n_pct|f0"></span><small>%</small></div><div class="l">share of ln Pc<sub>max</sub> variance from the exponent n</div></div>
+    <div class="stat"><div class="v"><span data-v="js.max_rel_diff|e1"></span></div><div class="l">max relative difference, browser JS vs Python</div></div>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+<section id="motivation">
+  <h2><span class="num">1</span>Motivation</h2>
+  <p>A solid motor has no throttle: once the grain is cast, the thrust history is fixed by how its burning surface evolves. The designer shapes that history through the port geometry, which is why grain design is the core of SRM work, from amateur KNSB motors to the Space Shuttle boosters whose forward star segment was shaped to lower thrust through the region of maximum dynamic pressure. The same equilibrium that sets the pressure level also makes it sensitive: with \(P_c\propto K_n^{1/(1-n)}\), a small error in burn rate or throat area becomes a larger error in pressure, and the case has to be designed for the high tail of that spread, not for the nominal.</p>
+  <p>This study builds the tool chain end to end: a general grain-regression solver (not a table of closed-form shapes), a ballistics model checked against its own equilibrium limit, and a dispersion analysis that turns tolerances into a maximum expected operating pressure (MEOP).</p>
+</section>
+
+<section id="method">
+  <h2><span class="num">2</span>Method</h2>
+  <h3>2.1 Grain regression by fast marching</h3>
+  <p>Each axial segment has a 2-D cross-section of outer radius \(R\) (outer surface bonded and inhibited). The port is an implicit function \(\phi_0(x,y)\): negative in the gas, positive in the propellant, and a signed distance near the surface. With the burn rate uniform over the cross-section, the burning surface after web \(w\) has burned is a level set of the arrival-time field \(T\):</p>
+  <div class="eq">$$|\nabla T| = 1 \ \text{in the propellant},\qquad T=\phi_0 \ \text{on the initial surface},\qquad \Gamma(w)=\{T=w\}.$$</div>
+  <p>\(T\) is computed once per geometry with Sethian's fast-marching method, using second-order one-sided differences where two accepted upwind nodes exist. The nodes within three cells of the surface are initialised from \(\phi_0\) (narrow-band initialisation), which removes most of the first-order error the march otherwise picks up at sharp star tips. The burning perimeter \(P(w)\) is the length of the marching-squares contour \(T=w\), clipped to the case circle. The port area follows from the co-area identity \(A_p(w)=A_p(0)+\int_0^w P\,dw'\), which keeps \(A_b = -dV_\text{prop}/dw\) exactly consistent. Primitives are a circular BATES core, an \(N\)-point star polygon, a finocyl-style slotted core (circle ∪ radial slots) and an offset moon-burner core. Unions use \(\min(\phi_i)\), which is exact on the propellant side, the only side that is marched.</p>
+  <p>For a segment of length \(L_k\) with \(e_k\in\{0,1,2\}\) uninhibited ends, a point is burned when \(\min(T, z)\le w\), where \(z\) is its distance to an exposed end. The burning area is therefore</p>
+  <div class="eq">$$A_b(w)=\sum_k\Big[P_k(w)\,\big(L_k-e_k w\big)+e_k\big(\pi R^2-A_{p,k}(w)\big)\Big].$$</div>
+
+  <h3>2.2 Chamber ballistics</h3>
+  <p>The burn rate follows Saint-Robert/Vieille, \(r=a\,(P_c/1\,\text{MPa})^n\), piecewise in pressure where the propellant data require it. The lumped chamber of free volume \(V\) (case volume minus remaining propellant) obeys the gas mass balance with an ideal nozzle:</p>
+  <div class="eq">$$\begin{gathered}\frac{V}{RT_0}\frac{dP_c}{dt}=(\rho_p-\rho_g)\,A_b\,r-\dot m_n,\qquad \frac{dw}{dt}=r,\\ \dot m_n=\frac{P_cA_t}{c^*}\ \text{(choked)},\qquad RT_0=(c^*\Gamma)^2 .\end{gathered}$$</div>
+  <p>It is integrated with RK4 from ambient pressure (whole surface ignited at \(t=0\), no igniter mass), with a step of 0.2 of the chamber filling time \(Vc^*/(RT_0A_t)\) and no more than half a table spacing in \(w\). Below the subsonic-exit pressure ratio the throat unchokes and the flow is computed isentropically to ambient. Dropping the storage term and \(\rho_g\) gives the quasi-steady equilibrium used for comparison and for the Monte Carlo:</p>
+  <div class="eq">$$P_c=\left(\frac{\rho_p\,a\,c^*\,K_n}{P_\text{ref}^{\,n}}\right)^{\!1/(1-n)},\qquad K_n=\frac{A_b}{A_t},\qquad t(w)=\int_0^w\frac{dw'}{r(P_c)}.$$</div>
+  <p>Thrust is \(F=C_F P_c A_t\) with the ideal thrust coefficient for the exit-to-throat area ratio \(\varepsilon\) and ambient pressure \(p_a\) (Sutton &amp; Biblarz):</p>
+  <div class="eq">$$C_F=\sqrt{\frac{2\gamma^2}{\gamma-1}\Big(\frac{2}{\gamma+1}\Big)^{\frac{\gamma+1}{\gamma-1}}\Big[1-\Big(\frac{p_e}{P_c}\Big)^{\frac{\gamma-1}{\gamma}}\Big]}+\frac{p_e-p_a}{P_c}\,\varepsilon .$$</div>
+  <p>Two optional effects are available as switches, both off unless stated: <b>throat erosion</b> (constant recession rate of the throat diameter) and <b>erosive burning</b> by Lenoir–Robillard, \(r=r_0+\alpha G^{0.8}D_h^{-0.2}e^{-\beta r_0\rho_p/G}\), evaluated per axial segment from the mass flux \(G\) generated upstream.</p>
+
+  <h3>2.3 Motor metrics</h3>
+  <p class="eqn-note">Total impulse \(I=\int F\,dt\) over the whole trace. Burn (action) time: from the first to the last instant at which \(F\ge 10\,\%\,F_\text{max}\); certification bodies use their own definitions. Average thrust \(=I/t_b\). \(I_{sp}=I/(m_p g_0)\). Class letter by total impulse (A: 1.26–2.5 N·s, each letter doubles, as used by NAR/TRA). Neutrality: \(P_{c,\max}/P_{c,\min}\) of the equilibrium pressure over the web burn, taken as \(0\le w\le 0.97\,w_\text{web}\), where \(w_\text{web}\) is the first contact of the flame front with the case (or the end-burn limit \(L/e\)). Shape ratio: mean thrust over the last third of the burn time divided by the first third.</p>
+</section>
+
+<section id="verification">
+  <h2><span class="num">3</span>Verification &amp; validation</h2>
+  <p>Validation leans on exact solutions I can compute myself. For a circular port the regressed perimeter is exactly \(2\pi(r_0+w)\). For a star polygon, the outward offset is exact until the first edge is consumed at a valley: \(P(w)=P_0+w\sum_\text{tips}\theta_i-2w\sum_\text{valleys}\tan(|\theta_j|/2)\), with \(\theta\) the turning angle at each vertex. BATES grains have the closed form \(A_b=\pi(d+2w)(L-2w)+\tfrac{\pi}{2}\big(D^2-(d+2w)^2\big)\).</p>
+  <figure>
+    <div id="fig-conv" class="plot"></div>
+    <figcaption><b>Figure 1.</b> Grid convergence. Circular port: maximum relative perimeter error over the web (second order). Six-point star (\(r_\text{tip}\)=30 mm, \(r_\text{valley}\)=12 mm, \(R\)=45 mm): mean relative perimeter error against the exact offset formula for the FMM field and, for reference, for contouring the exact distance function; both are first order because the valleys stay sharp corners. Grey lines show slopes 1 and 2.</figcaption>
+  </figure>
+  <div class="fig-grid">
+    <figure><div id="fig-bates" class="plot short"></div>
+      <figcaption><b>Figure 2a.</b> Burning area of the four-grain APCP BATES motor: level-set solver at N = <span data-v="v.bates.N|f0"></span> (markers) vs closed form (line). Max relative error <span data-v="v.bates.err_max|e1"></span>.</figcaption></figure>
+    <figure><div id="fig-starP" class="plot short"></div>
+      <figcaption><b>Figure 2b.</b> Six-point star perimeter vs web: exact offset (line) and FMM at N = 201 (markers), up to case contact.</figcaption></figure>
+  </div>
+  <div class="table-wrap"><table id="tab-ver">
+    <caption>Verification summary. Pass thresholds are the ones used in <code>code/tests/</code>.</caption>
+    <thead><tr><th>Check</th><th class="num">Result</th><th>Criterion</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p>The first-order behaviour for stars is a property of the geometry, not the march: contouring the exact distance function converges at the same rate, because the level sets keep a corner at each valley until the valley edges are consumed. The same corners make the raw co-area closure \(A_p(0)+\int P\,dw\) fall short of \(\pi R^2\) by about <span data-v="x.star_closure_161|pct1"></span> for the eight-point star at N&nbsp;=&nbsp;161, halving with each grid doubling. The tool rescales \(P(w)\) by that closure so that the burned mass equals the cast propellant mass exactly; the correction is below \(10^{-5}\) for circular ports.</p>
+  <p>The transient ODE settles onto the equilibrium solution during the web burn. At mid-web the equilibrium pressure is higher than the ODE by <span data-v="r.cases.knsb.qs_vs_ode.mid_burn_dPc|pct1"></span> (KNSB) and <span data-v="r.cases.apcp.qs_vs_ode.mid_burn_dPc|pct1"></span> (APCP). That offset is the gas-density term \(\rho_g/\rho_p\) that the equilibrium formula drops, amplified by \(1/(1-n)\), and it is larger for KNSB because its local exponent above 3.8 MPa is 0.535. Total impulse agrees to <span data-v="x.dI_knsb|pct2"></span> and <span data-v="x.dI_apcp|pct2"></span>, because the filling and tail-off transients carry little impulse. Reducing the ODE step fourfold changes impulse and peak pressure by less than \(10^{-3}\).</p>
+</section>
+
+<section id="cases">
+  <h2><span class="num">4</span>Case studies</h2>
+  <p>All inputs are representative values from public sources and are approximate. They are not measurements of any specific motor.</p>
+  <div class="table-wrap"><table id="tab-props">
+    <caption>Propellant inputs (representative values from public sources)</caption>
+    <thead><tr><th>Propellant</th><th class="num">ρ<sub>p</sub> [kg/m³]</th><th>burn rate r = a (P/1 MPa)<sup>n</sup></th><th class="num">c* [m/s]</th><th class="num">γ</th><th>Source type</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="table-wrap"><table id="tab-knsb">
+    <caption>KNSB piecewise burn-rate fit (R. Nakka; recalled from his published table, treat as approximate). Density taken as 95 % of the ideal <span data-v="c.knsb_thermo.rho_ideal|f0"></span> kg/m³; c* derived from T<sub>0</sub> ≈ <span data-v="c.knsb_thermo.T0|f0"></span> K, M ≈ <span data-v="c.knsb_thermo.M|f1"></span> kg/kmol, γ ≈ <span data-v="c.knsb_thermo.gamma|f3"></span>.</caption>
+    <thead><tr><th>Pressure range [MPa]</th><th class="num">a [mm/s]</th><th class="num">n</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="table-wrap"><table id="tab-motors">
+    <caption>Motor inputs (all at sea-level ambient, 101.325 kPa)</caption>
+    <thead><tr><th>Motor</th><th>Grain</th><th class="num">Grain OD [mm]</th><th class="num">D<sub>t</sub> [mm]</th><th class="num">ε</th><th class="num">Prop. mass [kg]</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p class="note"><b>SRB-class caveat.</b> The booster case is a qualitative shape reproduction, not a model of the Space Shuttle SRB. It uses an 11-point star forward segment and a stepped-bore aft grain (16 cylindrical slices whose bore grows linearly as a crude stand-in for a tapered bore), with a PBAN-class propellant built from widely quoted approximate figures (≈ 0.37 in/s at ≈ 625 psia, n ≈ 0.35). Grain proportions were adjusted by hand until the thrust history showed the known shape. It says nothing quantitative about the real motor.</p>
+</section>
+
+<section id="results">
+  <h2><span class="num">5</span>Results &amp; discussion</h2>
+
+  <h3>5.1 Reference motors</h3>
+  <div class="table-wrap"><table id="tab-results">
+    <caption>Computed performance (transient ODE; neutrality from the equilibrium solution; ideal nozzle, no efficiency losses)</caption>
+    <thead><tr><th>Motor</th><th>Class</th><th class="num">I [N·s]</th><th class="num">F<sub>avg</sub> [N]</th><th class="num">t<sub>b</sub> [s]</th><th class="num">P<sub>c,max</sub> [MPa]</th><th class="num">I<sub>sp</sub> [s]</th><th class="num">K<sub>n</sub> init / max</th><th class="num">P<sub>c</sub> max/min</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="fig-grid">
+    <figure><div id="fig-knsb" class="plot"></div><figcaption><b>Figure 3a.</b> KNSB 54 mm-class BATES motor: thrust (left) and chamber pressure (right); transient ODE solid, quasi-steady equilibrium dashed.</figcaption></figure>
+    <figure><div id="fig-apcp" class="plot"></div><figcaption><b>Figure 3b.</b> APCP 98 mm-class BATES motor, same convention.</figcaption></figure>
+  </div>
+  <p>The KNSB motor is a <span data-v="r.cases.knsb.metrics.designation|s"></span> at <span data-v="r.cases.knsb.metrics.Isp|f0"></span>&nbsp;s ideal sea-level specific impulse. Amateur KNSB motors usually deliver noticeably less, because of two-phase flow losses and nozzle efficiency, which this ideal model leaves out. Its four 70&nbsp;mm grains are slightly shorter than the \((3D+d)/2=\)&nbsp;<span data-v="x.knsb_Lrule|f0"></span>&nbsp;mm neutral length, so \(K_n\) rises to a maximum and then falls, with a \(K_n\) ratio of <span data-v="r.cases.knsb.metrics.neutrality_kn|f2"></span>. The pressure ratio is larger, <span data-v="r.cases.knsb.metrics.neutrality_pc|f2"></span>, because the burn crosses from Nakka's nearly pressure-independent band (n ≈ −0.013 between 1.5 and 3.8 MPa) into the n = 0.535 band. For the APCP motor the same amplification is exact: a \(K_n\) ratio of <span data-v="r.cases.apcp.metrics.neutrality_kn|f3"></span> becomes a pressure ratio of <span data-v="r.cases.apcp.metrics.neutrality_pc|f3"></span> = <span data-v="r.cases.apcp.metrics.neutrality_kn|f3"></span><sup>1/(1−0.35)</sup>.</p>
+  <div class="fig-grid">
+    <figure><div id="fig-eros" class="plot short"></div><figcaption><b>Figure 4a.</b> Erosive-burning switch on the KNSB motor (Lenoir–Robillard, illustrative α = <span data-v="r.cases.knsb_erosive.alpha|e1"></span> SI, β = <span data-v="r.cases.knsb_erosive.beta|f0"></span>). Port-to-throat area ratio <span data-v="r.cases.knsb_erosive.port_to_throat|f2"></span>.</figcaption></figure>
+    <figure><div id="fig-throat" class="plot short"></div><figcaption><b>Figure 4b.</b> Throat-erosion switch on the APCP motor (illustrative <span data-v="x.throat_rate_mm|f2"></span> mm/s diameter recession).</figcaption></figure>
+  </div>
+  <p>Both switches behave as expected and are off everywhere else. Erosive burning raises the early pressure peak (<span data-v="r.cases.knsb_erosive.metrics.Pc_max|mpa2"></span> vs <span data-v="r.cases.knsb.metrics.Pc_max|mpa2"></span> MPa) and shortens the burn, because the aft grains see the highest mass flux while the port is still small. Throat erosion makes the pressure trace drift downward as \(K_n\) falls. The α used here only sets the order of magnitude and is not fitted to data, so Figure 4 shows trends only.</p>
+
+  <h3>5.2 SRB-class thrust bucket</h3>
+  <div class="fig-grid">
+    <figure><div id="fig-srb" class="plot"></div><figcaption><b>Figure 5a.</b> SRB-class booster thrust and pressure (qualitative). The forward star is regressive until its tips reach the case, the stepped bore is progressive until each slice burns out, and the sum shows the two-hump shape.</figcaption></figure>
+    <figure><div id="fig-srbx" class="plot"></div><figcaption><b>Figure 5b.</b> Burn-back of the 11-point forward star (left half of the view) and of the first aft slice, in metres. Front positions at equal web steps.</figcaption></figure>
+  </div>
+  <p>The simulated booster burns <span data-v="x.srb_mass_t|f0"></span>&nbsp;t of propellant over <span data-v="r.cases.srb.metrics.t_burn|f0"></span>&nbsp;s with peak thrust <span data-v="x.srb_Fmax_MN|f1"></span>&nbsp;MN. That is the right order of magnitude for this class of motor, but it is not a validation. The part that matters is the mechanism. Thrust sags to a minimum near <span data-v="x.srb_bucket_t|f0"></span>&nbsp;s, at <span data-v="x.srb_bucket_ratio|pct0"></span> of the first peak, once the star tips reach the case. It recovers as the cylindrical bores grow, and it tails off gradually because the slices burn out one after another. That is the mechanism behind the real booster's reduced-thrust period around maximum dynamic pressure.</p>
+
+  <h3>5.3 Study (a): cross-section shape at equal propellant mass</h3>
+  <p>Four single-segment APCP grains (OD 90 mm, L = <span data-v="r.geometry.L|f2"></span> m, ends inhibited) share the same initial port area and hence the same propellant mass (<span data-v="r.geometry.items.bates.metrics.m_prop|f2"></span> kg). Each throat is sized so that the equilibrium peak pressure is <span data-v="x.geo_pt|f1"></span> MPa, the same MEOP-limited comparison a designer would make.</p>
+  <figure><div class="fig-grid" id="geo-xsec"></div>
+    <figcaption><b>Figure 6.</b> Burn-back of the four equal-mass cross-sections (mm): flame-front positions at equal web steps from the initial port (orange) to near burnout, clipped at the case.</figcaption></figure>
+  <figure><div id="fig-geoF" class="plot"></div><figcaption><b>Figure 7.</b> Thrust histories of the four equal-mass grains (transient ODE). All four are sized to the same peak pressure.</figcaption></figure>
+  <div class="table-wrap"><table id="tab-geo">
+    <caption>Equal-mass geometry comparison</caption>
+    <thead><tr><th>Cross-section</th><th>Shape</th><th class="num">shape ratio</th><th class="num">P<sub>c</sub> max/min (web)</th><th class="num">D<sub>t</sub> [mm]</th><th class="num">t<sub>b</sub> [s]</th><th class="num">I [N·s]</th><th class="num">I<sub>sp</sub> [s]</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p>The tube is strongly progressive (its perimeter grows from \(\pi d\) to \(\pi D\)). The eight-point star and the moon-burner are regressive. The slotted core's thrust dips while its fins merge and then recovers as the central port grows, so its first and last thirds carry nearly equal thrust (near-neutral by the shape ratio), although its web-burn pressure still varies by a factor of <span data-v="r.geometry.items.finocyl.metrics.neutrality_pc|f2"></span> and it ends in a short sliver tail. The small ripples on the star curve are a contour-discretisation artefact of the sharp valleys at this grid. With peak pressure held fixed, shape costs performance. The progressive tube runs most of its burn below the MEOP it was designed for, so its average \(C_F\), and with it its total impulse and \(I_{sp}\), is the lowest of the four (<span data-v="r.geometry.items.bates.metrics.Isp|f1"></span> s vs <span data-v="r.geometry.items.finocyl.metrics.Isp|f1"></span> s for the slotted core). A neutral grain uses the pressure capacity of the case most efficiently.</p>
+
+  <h3>5.4 Study (b): BATES segment count and core diameter</h3>
+  <figure><div id="fig-bheat" class="plot tall"></div><figcaption><b>Figure 8.</b> Equilibrium-pressure neutrality \(P_{c,\max}/P_{c,\min}\) over the web burn for a 90 mm APCP BATES grain of fixed total length <span data-v="r.bates.Ltot|f2"></span> m split into N segments, as a function of core-to-OD ratio (colour on a log scale, throat sized for a 6 MPa peak). The line marks the segment count implied by the rule \(L=(3D+d)/2\). The marker shows the most neutral point.</figcaption></figure>
+  <p>The most neutral combination in the grid is <span data-v="r.bates.best.nseg|f0"></span> segments at \(d/D=\)&nbsp;<span data-v="r.bates.best.dD|f3"></span> (\(P_c\) ratio <span data-v="r.bates.best.neutrality|f3"></span>). Its segment length of <span data-v="x.best_Lseg_mm|f0"></span>&nbsp;mm is close to the rule's <span data-v="x.best_Lrule_mm|f0"></span>&nbsp;mm. The rule follows from \(dA_b/dw = 2\pi(L-2d-6w)\), which is zero at mid-web and gives equal initial and final areas when \(L=(3D+d)/2\). The rule implies <span data-v="x.rule_lo|f2"></span>–<span data-v="x.rule_hi|f2"></span> segments across the core ratios studied, and for <span data-v="x.rule_match|s"></span> core ratios the most neutral integer count equals the nearest integer to that value. Larger cores are more neutral because the shorter web limits how far \(A_b\) can drift, but they carry less propellant: <span data-v="x.mass_lo|f2"></span> kg at \(d/D=0.55\) vs <span data-v="x.mass_hi|f2"></span> kg at 0.20 (at fixed total length the mass does not depend on N). The trade between neutrality and volumetric loading is the real design decision. Short segments (N ≥ 6) are dominated by their end faces, whose area shrinks as the port opens, so they are strongly regressive. When \(L/2\) approaches the radial web, the grain also ends as a thin, fast-shrinking disc.</p>
+
+  <h3>5.5 Study (c): Monte Carlo pressure dispersion and MEOP</h3>
+  <p>For the APCP BATES motor I sample <span data-v="mc.n_samples|int"></span> motors with independent normal tolerances (1σ): burn-rate coefficient <span data-v="x.sig_a|pct1"></span>, exponent ±<span data-v="mc.sig.n|f3"></span>, throat diameter <span data-v="x.sig_Dt|pct1"></span>, density <span data-v="x.sig_rho|pct1"></span>. The coefficient \(a\) is referenced to 1 MPa, as in the tables it would come from. Each sample is solved with the vectorised equilibrium model, whose nominal peak lies within <span data-v="r.cases.apcp.qs_vs_ode.dPc|pct1"></span> of the transient solution.</p>
+  <div class="fig-grid">
+    <figure><div id="fig-hP" class="plot short"></div><figcaption><b>Figure 9a.</b> Peak chamber pressure distribution with the nominal, μ + 3σ, and 99.865th-percentile (3σ-equivalent MEOP) values.</figcaption></figure>
+    <figure><div id="fig-hI" class="plot short"></div><figcaption><b>Figure 9b.</b> Total impulse distribution.</figcaption></figure>
+  </div>
+  <div class="table-wrap"><table id="tab-mc">
+    <caption>Monte Carlo statistics (APCP BATES; percentile interval from 400 bootstrap resamples)</caption>
+    <tbody></tbody>
+  </table></div>
+  <p>The peak-pressure distribution is right-skewed. The ratio of lognormals that \(P_c^{1/(1-n)}\) produces puts the empirical 99.865th percentile, <span data-v="mc.Pc_max.p99865|mpa2"></span> MPa, above the normal-theory μ + 3σ of <span data-v="mc.Pc_max.mu3s|mpa2"></span> MPa. Using μ + 3σ would understate the MEOP. With an assumed ultimate factor of safety of <span data-v="mc.FS_ultimate|f1"></span> (a common choice; the governing standard sets the real value), the case must hold <span data-v="mc.burst_required|mpa2"></span> MPa, a design factor of <span data-v="mc.design_factor|f2"></span> on the nominal peak. Total impulse varies far less (σ/μ = <span data-v="x.cvI|pct1"></span>), since it scales with propellant mass and only weakly with pressure through \(C_F\).</p>
+  <div class="fig-grid">
+    <figure><div id="fig-sens" class="plot short"></div><figcaption><b>Figure 10a.</b> One-at-a-time ±1σ effect on peak pressure (bars) against the linearised prediction (◆). The exponent and coefficient dominate; density and throat enter only through \(\rho_p\,a/A_t\).</figcaption></figure>
+    <figure><div id="fig-share" class="plot short"></div><figcaption><b>Figure 10b.</b> Share of the ln P<sub>c,max</sub> variance (squared standardised regression coefficients, R² = <span data-v="mc.r2_lnPc|f3"></span>), for tolerances referenced to 1 MPa and for the same tolerances referenced to the operating pressure.</figcaption></figure>
+  </div>
+  <p><b>Why n dominates.</b> Linearising the equilibrium pressure gives</p>
+  <div class="eq">$$\delta\ln P_c=\frac{1}{1-n}\Big[\delta\ln a+\delta\ln\rho_p-2\,\delta\ln D_t+\ln\!\Big(\frac{P_c}{P_\text{ref}}\Big)\delta n\Big].$$</div>
+  <p>Two things follow. First, the \(1/(1-n)\) factor (<span data-v="x.amp|f2"></span> here) multiplies <em>every</em> tolerance, so the nominal exponent sets how hard the whole tolerance stack is amplified. Figure 11 shows the 3σ-equivalent MEOP factor growing from <span data-v="x.sweep_lo|f2"></span> at n = 0.20 to <span data-v="x.sweep_hi|f2"></span> at n = 0.70 with the tolerances unchanged. Second, the exponent's own uncertainty acts through a lever arm \(\ln(P_c/P_\text{ref}) = \)&nbsp;<span data-v="x.lever|f2"></span>. At a 5 MPa operating point and σ<sub>n</sub> = <span data-v="mc.sig.n|f2"></span>, that is a <span data-v="x.n_equiv|pct1"></span> effective rate error against the <span data-v="x.sig_a|pct1"></span> from \(a\), which makes n the largest single contributor (<span data-v="x.share_n_pct|f0"></span> % of the variance). Figure 10b makes a caveat plain: that lever arm exists only because \(a\) is referenced to 1 MPa. If the same tolerances are defined at the operating pressure, as a strand-burner fit centred on \(P_c\) would give, the n contribution nearly vanishes at the peak and the spread drops to σ/μ = <span data-v="x.cv_anchor|pct1"></span> from <span data-v="x.cv|pct1"></span>. So how the burn-rate data are fitted and quoted is itself a design variable for MEOP.</p>
+  <figure><div id="fig-sweep" class="plot short"></div><figcaption><b>Figure 11.</b> 3σ-equivalent MEOP factor (left) and coefficient of variation of peak pressure (right) versus nominal exponent, with the peak pressure held at the nominal value by adjusting a. Tolerances unchanged; 8000 samples per point.</figcaption></figure>
+</section>
+
+<section id="tool">
+  <h2><span class="num">6</span>Interactive tool</h2>
+  <p>The panel below runs the JavaScript port of the solver in your browser: fast marching on a <span data-v="c.js_grid.N|f0"></span>×<span data-v="c.js_grid.N|f0"></span> grid, <span data-v="c.js_grid.nw|f0"></span> web levels, and the full RK4 transient. It is not a lookup of precomputed curves. Pick a preset or change any control, then watch the cross-section burn back while the curves draw. Under node, the same code reproduces the Python results for the KNSB and APCP presets to <span data-v="js.max_rel_diff|e1"></span>, relative, on every reported metric (<code>code/tests/js_crosscheck.js</code>).</p>
+  <div class="tool">
+    <div class="tool-head">SRM designer · level-set burn-back + ballistics (JS)</div>
+    <div class="controls">
+      <label class="ctl">Preset<select id="c-preset"></select></label>
+      <label class="ctl">Propellant<select id="c-prop"><option value="knsb">KNSB (Nakka fit)</option><option value="apcp">APCP (typical)</option><option value="pban">PBAN (SRB-class)</option></select></label>
+      <label class="ctl">Cross-section<select id="c-geom"><option value="bates">BATES (circular core)</option><option value="star">Star</option><option value="finocyl">Slotted core (finocyl / wagon wheel)</option><option value="moon">Moon burner</option></select></label>
+      <label class="ctl"><span class="row"><span>Grain OD</span><output id="o-od"></output></span><input id="c-od" type="range" min="0" max="1000" step="1"></label>
+      <div class="geo-ctls" id="geo-ctls"></div>
+      <label class="ctl"><span class="row"><span>Segment length L/D</span><output id="o-ld"></output></span><input id="c-ld" type="range" min="0.5" max="12" step="0.05"></label>
+      <label class="ctl"><span class="row"><span>Segments</span><output id="o-ns"></output></span><input id="c-ns" type="range" min="1" max="8" step="1"></label>
+      <label class="ctl">Burning end faces per segment<select id="c-ends"><option value="0">0 (inhibited)</option><option value="1">1</option><option value="2">2 (BATES)</option></select></label>
+      <label class="ctl"><span class="row"><span>Throat diameter D<sub>t</sub>/D</span><output id="o-dt"></output></span><input id="c-dt" type="range" min="0.05" max="0.7" step="0.0025"></label>
+      <label class="ctl"><span class="row"><span>Expansion ratio ε</span><output id="o-eps"></output></span><input id="c-eps" type="range" min="1.5" max="20" step="0.1"></label>
+      <label class="ctl ctl-check"><input id="c-eros" type="checkbox"> Erosive burning (L–R, illustrative)</label>
+      <label class="ctl ctl-check"><input id="c-thr" type="checkbox"> Throat erosion 0.1 mm/s</label>
+    </div>
+    <div class="tool-grid">
+      <div><div class="xsec-wrap"><canvas id="xsec" aria-label="Grain cross-section burning back"></canvas></div><div class="xsec-cap" id="xsec-cap">&nbsp;</div></div>
+      <div><div id="tool-plot" class="plot short"></div></div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn" id="b-play" type="button">Pause</button>
+      <button class="btn ghost" id="b-replay" type="button">Replay</button>
+      <input class="scrub" id="c-scrub" type="range" min="0" max="1000" step="1" value="0" aria-label="Time">
+      <span class="status" id="status">loading…</span>
+    </div>
+    <div class="readout" id="readout"></div>
+    <p class="small" id="live-check" style="margin:10px 0 0"></p>
+  </div>
+  <p class="small">Notes: grain OD, lengths and throat are free, so extreme settings can leave the burn-rate fit's pressure range or give an unchoked motor; the status line flags these. The multi-segment SRB-class preset keeps its 17 axial segments until you change a cross-section control, which switches the tool to a uniform motor. Erosive burning uses α = 5×10⁻⁶ SI and β = 53.</p>
+</section>
+
+<section id="limitations">
+  <h2><span class="num">7</span>Limitations &amp; future work</h2>
+  <ul>
+    <li><b>Lumped (0-D) chamber.</b> No axial pressure drop, flow in the port, or head-end to aft-end pressure ratio. The erosive switch uses a per-segment mass flux from the upstream generation, which is only a proxy. A 1-D quasi-steady port-flow model is the natural next step, and is needed for low port-to-throat ratios like the KNSB motor's <span data-v="r.cases.knsb_erosive.port_to_throat|f2"></span>.</li>
+    <li><b>2-D regression per segment.</b> Uniform burn rate over each cross-section. Tapered bores, 3-D fins and conocyl grains need a 3-D level set, and the SRB-class case fakes a taper with steps.</li>
+    <li><b>Grid accuracy for cornered ports.</b> Perimeter errors converge only at first order for stars and slots, and the mass-conserving rescale spreads a local error over the burn. Corner-aware (subcell) initialisation or finer grids would help. The browser grid (<span data-v="c.js_grid.N|f0"></span>²) is coarser than the study grid (161²).</li>
+    <li><b>Ideal thermochemistry and nozzle.</b> Frozen \(c^*\) and γ, no two-phase, divergence, boundary-layer or combustion-efficiency losses, and no flow-separation model: over-expanded thrust is clipped at zero rather than modelled. Delivered \(I_{sp}\) of real motors, especially KNSB, is lower.</li>
+    <li><b>Inputs are approximate.</b> The propellant data are recalled public values, and the Monte Carlo tolerances are assumed and independent. Real burn-rate data carry correlated a–n uncertainty, temperature sensitivity \(\pi_K\), and batch effects, which should be added before any MEOP is used on hardware.</li>
+    <li><b>Ignition.</b> The whole surface ignites at t = 0 with no igniter mass or flame-spread delay, so the start-up transient is a lower bound on the real rise time.</li>
+  </ul>
+</section>
+
+<section id="refs">
+  <h2>References</h2>
+  <ol class="refs">
+    <li>G. P. Sutton and O. Biblarz, <i>Rocket Propulsion Elements</i>, 9th ed., Wiley, 2017. Solid-motor ballistics, burn-rate law, ideal thrust coefficient, typical composite-propellant properties.</li>
+    <li>J. A. Sethian, <i>Level Set Methods and Fast Marching Methods</i>, 2nd ed., Cambridge University Press, 1999.</li>
+    <li>S. Osher and R. Fedkiw, <i>Level Set Methods and Dynamic Implicit Surfaces</i>, Springer, 2003.</li>
+    <li>J. M. Lenoir and G. Robillard, "A mathematical method to predict the effects of erosive burning in solid-propellant rockets," <i>Sixth Symposium (International) on Combustion</i>, 1957.</li>
+    <li>R. Nakka, Richard Nakka's Experimental Rocketry Web Site (KNSB propellant burn-rate and thermochemical data), <a href="https://www.nakka-rocketry.net" target="_blank" rel="noopener">nakka-rocketry.net</a>.</li>
+    <li>P. G. Hill and C. R. Peterson, <i>Mechanics and Thermodynamics of Propulsion</i>, 2nd ed., Addison-Wesley, 1992.</li>
+    <li>NASA public descriptions of the Space Shuttle Solid Rocket Booster (grain layout and thrust-profile shaping), used only qualitatively.</li>
+    <li>NFPA 1125 / 1127 and NAR/TRA motor-classification practice (impulse-class letters).</li>
+  </ol>
+</section>
+</div>
+</main>
+<footer class="paper-foot"><div class="wrap">Propulsion Research Series · No. 3 · Dulran · All numbers on this page are loaded from <code>data/*.json</code>, generated by <code>code/run_study.py</code>.</div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="../assets/plot.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="srm.js"></script>
+<script src="page.js"></script>
+</body>
+</html>

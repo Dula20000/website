@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propulsion Research Series · Dulran</title>
+<meta name="description" content="Four propulsion studies by Dulran: solvers written from scratch, verified against exact solutions, then run on representative real-engine data.">
+<meta property="og:title" content="Propulsion Research Series · Dulran">
+<meta property="og:description" content="Nozzle CFD, chemical equilibrium, solid-motor ballistics and turbofan cycle analysis, each with an in-browser solver.">
+<link rel="stylesheet" href="assets/paper.css">
+</head>
+<body>
+
+<nav class="series-bar">
+  <div class="wide">
+    <span class="dot"></span>
+    <a href="../index.html" target="_top">← Projects</a>
+    <span class="spacer"></span>
+    <a href="https://github.com/Dula20000/website/tree/main/projects/propulsion">Code ↗</a>
+  </div>
+</nav>
+
+<div class="wide">
+  <header class="paper-head">
+    <p class="kicker">Propulsion Research Series · 2026</p>
+    <h1>Four propulsion tools, built from scratch and pointed at real engines</h1>
+    <p class="byline"><b>Dulran</b> · Aerospace Engineering, UT Austin · September 2026</p>
+    <p style="margin-top:18px;max-width:760px;color:var(--ink-2)">
+      Each study follows the same pattern. I wrote the solver myself, verified it against exact or closed-form
+      solutions (with observed orders of accuracy, conservation checks and grid studies), and then ran it on
+      representative inputs from public sources: Merlin, RS-25 and Raptor-class engines, KNSB and APCP motors,
+      and CFM56, LEAP and GE90-class turbofans. Every page includes a JavaScript port of the solver that runs in
+      your browser and is cross-checked against the Python reference to round-off.
+    </p>
+    <div class="meta-row">
+      <span class="chip">Python · NumPy / SciPy</span>
+      <span class="chip">JavaScript solver ports</span>
+      <span class="chip">Verification &amp; validation</span>
+      <a class="chip" href="https://github.com/Dula20000/website/tree/main/projects/propulsion">Source on GitHub ↗</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="cards">
+      <a class="card" href="nozzle-cfd/index.html">
+        <p class="kicker">No. 1 · Compressible flow / CFD</p>
+        <h3>Quasi-1D Euler CFD of rocket nozzles</h3>
+        <p>HLLC finite-volume solver with MUSCL reconstruction and SSP-RK3, verified against the exact
+           nozzle-shock solution. It sweeps three engine classes through the 1976 US Standard Atmosphere to map
+           over-expansion and separation risk.</p>
+        <p class="finding">An RS-25-class nozzle (ε = 69) exits at about 0.21 × sea-level ambient pressure, past the Summerfield
+           separation line. Only its 20.6 MPa chamber pressure makes that area ratio viable at all.</p>
+      </a>
+      <a class="card" href="combustion-equilibrium/index.html">
+        <p class="kicker">No. 2 · Thermochemistry</p>
+        <h3>Chemical equilibrium for liquid bipropellants</h3>
+        <p>Gibbs minimisation in the style of NASA RP-1311 over 17 C–H–O species, with frozen and shifting
+           nozzle expansion. Applied to kerolox, methalox and hydrolox engines.</p>
+        <p class="finding">Hydrolox Isp peaks near O/F 4.8, yet RS-25 runs at 6: it gives up about 3 s of Isp for
+           about 14 % denser propellant.</p>
+      </a>
+      <a class="card" href="srm-ballistics/index.html">
+        <p class="kicker">No. 3 · Solid propulsion</p>
+        <h3>SRM internal ballistics with level-set grain regression</h3>
+        <p>Fast-marching burn-back of arbitrary grain cross-sections coupled to lumped chamber ballistics,
+           with a 20,000-sample Monte Carlo on propellant and throat tolerances.</p>
+        <p class="finding">The 3σ-equivalent MEOP comes out 1.26× the nominal peak pressure. Burn-rate exponent n
+           looks dominant only because tables quote a at a 1 MPa reference.</p>
+      </a>
+      <a class="card" href="turbofan-cycle/index.html">
+        <p class="kicker">No. 4 · Air-breathing propulsion</p>
+        <h3>Why turbofans keep getting bigger</h3>
+        <p>Mattingly-style on- and off-design cycle analysis with variable-property gas and turbine cooling
+           air. Includes a carpet-plot trade over bypass ratio, fan pressure ratio and turbine inlet temperature.</p>
+        <p class="finding">A LEAP-1A-class engine burns 14.4 % less fuel per unit thrust than a CFM56-class one, about
+           two-thirds of it from propulsive efficiency. With nacelle drag included, the optimum bypass ratio is about 14.</p>
+      </a>
+    </div>
+
+    <section>
+      <h2><span class="num">§</span>How to read these</h2>
+      <p style="font-family:var(--sans);font-size:15px;color:var(--ink-2)">
+        Inputs are representative values from public sources (textbooks, NASA reports, manufacturer
+        figures). Treat them as approximate; each page gives its sources and assumptions in an inputs table.
+        Where a model disagrees with a published figure, the page says so rather than retuning to match. Every
+        number on each page is loaded from the JSON that the study's <code>run_study.py</code> generates, so the
+        results can be reproduced from the code in the repository.
+      </p>
+    </section>
+  </main>
+
+  <footer class="paper-foot">Dulran · dulran.com · Propulsion Research Series</footer>
+</div>
+</body>
+</html>
