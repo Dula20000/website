@@ -335,12 +335,104 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
   footer { padding-top: 50px; }
 }
 
+/* ---------- entry gate ---------- */
+/* A real user gesture is required before audio can play, so the page
+   opens behind this. Space, any key, or a tap dismisses it and starts
+   the clip unmuted. */
+#gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--chalk);
+  transition: opacity .7s ease, visibility .7s;
+  -webkit-tap-highlight-color: transparent;
+}
+#gate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 40% at 50% 42%, rgba(255,255,255,.9), transparent 70%),
+    radial-gradient(75% 60% at 50% 100%, rgba(183,176,160,.3), transparent 72%);
+}
+#gate > * { position: relative; }
+
+#gate .seal {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+#gate .title {
+  font-size: clamp(2.4rem, 7vw, 4.6rem);
+  font-weight: 300;
+  letter-spacing: -.045em;
+  line-height: .95;
+  color: var(--ink);
+}
+#gate .title em { font-style: normal; font-weight: 500; }
+
+#gate .prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+#gate .key {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  background: rgba(255,255,255,.72);
+  border-radius: 3px;
+  padding: 11px 20px;
+  box-shadow: 0 2px 0 var(--rule), 0 10px 26px -16px rgba(40,36,28,.5);
+  animation: breathe 2.6s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .52; }
+}
+#gate .sub {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+body.entered #gate { opacity: 0; visibility: hidden; }
+body.gated { overflow: hidden; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
 </style>
 </head>
 <body>
+
+<div id="gate" role="button" tabindex="0" aria-label="Enter and play the clip with sound">
+  <div class="seal">DulLand State Archive</div>
+  <div class="title">Dulran<br /><em>Pronunciation</em></div>
+  <div class="prompt">
+    <div class="key" id="gate-key">Press space to enter</div>
+    <div class="sub">Plays with sound</div>
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -411,10 +503,67 @@ const VIDEO_SRC = "https://media.dulran.com/iriscorrectingmyname.MP4";
 (function () {
   const video = document.getElementById('clip');
   const veil  = document.getElementById('veil');
+  const gate  = document.getElementById('gate');
+  const key   = document.getElementById('gate-key');
+  const body  = document.body;
 
   function redact() {
-    document.body.classList.add('is-redacted');
+    body.classList.add('is-redacted');
+    openGate();
   }
+
+  /* ---- entry gate ----
+     Browsers block audio until the viewer interacts, so the gate turns
+     that requirement into the way in. Any key, click or tap counts as
+     the gesture, which lets the clip start unmuted. */
+
+  let entered = false;
+
+  function openGate() {
+    if (entered) return;
+    entered = true;
+    body.classList.add('entered');
+    body.classList.remove('gated');
+    gate.setAttribute('aria-hidden', 'true');
+    window.removeEventListener('keydown', onKey);
+    setTimeout(() => { gate.style.display = 'none'; }, 800);
+  }
+
+  function enter() {
+    if (entered) return;
+    const wasRedacted = body.classList.contains('is-redacted');
+    openGate();
+    if (wasRedacted || !VIDEO_SRC) return;
+
+    veil.classList.add('gone');
+    video.controls = true;
+    video.muted = false;
+    const p = video.play();
+    if (p && p.catch) {
+      /* If the browser still refuses, fall back to the in-frame play button
+         rather than leaving a dead player. */
+      p.catch(() => {
+        veil.classList.remove('gone');
+        video.controls = false;
+      });
+    }
+  }
+
+  function onKey(e) {
+    /* Let people tab to the gate and keep browser shortcuts working. */
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Tab') return;
+    e.preventDefault();
+    enter();
+  }
+
+  if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    key.textContent = 'Tap anywhere to enter';
+  }
+
+  body.classList.add('gated');
+  gate.addEventListener('click', enter);
+  window.addEventListener('keydown', onKey);
 
   if (!VIDEO_SRC) {
     redact();
@@ -427,7 +576,11 @@ const VIDEO_SRC = "https://media.dulran.com/iriscorrectingmyname.MP4";
   veil.addEventListener('click', function () {
     veil.classList.add('gone');
     video.controls = true;
-    video.play().catch(redact);
+    video.muted = false;
+    video.play().catch(() => {
+      veil.classList.remove('gone');
+      video.controls = false;
+    });
   });
 
   video.addEventListener('play', () => {
