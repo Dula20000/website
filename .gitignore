@@ -10,3 +10,12 @@ taiwanpics/*.mp4
 # when these are absent, so the site still works without them.
 taiwanpics/web/*.mp4
 taiwanpics/web/*.m4v
+
+# The pronunciation clip must NEVER enter git history. It is served from
+# object storage so it can be deleted for good; anything committed here
+# stays recoverable from the history forever, which defeats the point.
+pronunciation*.mp4
+pronunciation*.mov
+pronunciation*.MP4
+pronunciation*.MOV
+pronunciation*.webm
