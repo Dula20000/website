@@ -1,125 +1,23 @@
-<!--<!DOCTYPE html>
-<html>
-<head>
-<title>My Dashboard</title>
-<style>
-  body {
-    margin: 0;
-    height: 100vh;
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 10px;
-    background: #111;
-    color: white;
-    font-family: Arial, sans-serif;
-  }
-
-  #calendar {
-    grid-row: 1 / span 2; /* tall main area */
-    background: #222;
-  }
-
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
-
-  #notes {
-    padding: 15px;
-    background: #1a1a1a;
-    overflow-y: auto;
-  }
-
-  #stocks {
-    padding: 15px;
-    background: #1a1a1a;
-    font-size: 20px;
-  }
-</style>
-</head>
-<body>
-
-//calendar
-
-<div id="calendar">
-  <iframe src="https://calendar.zoho.com/zc/ui/embed/#calendar=zz080112308bfe503a972ed422467afc1b309a10468918d168ccab86ad1b91fd5a05d388fa679061903ed25e344fd14cec6ef6dc2f&title=business&type=1&language=en&timezone=America%2FChicago&showTitle=1&showTimezone=1&view=day&showDetail=0&theme=1&eventColorType=light" title="business"width="350" height="500" frameBorder="0" scrolling="no"></iframe>
-</div>
-
-
-//notes
-
-
-<div id="notes">
-  <h2>Notes / Ideas/Long term goals</h2>
-  <p>
-    - Do GYROSCOPES 3D SCOOTER<br>
-    - Do El. Sieve <br>
-    - SMART Schol.<br>
-    - STUDY ABROAD Related -- chin. vis.<br>
-    - 3D printed CCTV 2 tilt esp 32 camera arduino/rasp<br>
-  </p>
-</div>
-
-
-//Live stock prices
-
-
-<div id="stocks">
-  <h2>Stocks</h2>
-  <div id="stockData">Loading...</div>
-</div>
-
-<script>
-const API_KEY = "0b983ca7cc8e49eb908e0233c202ee4f";
-const tickers = ["NVDA", "AMD", "TMC", "AAPL"];
-
-async function loadStocks() {
-  let html = "";
-
-  for (let t of tickers) {
-    try {
-      const res = await fetch(
-        `https://api.twelvedata.com/price?symbol=${t}&apikey=${API_KEY}`
-      );
-      const data = await res.json();
-
-      html += `${t}: $${Number(data.price).toFixed(2)}<br>`;
-    } catch (err) {
-      html += `${t}: error<br>`;
-    }
-  }
-
-  document.getElementById("stockData").innerHTML = html;
-}
-
-loadStocks();
-setInterval(loadStocks, 15000);
-</script>
-
-
-<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
-<script src="https://dulran.com/tracker.js"></script>
-<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
-
-
-</body>
-</html>
-<!--<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=America%2FChicago&mode=WEEK&showPrint=0&showTabs=0&showCalendars=0&showTz=0&title=Poudgalika&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border-width:0" width="800" height="600" frameborder="0" scrolling="no"></iframe></iframe>
--->
-<!--<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=America%2FChicago&showPrint=0&mode=WEEK&title=Poudgalika&showDate=0&showCalendars=0&showTabs=0&showTz=0&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border-width:0" width="800" height="600" frameborder="0" scrolling="no"></iframe>-->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <title>My Dashboard</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
   body {
     margin: 0;
     height: 100vh;
     display: grid;
     grid-template-columns: 3.5fr 1fr;
-    grid-template-rows: 1fr1fr;
+    grid-template-rows: 1fr auto;
     gap: 10px;
     background: #111;
     color: white;
@@ -127,101 +25,379 @@ setInterval(loadStocks, 15000);
   }
 
   #calendar {
-    grid-row: 1 / span 2; /* tall main area */
+    grid-row: 1 / span 2;
     background: #222;
   }
 
-  iframe {
+  #calendar iframe {
+    display: block;
     width: 100%;
     height: 100%;
     border: none;
   }
 
+  .panel {
+    background: #1a1a1a;
+    padding: 8px 10px;
+    min-width: 0;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .panel h2 {
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  .status {
+    font: 11px 'JetBrains Mono', monospace;
+    color: #777;
+    white-space: nowrap;
+  }
+  .status.warn { color: #e0a040; }
+
+  /* Notes: a plain notepad that fills whatever the stocks panel leaves */
   #notes {
-    padding: 1px;
-    background: #1a1a1a;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
+  #notesText {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 2px 0;
+    background: transparent;
+    color: white;
+    font: 15px/1.5 Arial, sans-serif;
+  }
+
+  /* Stocks: eight fixed rows plus one terminal row, all the same height */
   #stocks {
-    padding: 1px;
-    background: #1a1a1a;
-    font-size: 15px;
+    --row: 20px;
+    font: 13px/var(--row) 'JetBrains Mono', monospace;
   }
 
-  
+  #stocks h2 { font-family: Arial, sans-serif; }
+
+  #stockList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #stockList li {
+    height: var(--row);
+    display: grid;
+    grid-template-columns: 1fr auto 4.5em;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  #stockList .px { text-align: right; }
+  #stockList .chg { text-align: right; color: #888; }
+  #stockList .up { color: #4cc38a; }
+  #stockList .down { color: #e5534b; }
+
+  #term {
+    height: var(--row);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid #2a2a2a;
+    margin-top: 2px;
+  }
+
+  #term .prompt { color: #4cc38a; }
+
+  #termInput {
+    flex: 1;
+    min-width: 0;
+    height: var(--row);
+    border: none;
+    outline: none;
+    padding: 0;
+    background: transparent;
+    color: white;
+    font: inherit;
+  }
+
+  #termMsg {
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+    transition: opacity .4s;
+  }
+  #termMsg.err { color: #e0a040; }
+
+  @media (max-width: 760px) {
+    body {
+      height: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: 70vh 50vh auto;
+    }
+    #calendar { grid-row: auto; }
+  }
 </style>
 </head>
 <body>
 
 <!-- Calendar -->
 <div id="calendar">
-  <!---<iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=America%2FChicago&showPrint=0&mode=WEEK&title=Poudgalika&showDate=0&showCalendars=0&showTabs=0&showTz=0&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border-width:0" title="business"width="350" height="500" frameBorder="0" scrolling="no"></iframe>-->
-  <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FChicago&showPrint=0&mode=WEEK&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" style="border:solid 1px #777" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+  <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FChicago&showPrint=0&mode=WEEK&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" frameborder="0" scrolling="no"></iframe>
 </div>
 
-<!-- Notes -->
-<div id="notes">
-  <h2>Notes / Ideas/Long term goals</h2>
-  <p>
-    - Do GYROSCOPES 3D SCOOTER<br>
-    - Do El. Sieve <br>
-    - SMART Schol.<br>
-    - STUDY ABROAD Related -- chin. vis.<br>
-    - 3D printed CCTV 2 tilt esp 32 camera arduino/rasp<br>
-    - APIA schol due Jan 15<br>
-  </p>
+<!-- Notes: free-form, autosaved to the dash-store worker -->
+<div id="notes" class="panel">
+  <div class="panel-head">
+    <h2>Notes / Ideas/Long term goals</h2>
+    <span id="notesStatus" class="status">loading</span>
+  </div>
+  <textarea id="notesText" spellcheck="true" placeholder="Type anything..." disabled></textarea>
 </div>
 
-<!-- Live Stocks -->
-<div id="stocks">
+<!-- Stocks: watchlist edited from the one-line terminal (add NVDA, rm NVDA) -->
+<div id="stocks" class="panel">
   <h2>Stocks</h2>
-  <div id="stockData">Loading...</div>
+  <ul id="stockList"></ul>
+  <div id="term">
+    <span class="prompt">&gt;</span>
+    <input id="termInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="add NVDA / rm NVDA">
+    <span id="termMsg"></span>
+  </div>
 </div>
 
 <script>
-const API_KEY = "d4lmia9r01qr851pb6l0d4lmia9r01qr851pb6lg";
+const API = "https://dash-store.junkmails20d.workers.dev";
+const SLOTS = 8;
+const QUOTE_MS = 15000;
+const SAVE_DELAY_MS = 700;
+const DRAFT_KEY = "dash-notes-draft";
 
-// Add/remove tickers here:
-const tickers = ["NVDA", "AMD", "TMC", "AAPL"];
+const $ = (id) => document.getElementById(id);
+const notesEl = $("notesText");
+const statusEl = $("notesStatus");
 
-// Calculates refresh interval so: interval = number_of_stocks
-const REFRESH_SECONDS = tickers.length; 
-const REFRESH_MS = REFRESH_SECONDS * 1000;
+let tickers = [];
+let quotes = {};
 
-async function loadStocks() {
-  let html = "";
+/* ---------- notes ---------- */
 
-  for (let t of tickers) {
-    try {
-      const r = await fetch(
-        `https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`
-      );
-      const data = await r.json();
+let savedText = "";
+let saveTimer = null;
+let saving = null;
 
-      const price = Number(data.c); // "c" = current price
-
-      html += `${t}: $${price.toFixed(2)}<br>`;
-    } catch (err) {
-      html += `${t}: error<br>`;
-    }
-  }
-
-  document.getElementById("stockData").innerHTML = html;
+function setStatus(text, warn = false) {
+  statusEl.textContent = text;
+  statusEl.classList.toggle("warn", warn);
 }
 
-// First load immediately
-loadStocks();
+function readDraft() {
+  try { return localStorage.getItem(DRAFT_KEY); } catch { return null; }
+}
+function writeDraft(text) {
+  try { text === null ? localStorage.removeItem(DRAFT_KEY) : localStorage.setItem(DRAFT_KEY, text); } catch {}
+}
 
-// Auto-refresh every len(tickers) seconds
-setInterval(loadStocks, REFRESH_MS);
+async function saveNotes() {
+  clearTimeout(saveTimer);
+  if (saving) await saving;
+  const text = notesEl.value;
+  if (text === savedText) return;
+  setStatus("saving");
+  saving = fetch(`${API}/notes`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+    keepalive: text.length < 60000,
+  })
+    .then((r) => {
+      if (!r.ok) throw new Error(r.status);
+      savedText = text;
+      if (notesEl.value === text) { writeDraft(null); setStatus("saved"); }
+    })
+    .catch(() => setStatus("offline, kept on this device", true))
+    .finally(() => { saving = null; });
+  await saving;
+}
+
+notesEl.addEventListener("input", () => {
+  writeDraft(notesEl.value);
+  setStatus("editing");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNotes, SAVE_DELAY_MS);
+});
+notesEl.addEventListener("blur", saveNotes);
+window.addEventListener("pagehide", saveNotes);
+
+// Pull the latest notes when coming back to the tab, unless there are unsaved edits here.
+async function refreshNotes(state) {
+  const dirty = notesEl.value !== savedText;
+  if (dirty) return;
+  if (state.notes !== notesEl.value) {
+    const { selectionStart, selectionEnd } = notesEl;
+    notesEl.value = state.notes;
+    notesEl.setSelectionRange(selectionStart, selectionEnd);
+  }
+  savedText = state.notes;
+  setStatus("saved");
+}
+
+/* ---------- stocks ---------- */
+
+function renderStocks() {
+  const list = $("stockList");
+  list.replaceChildren();
+  for (let i = 0; i < SLOTS; i++) {
+    const li = document.createElement("li");
+    const sym = tickers[i];
+    if (sym) {
+      const q = quotes[sym];
+      const name = document.createElement("span");
+      const px = document.createElement("span");
+      const chg = document.createElement("span");
+      name.textContent = sym;
+      px.className = "px";
+      chg.className = "chg";
+      if (q && !q.error && q.c) {
+        px.textContent = "$" + Number(q.c).toFixed(2);
+        if (typeof q.dp === "number") {
+          chg.textContent = (q.dp >= 0 ? "+" : "") + q.dp.toFixed(2) + "%";
+          chg.classList.add(q.dp >= 0 ? "up" : "down");
+        }
+      } else {
+        px.textContent = q ? "error" : "...";
+      }
+      li.append(name, px, chg);
+    }
+    list.append(li);
+  }
+}
+
+async function loadQuotes() {
+  try {
+    const r = await fetch(`${API}/quotes`);
+    const data = await r.json();
+    quotes = Object.fromEntries(data.quotes.map((q) => [q.symbol, q]));
+    tickers = data.quotes.map((q) => q.symbol);
+  } catch {}
+  renderStocks();
+}
+
+/* ---------- terminal ---------- */
+
+const termInput = $("termInput");
+const termMsg = $("termMsg");
+const HINT = termInput.placeholder;
+const history = [];
+let histPos = 0;
+let msgTimer = null;
+
+function say(text, err = false) {
+  clearTimeout(msgTimer);
+  termMsg.textContent = text;
+  termMsg.classList.toggle("err", err);
+  termMsg.style.opacity = 1;
+  termInput.placeholder = "";
+  msgTimer = setTimeout(() => {
+    termMsg.style.opacity = 0;
+    termInput.placeholder = HINT;
+  }, 5000);
+}
+
+async function runCommand(line) {
+  const [cmd, ...args] = line.trim().split(/[\s,]+/).filter(Boolean);
+  const op = { add: "add", rm: "rm", remove: "rm", del: "rm" }[cmd?.toLowerCase()];
+  if (!op || !args.length) {
+    say("usage: add TICKER / rm TICKER", true);
+    return;
+  }
+  say(op === "add" ? "checking..." : "removing...");
+  try {
+    const r = await fetch(`${API}/tickers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op, symbols: args }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || r.status);
+    tickers = data.tickers;
+    renderStocks();
+    if (data.errors.length) say(data.errors.join("; "), true);
+    else say(op === "add" ? "added" : "removed");
+    if (op === "add") loadQuotes();
+  } catch (e) {
+    say("failed: " + e.message, true);
+  }
+}
+
+termInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const line = termInput.value;
+    if (!line.trim()) return;
+    history.push(line);
+    histPos = history.length;
+    termInput.value = "";
+    runCommand(line);
+  } else if (e.key === "ArrowUp" && histPos > 0) {
+    termInput.value = history[--histPos];
+    e.preventDefault();
+  } else if (e.key === "ArrowDown" && histPos < history.length) {
+    termInput.value = history[++histPos] ?? "";
+    e.preventDefault();
+  }
+});
+
+/* ---------- boot ---------- */
+
+async function loadState() {
+  const r = await fetch(`${API}/state`);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+(async () => {
+  renderStocks();
+  try {
+    const state = await loadState();
+    tickers = state.tickers;
+    renderStocks();
+    savedText = state.notes;
+    const draft = readDraft();
+    notesEl.value = draft ?? state.notes;
+    notesEl.disabled = false;
+    if (draft !== null && draft !== state.notes) saveNotes();
+    else { writeDraft(null); setStatus("saved"); }
+  } catch {
+    const draft = readDraft();
+    notesEl.value = draft ?? "";
+    notesEl.disabled = false;
+    setStatus("offline, kept on this device", true);
+  }
+  loadQuotes();
+  setInterval(loadQuotes, QUOTE_MS);
+})();
+
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState !== "visible") return;
+  try { refreshNotes(await loadState()); } catch {}
+  loadQuotes();
+});
 </script>
 
-  
 <!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
 <script src="https://dulran.com/tracker.js"></script>
 <!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
-
-
 </body>
 </html>
