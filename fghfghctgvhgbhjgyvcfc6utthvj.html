@@ -9,6 +9,7 @@
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
 
   html, body { height: 100%; }
 
@@ -24,17 +25,165 @@
     font-family: Arial, sans-serif;
   }
 
+  /* Calendar: drawn from Google Calendar data so per-event colors survive */
   #calendar {
     grid-row: 1 / span 2;
-    background: #222;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    padding: 8px 10px;
+    background: #1a1a1a;
+
+    --fc-page-bg-color: #1a1a1a;
+    --fc-neutral-bg-color: #222;
+    --fc-border-color: #2c2c2c;
+    --fc-today-bg-color: rgba(255, 255, 255, .035);
+    --fc-now-indicator-color: #e5534b;
+    --fc-highlight-color: rgba(76, 195, 138, .18);
+    --fc-button-text-color: #ddd;
+    --fc-button-bg-color: #262626;
+    --fc-button-border-color: #333;
+    --fc-button-hover-bg-color: #303030;
+    --fc-button-hover-border-color: #3a3a3a;
+    --fc-button-active-bg-color: #3a3a3a;
+    --fc-button-active-border-color: #444;
   }
 
-  #calendar iframe {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: none;
+  #cal { height: 100%; }
+
+  .fc { font-size: 13px; }
+  .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 8px; }
+  .fc .fc-toolbar-title { font-size: 18px; }
+  .fc .fc-button { padding: 3px 9px; font-size: 13px; text-transform: capitalize; box-shadow: none !important; }
+  .fc .fc-col-header-cell-cushion,
+  .fc .fc-daygrid-day-number { color: #ccc; text-decoration: none; }
+  .fc .fc-timegrid-slot-label-cushion { color: #888; }
+  .fc .fc-timegrid-slot { height: 2.1em; }
+  .fc-event { cursor: pointer; }
+  .fc .fc-event-main { padding: 1px 3px; }
+  .fc-event.task { border-style: dashed; }
+  .fc-event.task .fc-event-title { font-weight: 600; }
+  .fc-event.task.done { opacity: .5; }
+  .fc-event.task.done .fc-event-title { text-decoration: line-through; }
+
+  #calNotice {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    place-items: center;
+    background: rgba(17, 17, 17, .85);
+    text-align: center;
   }
+  #calNotice.show { display: grid; }
+  #calNotice p { margin: 0 0 12px; color: #bbb; }
+
+  .btn {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #262626;
+    color: #eee;
+    font: 14px Arial, sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn:hover { background: #303030; }
+  .btn.primary { background: #2f6f4f; border-color: #3c8a63; }
+  .btn.danger { color: #ff8a80; }
+
+  #lock {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+    place-items: center;
+    background: #111;
+  }
+  #lock.show { display: grid; }
+  #lock form { display: grid; gap: 10px; width: min(280px, calc(100vw - 32px)); }
+  #lock input {
+    padding: 9px 11px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #1c1c1c;
+    color: #eee;
+    font: 15px Arial, sans-serif;
+  }
+  #lock input:focus { outline: none; border-color: #3c8a63; }
+  #lockErr { min-height: 18px; margin: 0; color: #ff8a80; font: 13px Arial, sans-serif; }
+
+  #calToast {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    z-index: 6;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #333;
+    color: #eee;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s;
+  }
+  #calToast.show { opacity: 1; }
+  #calToast.err { background: #5a2a26; }
+
+  /* Event editor */
+  #editor {
+    width: min(420px, calc(100vw - 32px));
+    padding: 16px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #1d1d1d;
+    color: #eee;
+  }
+  #editor::backdrop { background: rgba(0, 0, 0, .55); }
+  #editor form { display: grid; gap: 10px; margin: 0; }
+  #editor label { display: grid; gap: 4px; font-size: 12px; color: #999; }
+  #editor .row { display: grid; gap: 8px; }
+  #editor label, #editor input, #editor select { min-width: 0; }
+  #editor .check { display: flex; align-items: center; gap: 6px; color: #ccc; font-size: 13px; }
+  #editor input:not([type=checkbox]),
+  #editor select,
+  #editor textarea {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #141414;
+    color: #eee;
+    font: 14px Arial, sans-serif;
+    color-scheme: dark;
+  }
+  #editor textarea { resize: vertical; min-height: 54px; }
+  #edTitle { font-size: 17px !important; }
+  #edNote { margin: 0; font-size: 12px; color: #c9a25b; }
+  #edNote:empty { display: none; }
+  #edLink { font-size: 12px; color: #8ab4f8; }
+
+  #swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+  #swatches button {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  #swatches button.on { border-color: #fff; }
+  #swatches button.default {
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 11px;
+  }
+
+  #editor .actions { display: flex; gap: 8px; align-items: center; }
+  #editor .actions .spacer { flex: 1; }
 
   .panel {
     background: #1a1a1a;
@@ -147,16 +296,56 @@
       grid-template-columns: 1fr;
       grid-template-rows: 70vh 50vh auto;
     }
-    #calendar { grid-row: auto; }
+    #calendar { grid-row: auto; padding: 6px; }
+    .fc .fc-toolbar { flex-wrap: wrap; gap: 6px; }
+    .fc .fc-toolbar-title { font-size: 15px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Calendar -->
-<div id="calendar">
-  <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FChicago&showPrint=0&mode=WEEK&src=a2R1bHJhbkBnbWFpbC5jb20&color=%23ff9500" frameborder="0" scrolling="no"></iframe>
+<div id="lock">
+  <form id="lockForm">
+    <input id="lockInput" type="password" placeholder="Passphrase" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Unlock</button>
+    <p id="lockErr"></p>
+  </form>
 </div>
+
+<!-- Calendar: Google Calendar is the source of truth, so phone notifications keep working -->
+<div id="calendar">
+  <div id="cal"></div>
+  <div id="calNotice">
+    <div>
+      <p id="calNoticeText">Loading calendar...</p>
+      <a id="calNoticeBtn" class="btn primary" href="/api/dash/google/connect" hidden>Connect Google Calendar</a>
+    </div>
+  </div>
+  <div id="calToast"></div>
+</div>
+
+<dialog id="editor">
+  <form method="dialog">
+    <input id="edTitle" placeholder="Title" autocomplete="off">
+    <label>Calendar<select id="edCal"></select></label>
+    <span class="check"><input type="checkbox" id="edAllDay"> All day</span>
+    <div class="row">
+      <label>Start<input id="edStart" type="datetime-local"></label>
+      <label>End<input id="edEnd" type="datetime-local"></label>
+    </div>
+    <label>Color<div id="swatches"></div></label>
+    <label>Location<input id="edLoc" autocomplete="off"></label>
+    <label>Description<textarea id="edDesc"></textarea></label>
+    <p id="edNote"></p>
+    <div class="actions">
+      <button type="button" id="edDelete" class="btn danger">Delete</button>
+      <a id="edLink" target="_blank" rel="noopener">Open in Google</a>
+      <span class="spacer"></span>
+      <button type="button" id="edCancel" class="btn">Cancel</button>
+      <button type="submit" id="edSave" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
 
 <!-- Notes: free-form, autosaved to the dash-store worker -->
 <div id="notes" class="panel">
@@ -178,8 +367,9 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script>
-const API = "https://dash-store.junkmails20d.workers.dev";
+const API = "/api/dash";
 const SLOTS = 8;
 const QUOTE_MS = 15000;
 const SAVE_DELAY_MS = 700;
@@ -191,6 +381,50 @@ const statusEl = $("notesStatus");
 
 let tickers = [];
 let quotes = {};
+
+/* ---------- api ---------- */
+
+// The Worker answers 401 until this browser has unlocked with the passphrase. The
+// session lives in an HttpOnly cookie, so nothing on this page can read it.
+let signedOut = false;
+
+async function api(path, { method = "GET", body, keepalive } = {}) {
+  const r = await fetch(API + path, {
+    method,
+    keepalive,
+    credentials: "same-origin",
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (r.status === 401) {
+    showSignedOut();
+    throw Object.assign(new Error("signed out"), { status: 401 });
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(data.error || `error ${r.status}`), { status: r.status, data });
+  return data;
+}
+
+function showSignedOut() {
+  if (signedOut) return;
+  signedOut = true;
+  $("lock").classList.add("show");
+  $("lockInput").focus();
+}
+
+$("lockForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const r = await fetch(API + "/unlock", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ passphrase: $("lockInput").value }),
+  }).catch(() => null);
+  if (r?.ok) return location.reload();
+  const data = r ? await r.json().catch(() => ({})) : { error: "offline" };
+  $("lockErr").textContent = data.error || `error ${r.status}`;
+  $("lockInput").select();
+});
 
 /* ---------- notes ---------- */
 
@@ -216,14 +450,8 @@ async function saveNotes() {
   const text = notesEl.value;
   if (text === savedText) return;
   setStatus("saving");
-  saving = fetch(`${API}/notes`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-    keepalive: text.length < 60000,
-  })
-    .then((r) => {
-      if (!r.ok) throw new Error(r.status);
+  saving = api("/notes", { method: "PUT", body: { text }, keepalive: text.length < 60000 })
+    .then(() => {
       savedText = text;
       if (notesEl.value === text) { writeDraft(null); setStatus("saved"); }
     })
@@ -287,8 +515,7 @@ function renderStocks() {
 
 async function loadQuotes() {
   try {
-    const r = await fetch(`${API}/quotes`);
-    const data = await r.json();
+    const data = await api("/quotes");
     quotes = Object.fromEntries(data.quotes.map((q) => [q.symbol, q]));
     tickers = data.quotes.map((q) => q.symbol);
   } catch {}
@@ -325,13 +552,7 @@ async function runCommand(line) {
   }
   say(op === "add" ? "checking..." : "removing...");
   try {
-    const r = await fetch(`${API}/tickers`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ op, symbols: args }),
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || r.status);
+    const data = await api("/tickers", { method: "POST", body: { op, symbols: args } });
     tickers = data.tickers;
     renderStocks();
     if (data.errors.length) say(data.errors.join("; "), true);
@@ -362,9 +583,7 @@ termInput.addEventListener("keydown", (e) => {
 /* ---------- boot ---------- */
 
 async function loadState() {
-  const r = await fetch(`${API}/state`);
-  if (!r.ok) throw new Error(r.status);
-  return r.json();
+  return api("/state");
 }
 
 (async () => {
@@ -393,7 +612,341 @@ document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState !== "visible") return;
   try { refreshNotes(await loadState()); } catch {}
   loadQuotes();
+  if (!signedOut && !$("editor").open) cal.refetchEvents();
 });
+
+/* ---------- calendar ---------- */
+
+const CAL_REFRESH_MS = 60000;
+const calNotice = $("calNotice");
+const toastEl = $("calToast");
+let calendars = [];
+let palette = {};
+let toastTimer = null;
+
+function toast(text, err = false) {
+  clearTimeout(toastTimer);
+  toastEl.textContent = text;
+  toastEl.classList.toggle("err", err);
+  toastEl.classList.add("show");
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), err ? 6000 : 2500);
+}
+
+function showConnect() {
+  $("calNoticeText").textContent = "Connect Google Calendar to show and edit your events here.";
+  const btn = $("calNoticeBtn");
+  btn.textContent = "Connect Google Calendar";
+  btn.href = `${API}/google/connect`;
+  btn.hidden = false;
+  calNotice.classList.add("show");
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+const localDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const localDateTime = (d) => `${localDate(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fromDate = (s) => new Date(`${s}T00:00`);
+const enc = encodeURIComponent;
+
+function shiftDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+// Readable text on a colored block.
+function textOn(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return "#fff";
+  const n = parseInt(m[1], 16);
+  return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 170 ? "#111" : "#fff";
+}
+
+function toFcEvent(e) {
+  return {
+    id: `${e.calendarId}|${e.id}`,
+    title: e.title,
+    start: e.start,
+    end: e.end,
+    allDay: e.allDay,
+    editable: e.editable,
+    backgroundColor: e.color,
+    borderColor: e.color,
+    textColor: textOn(e.color),
+    extendedProps: { kind: "event", ...e },
+  };
+}
+
+function toFcTask(t) {
+  return {
+    id: `task|${t.listId}|${t.id}`,
+    title: (t.done ? "☑ " : "☐ ") + t.title,
+    start: t.due,
+    allDay: true,
+    editable: false,
+    classNames: t.done ? ["task", "done"] : ["task"],
+    backgroundColor: "#262626",
+    borderColor: "#777",
+    textColor: "#ddd",
+    extendedProps: { kind: "task", ...t },
+  };
+}
+
+async function fetchEvents(info, success, failure) {
+  try {
+    const data = await api(`/cal/events?start=${enc(info.startStr)}&end=${enc(info.endStr)}`);
+    calendars = data.calendars;
+    palette = data.colors;
+    if (!signedOut) calNotice.classList.remove("show");
+    success([...data.events.map(toFcEvent), ...data.tasks.map(toFcTask)]);
+  } catch (e) {
+    if (e.status === 409) showConnect();
+    else if (e.status !== 401) toast(`Calendar failed to load: ${e.message}`, true);
+    failure(e);
+  }
+}
+
+// The time fields Google needs for an event FullCalendar just moved or resized.
+function timesOf(ev) {
+  if (ev.allDay) {
+    const start = localDate(ev.start);
+    return { allDay: true, start, end: ev.end ? localDate(ev.end) : localDate(shiftDays(ev.start, 1)) };
+  }
+  const end = ev.end || new Date(ev.start.getTime() + 3600_000);
+  return { allDay: false, start: ev.start.toISOString(), end: end.toISOString() };
+}
+
+async function onMove(info) {
+  const p = info.event.extendedProps;
+  try {
+    await api(`/cal/events/${enc(p.calendarId)}/${enc(p.id)}`, { method: "PATCH", body: timesOf(info.event) });
+    toast(p.recurring ? "Moved this occurrence" : "Saved");
+  } catch (e) {
+    info.revert();
+    if (e.status !== 401) toast(`Couldn't save: ${e.message}`, true);
+  }
+}
+
+async function toggleTask(ev) {
+  const t = ev.extendedProps;
+  try {
+    await api(`/tasks/${enc(t.listId)}/${enc(t.id)}`, { method: "PATCH", body: { done: !t.done } });
+    toast(t.done ? "Task reopened" : "Task done");
+    cal.refetchEvents();
+  } catch (e) {
+    if (e.status !== 401) toast(`Couldn't update task: ${e.message}`, true);
+  }
+}
+
+/* ---------- event editor ---------- */
+
+const ed = {
+  dlg: $("editor"),
+  title: $("edTitle"),
+  cal: $("edCal"),
+  allDay: $("edAllDay"),
+  start: $("edStart"),
+  end: $("edEnd"),
+  loc: $("edLoc"),
+  desc: $("edDesc"),
+  note: $("edNote"),
+  link: $("edLink"),
+  del: $("edDelete"),
+  save: $("edSave"),
+};
+let edCtx = null;
+let edColor = null;
+
+// Inputs show all-day ranges inclusively; Google stores the end day exclusively.
+function setTimes(allDay, start, end) {
+  ed.allDay.checked = allDay;
+  ed.start.type = ed.end.type = allDay ? "date" : "datetime-local";
+  if (allDay) {
+    ed.start.value = localDate(start);
+    ed.end.value = localDate(shiftDays(end, -1));
+  } else {
+    ed.start.value = localDateTime(start);
+    ed.end.value = localDateTime(end);
+  }
+}
+
+function readTimes() {
+  if (ed.start.type === "date") {
+    return { start: fromDate(ed.start.value), end: shiftDays(fromDate(ed.end.value), 1) };
+  }
+  return { start: new Date(ed.start.value), end: new Date(ed.end.value) };
+}
+
+ed.allDay.addEventListener("change", () => {
+  const { start, end } = readTimes();
+  if (ed.allDay.checked) {
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const lastDay = new Date(end.getTime() - 1);
+    setTimes(true, s, shiftDays(new Date(lastDay.getFullYear(), lastDay.getMonth(), lastDay.getDate()), 1));
+  } else {
+    const s = new Date(start);
+    s.setHours(9, 0, 0, 0);
+    setTimes(false, s, new Date(s.getTime() + 3600_000));
+  }
+});
+
+function calColor(id) {
+  return calendars.find((c) => c.id === id)?.color || "#888";
+}
+
+function renderSwatches() {
+  const box = $("swatches");
+  box.replaceChildren();
+  const def = document.createElement("button");
+  def.type = "button";
+  def.className = "default" + (edColor ? "" : " on");
+  def.style.background = calColor(ed.cal.value);
+  def.title = "Calendar color";
+  def.textContent = "•";
+  def.onclick = () => { edColor = null; renderSwatches(); };
+  box.append(def);
+  for (const [id, c] of Object.entries(palette)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = edColor === id ? "on" : "";
+    b.style.background = c.hex;
+    b.title = c.name;
+    b.onclick = () => { edColor = id; renderSwatches(); };
+    box.append(b);
+  }
+}
+ed.cal.addEventListener("change", renderSwatches);
+
+function openEditor({ event, start, end, allDay }) {
+  const p = event?.extendedProps;
+  const editable = !p || p.editable;
+  edCtx = event ? { event, p } : { event: null };
+
+  const writable = calendars.filter((c) => c.editable);
+  const options = p && !p.editable ? calendars.filter((c) => c.id === p.calendarId) : writable;
+  ed.cal.replaceChildren(
+    ...options.map((c) => {
+      const o = document.createElement("option");
+      o.value = c.id;
+      o.textContent = c.name + (c.primary ? " (main)" : "");
+      return o;
+    })
+  );
+  ed.cal.value = p ? p.calendarId : (writable.find((c) => c.primary) || writable[0])?.id;
+
+  ed.title.value = p ? p.title : "";
+  ed.loc.value = p ? p.location : "";
+  ed.desc.value = p ? p.description : "";
+  edColor = p ? p.colorId : null;
+
+  const s = event ? event.start : start;
+  const e = event ? (event.end || new Date(s.getTime() + (event.allDay ? 86400_000 : 3600_000))) : end;
+  setTimes(event ? event.allDay : allDay, s, e);
+  renderSwatches();
+
+  ed.note.textContent = !editable
+    ? "This calendar is read-only."
+    : p?.recurring ? "Repeating event: changes here apply to this occurrence only." : "";
+  ed.link.hidden = !p?.link;
+  if (p?.link) ed.link.href = p.link;
+  ed.del.hidden = !p || !editable;
+  ed.save.hidden = !editable;
+  for (const el of [ed.title, ed.cal, ed.allDay, ed.start, ed.end, ed.loc, ed.desc]) el.disabled = !editable;
+  $("swatches").style.pointerEvents = editable ? "" : "none";
+
+  ed.dlg.showModal();
+  if (editable && !p) ed.title.focus();
+}
+
+ed.dlg.querySelector("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { start, end } = readTimes();
+  if (isNaN(start) || isNaN(end) || end <= start) {
+    toast("End has to be after start", true);
+    return;
+  }
+  const allDay = ed.allDay.checked;
+  const body = {
+    title: ed.title.value.trim() || "(no title)",
+    allDay,
+    start: allDay ? localDate(start) : start.toISOString(),
+    end: allDay ? localDate(end) : end.toISOString(),
+    colorId: edColor,
+    location: ed.loc.value,
+    description: ed.desc.value,
+  };
+  ed.save.disabled = true;
+  try {
+    if (edCtx.event) {
+      const { p } = edCtx;
+      if (ed.cal.value !== p.calendarId) body.moveTo = ed.cal.value;
+      await api(`/cal/events/${enc(p.calendarId)}/${enc(p.id)}`, { method: "PATCH", body });
+    } else {
+      await api("/cal/events", { method: "POST", body: { calendarId: ed.cal.value, ...body } });
+    }
+    ed.dlg.close();
+    toast("Saved");
+    cal.refetchEvents();
+  } catch (err) {
+    if (err.status !== 401) toast(`Couldn't save: ${err.message}`, true);
+  } finally {
+    ed.save.disabled = false;
+  }
+});
+
+ed.del.addEventListener("click", async () => {
+  const { event, p } = edCtx;
+  if (!confirm(`Delete "${p.title}"${p.recurring ? " (this occurrence)" : ""}?`)) return;
+  try {
+    await api(`/cal/events/${enc(p.calendarId)}/${enc(p.id)}`, { method: "DELETE" });
+    event.remove();
+    ed.dlg.close();
+    toast("Deleted");
+  } catch (err) {
+    if (err.status !== 401) toast(`Couldn't delete: ${err.message}`, true);
+  }
+});
+
+$("edCancel").addEventListener("click", () => ed.dlg.close());
+
+/* ---------- calendar boot ---------- */
+
+const narrow = matchMedia("(max-width: 760px)").matches;
+const cal = new FullCalendar.Calendar($("cal"), {
+  initialView: narrow ? "timeGridDay" : "timeGridWeek",
+  headerToolbar: { left: "prev,next today", center: "title", right: "timeGridDay,timeGridWeek,dayGridMonth" },
+  buttonText: { today: "Today", day: "Day", week: "Week", month: "Month" },
+  height: "100%",
+  firstDay: 0,
+  nowIndicator: true,
+  scrollTime: `${pad(Math.max(new Date().getHours() - 2, 0))}:00:00`,
+  scrollTimeReset: false,
+  dayMaxEvents: true,
+  selectable: true,
+  selectMirror: true,
+  editable: true,
+  selectLongPressDelay: 300,
+  eventLongPressDelay: 300,
+  eventTimeFormat: { hour: "numeric", minute: "2-digit", meridiem: "short" },
+  slotLabelFormat: { hour: "numeric", meridiem: "short" },
+  eventSources: [{ id: "google", events: fetchEvents }],
+  select: (info) => {
+    cal.unselect();
+    if (!calendars.some((c) => c.editable)) return;
+    openEditor({ start: info.start, end: info.end, allDay: info.allDay });
+  },
+  eventClick: (info) => {
+    info.jsEvent.preventDefault();
+    if (info.event.extendedProps.kind === "task") toggleTask(info.event);
+    else openEditor({ event: info.event });
+  },
+  eventDrop: onMove,
+  eventResize: onMove,
+});
+cal.render();
+
+setInterval(() => {
+  if (!signedOut && !ed.dlg.open && document.visibilityState === "visible") cal.refetchEvents();
+}, CAL_REFRESH_MS);
 </script>
 
 <!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
