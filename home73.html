@@ -858,7 +858,7 @@ function orbitPoints(n) {
 }
 
 // ---------- shared glow-particle shader with live hue rotation ----------
-const uniforms = { uHue: { value: 0 } };
+const uniforms = { uHue: { value: 1.5 } };
 const particleMaterial = new THREE.ShaderMaterial({
   uniforms,
   transparent: true,
@@ -1000,7 +1000,8 @@ addEventListener('touchmove', e => {
 }, { passive: true });
 
 // click anywhere (not on links/cards) shifts the palette — the soul of home67's tubes
-let hue = 0, hueTarget = 0;
+// start rotated ~86° so the wordmark first appears green; clicks cycle on from here
+let hue = 1.5, hueTarget = 1.5;
 document.addEventListener('click', e => {
   if (e.target.closest('a, button, .card, nav')) return;
   hueTarget += 0.9 + Math.random() * 1.1;
