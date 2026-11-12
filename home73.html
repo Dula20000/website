@@ -89,9 +89,46 @@ body.locked { overflow: hidden; }
 }
 @keyframes progress-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
+/* ---------- stock ticker (sits above the nav; the two make one header) ---------- */
+:root { --ticker-h: 28px; }
+.ticker {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--ticker-h);
+  z-index: 85;
+  overflow: hidden;
+  display: flex; align-items: center;
+  background: #000;
+  border-bottom: 1px solid rgba(232, 176, 75, 0.12);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  /* fade both edges into the black */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+.ticker-track {
+  display: flex; flex: none;
+  white-space: nowrap;
+  animation: ticker-scroll var(--ticker-dur, 60s) linear infinite;
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker-group { display: flex; flex: none; }
+.tick {
+  display: inline-flex; gap: 8px;
+  padding: 0 14px;
+  color: var(--cream);
+  text-decoration: none;
+}
+.tick .sym { color: var(--cream); }
+.tick .q { color: var(--muted); }
+.tick.up .q { color: #4ade80; }
+.tick.down .q { color: #f87171; }
+@keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
 /* ---------- nav ---------- */
 .nav {
-  position: fixed; top: 0; left: 0; right: 0;
+  position: fixed; top: var(--ticker-h); left: 0; right: 0;
   z-index: 80;
   display: flex; align-items: center; gap: 26px;
   padding: 16px 28px;
@@ -182,7 +219,7 @@ main { position: relative; z-index: 10; }
 section {
   min-height: 100vh;
   display: flex;
-  padding: 110px 6vw 80px;
+  padding: calc(110px + var(--ticker-h)) 6vw 80px;
   position: relative;
 }
 
@@ -467,14 +504,23 @@ footer a:hover { color: var(--gold); }
 @media (max-width: 760px) {
   .nav { gap: 16px; padding: 14px 18px; }
   .brand span { display: none; }
-  section { padding: 96px 7vw 60px; }
+  section { padding: calc(96px + var(--ticker-h)) 7vw 60px; }
   .about { justify-content: center; text-align: left; }
   .about .col { align-items: flex-start; }
   .chips { justify-content: flex-start; }
 }
 
+/* five nav links: tighten so Taiwan still fits on phones */
+@media (max-width: 480px) {
+  .nav { gap: 12px; padding: 14px 12px; }
+  .nav a.link { font-size: 10px; letter-spacing: 0.1em; }
+  .brand img { height: 28px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nebula, .scroll-cue::after, .connect h2.headline { animation: none; }
+  .ticker { overflow-x: auto; }
+  .ticker-track { animation: none; }
   html { scroll-behavior: auto; }
 }
 </style>
@@ -512,6 +558,12 @@ footer a:hover { color: var(--gold); }
   <div class="skip">Click anywhere to skip</div>
 </div>
 
+<!-- Stock ticker. Quotes come from the dash-store Worker's public /ticker route
+     (Finnhub behind it, key stays server side). Symbols render even if prices don't. -->
+<div class="ticker" id="ticker" aria-label="Stock prices">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
 <nav class="nav">
   <a class="brand" href="index.html">
     <img src="logofiles/crestlogosmall.png" alt="Dulran crest" />
@@ -521,6 +573,7 @@ footer a:hover { color: var(--gold); }
   <a class="link" href="resumeonboarding.html">Resume</a>
   <a class="link featured" href="projects/index.html">Projects</a>
   <a class="link" href="https://www.instagram.com/dul.is.running" target="_blank" rel="noopener">Gallery</a>
+  <a class="link" href="https://dulran.com/taiwan">Taiwan</a>
 </nav>
 
 <main>
@@ -1157,6 +1210,65 @@ build().then(() => {
   if (window.__introDone && revealT < 0) revealT = 0;
   animate();
 }).catch(() => document.body.classList.add('no-webgl'));
+</script>
+
+<script>
+// ---- stock ticker ----
+(() => {
+  const ENDPOINT = 'https://dulran.com/api/dash/ticker';
+  const FALLBACK = ['NVDA', 'WMT', 'PLTR', 'NOC', 'LMT', 'GOOG', 'SMCI', 'VOO',
+    'AAPL', 'MSFT', 'AMZN', 'META', 'TSLA', 'RTX', 'BA', 'SPY'];
+  const PX_PER_SEC = 55;
+  const track = document.getElementById('tickerTrack');
+  const money = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const signed = (n, f) => (n > 0 ? '+' : n < 0 ? '-' : '') + f(Math.abs(n));
+
+  function item(q) {
+    const ok = q && !q.error && q.c > 0;
+    const dir = !ok ? '' : q.d > 0 ? 'up' : q.d < 0 ? 'down' : '';
+    const quote = ok
+      ? money(q.c) + ' ' + signed(q.d ?? 0, money) + ' (' + signed(q.dp ?? 0, (n) => n.toFixed(2)) + '%)'
+      : '--';
+    return '<a class="tick ' + dir + '" href="https://finance.yahoo.com/quote/' + q.symbol +
+      '" target="_blank" rel="noopener"><span class="sym">$' + q.symbol + '</span><span class="q">' +
+      quote + '</span></a>';
+  }
+
+  function render(quotes) {
+    const group = '<div class="ticker-group">' + quotes.map(item).join('') + '</div>';
+    // repeat the group until one copy is wider than the screen, then double it so
+    // the -50% loop is seamless
+    track.innerHTML = group;
+    const w = track.firstElementChild.offsetWidth || 1;
+    const reps = Math.max(1, Math.ceil(innerWidth / w));
+    const half = group.repeat(reps);
+    track.innerHTML = half + half;
+    track.style.setProperty('--ticker-dur', (w * reps / PX_PER_SEC).toFixed(1) + 's');
+  }
+
+  let last = '';
+  async function load() {
+    try {
+      const r = await fetch(ENDPOINT, { cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      const { quotes } = await r.json();
+      const syms = quotes.map((q) => q.symbol).join();
+      if (syms !== last) { last = syms; render(quotes); return; }
+      // same symbols: swap the numbers in place so the scroll doesn't restart
+      const fresh = new DOMParser().parseFromString(quotes.map(item).join(''), 'text/html').body.children;
+      track.querySelectorAll('.ticker-group').forEach((g) => {
+        [...g.children].forEach((el, i) => {
+          el.className = fresh[i].className;
+          el.lastElementChild.textContent = fresh[i].lastElementChild.textContent;
+        });
+      });
+    } catch {
+      if (!last) { last = 'fallback'; render(FALLBACK.map((symbol) => ({ symbol, error: true }))); }
+    }
+  }
+  load();
+  setInterval(load, 60000);
+})();
 </script>
 
 <!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
