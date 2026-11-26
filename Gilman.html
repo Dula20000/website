@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Taiwan · How the Gilman Program Made It Happen</title>
+<meta name="description" content="My month in Taiwan, told as a scroll-driven journal, and how the Gilman Scholarship made the whole trip possible." />
+<meta name="theme-color" content="#04120f" />
+
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+<script src="https://dulran.com/tracker.js"></script>
+<!--this is the tracking code snippet from cloudfair worker and worker Kv. It uses FingerprintJS to log everything needed to fingerprint users. have this in all html files going forward.-->
+
+  
+<!-- Fonts: same pairing as the rest of the site (see china.html) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet" />
+
+  
+<!-- Three.js (WebGL) loaded as an ES module via import map -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<!-- GSAP + ScrollTrigger: scroll-driven animation engine -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<!-- Lenis: momentum smooth-scrolling -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+
+<style>
+  /* ============================================================
+     TAIWAN PALETTE — humid jade night, lantern gold, neon accents
+     (deliberately distinct from china.html's sapphire/gold)
+     ============================================================ */
+  :root {
+    --tw-bg-0:   #04120f;               /* deep jade-black */
+    --tw-bg-1:   #07211b;
+    --tw-ink:    #020a08;
+    --tw-jade:   #35c99b;               /* living jade */
+    --tw-jade-d: #1a7a5e;
+    --tw-gold:   #e8c476;               /* lantern gold */
+    --tw-red:    #e4573f;               /* temple vermilion */
+    --tw-cream:  #f5f1e6;
+    --tw-text:   #e6eeea;
+    --tw-muted:  #93aca3;
+    --tw-line:   rgba(53, 201, 155, 0.25);
+    --tw-accent: var(--tw-jade);        /* re-tinted per chapter by JS */
+
+    --font-display: "Fraunces", Georgia, serif;
+    --font-tc: "Noto Serif TC", "Fraunces", serif;
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--tw-text);
+    background: var(--tw-bg-0);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection { background: rgba(53,201,155,.35); color: #fff; }
+
+  /* ---------- WebGL canvas sits fixed behind everything ---------- */
+  #tw-gl {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0; display: block;
+    pointer-events: none;
+  }
+  /* If WebGL/modules fail we still get a rich gradient backdrop */
+  html.tw-no-gl #tw-gl { display: none; }
+  html.tw-no-gl body {
+    background:
+      radial-gradient(120% 90% at 80% -10%, #0c3a2d 0%, transparent 60%),
+      radial-gradient(100% 80% at 10% 110%, #123047 0%, transparent 55%),
+      var(--tw-bg-0);
+  }
+
+  /* subtle film grain over the whole page */
+  .tw-grain {
+    position: fixed; inset: -50%;
+    z-index: 3; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: tw-grain-shift 1.4s steps(4) infinite;
+  }
+  @keyframes tw-grain-shift {
+    0% { transform: translate(0,0); } 25% { transform: translate(-2%,3%); }
+    50% { transform: translate(3%,-2%); } 75% { transform: translate(-3%,-3%); }
+    100% { transform: translate(0,0); }
+  }
+
+  /* dimming veil: sits between the WebGL scene (z0) and the content (z2).
+     Off over the hero, fades in once you reach the journey so the orb's
+     glare doesn't fight the text. Tune the alpha here to taste. */
+  .tw-veil {
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+    background: rgba(2, 10, 8, 0.48);
+    opacity: 0;
+    transition: opacity .65s ease;
+  }
+  .tw-veil.on { opacity: 1; }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .tw-hero {
+    position: relative; z-index: 2;
+    min-height: 100svh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+  }
+  .tw-hero-cjk {
+    font-family: var(--font-tc);
+    font-size: clamp(64px, 16vw, 200px);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(232,196,118,.5);
+    letter-spacing: .08em;
+    user-select: none;
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -78%);
+    opacity: .55; pointer-events: none;
+  }
+  .tw-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(52px, 11vw, 150px);
+    letter-spacing: .04em;
+    line-height: .95;
+    background: linear-gradient(160deg, var(--tw-cream) 20%, var(--tw-gold) 55%, var(--tw-jade) 95%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    position: relative;
+  }
+  .tw-hero .tw-kicker {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: .42em; text-transform: uppercase;
+    color: var(--tw-muted); margin-bottom: 22px;
+  }
+  .tw-hero .tw-sub {
+    margin-top: 26px; max-width: 560px;
+    color: var(--tw-muted); font-size: 15px; line-height: 1.7;
+  }
+  .tw-hero .tw-sub em { color: var(--tw-gold); font-style: normal; }
+  .tw-hero .tw-gilman-line {
+    margin-top: 18px; position: relative;
+    font-family: var(--font-display); font-style: italic;
+    font-size: clamp(20px, 3vw, 32px); color: var(--tw-cream);
+  }
+  .tw-hero .tw-gilman-line em { color: var(--tw-gold); }
+  .tw-gilman-btn {
+    position: relative; z-index: 3;
+    margin-top: 28px; max-width: 520px;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 13px 22px; border-radius: 999px;
+    border: 1px solid rgba(232,196,118,.45);
+    background: rgba(4,18,15,.55); backdrop-filter: blur(8px);
+    color: var(--tw-cream); text-decoration: none;
+    font-size: 13.5px; font-weight: 600; line-height: 1.45;
+    transition: border-color .25s ease, background .25s ease;
+  }
+  .tw-gilman-btn:hover { border-color: var(--tw-jade); background: rgba(4,18,15,.8); }
+  .tw-gilman-btn .arr { color: var(--tw-jade); transition: transform .3s ease; }
+  .tw-gilman-btn:hover .arr { transform: translateY(3px); }
+  @media (max-height: 760px) { .tw-scrollcue { display: none; } }
+  .tw-scrollcue {
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    color: var(--tw-muted); font-size: 10px; letter-spacing: .34em; text-transform: uppercase;
+  }
+  .tw-scrollcue .tw-cue-line {
+    width: 1px; height: 54px; overflow: hidden;
+    background: rgba(255,255,255,.08); position: relative;
+  }
+  .tw-scrollcue .tw-cue-line::after {
+    content: ""; position: absolute; left: 0; top: -40%;
+    width: 100%; height: 40%;
+    background: linear-gradient(180deg, transparent, var(--tw-accent));
+    animation: tw-cue 2s cubic-bezier(.7,0,.3,1) infinite;
+  }
+  @keyframes tw-cue { to { top: 110%; } }
+
+  /* ============================================================
+     PROGRESS RAIL (the travelling dot) — left side on desktop
+     ============================================================ */
+  .tw-rail {
+    position: fixed; left: 26px; top: 50%;
+    transform: translateY(-50%);
+    height: 62vh; width: 2px; z-index: 5;
+    background: rgba(255,255,255,.07);
+    border-radius: 2px;
+  }
+  .tw-rail-fill {
+    position: absolute; left: 0; top: 0; width: 100%; height: 0%;
+    background: linear-gradient(180deg, var(--tw-jade), var(--tw-accent));
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(53,201,155,.55);
+  }
+  .tw-rail-dot {
+    position: absolute; left: 50%; top: 0%;
+    width: 13px; height: 13px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--tw-cream);
+    box-shadow:
+      0 0 0 4px rgba(53,201,155,.22),
+      0 0 18px 4px var(--tw-accent);
+    transition: box-shadow .5s ease;
+  }
+  .tw-rail-tick {
+    position: absolute; left: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--tw-bg-1);
+    border: 1px solid rgba(255,255,255,.28);
+    cursor: pointer; padding: 0;
+    transition: background .3s, border-color .3s, transform .2s;
+  }
+  .tw-rail-tick:hover { transform: translate(-50%,-50%) scale(1.5); border-color: var(--tw-gold); }
+  .tw-rail-tick.done { background: var(--tw-jade-d); border-color: var(--tw-jade); }
+  .tw-rail-tick .tw-tick-label {
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    white-space: nowrap; font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--tw-cream);
+    background: rgba(4,18,15,.85); border: 1px solid var(--tw-line);
+    padding: 5px 10px; border-radius: 6px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .tw-rail-tick:hover .tw-tick-label { opacity: 1; }
+  @media (max-width: 880px) {
+    .tw-rail { left: 0; top: 0; transform: none; height: 3px; width: 100%; border-radius: 0; }
+    .tw-rail-fill { height: 100% !important; width: 0%; background: linear-gradient(90deg, var(--tw-jade), var(--tw-accent)); }
+    .tw-rail-dot, .tw-rail-tick { display: none; }
+  }
+
+  /* ============================================================
+     JOURNEY LAYOUT
+     ============================================================ */
+  .tw-journey { position: relative; z-index: 2; }
+
+  .tw-chapter {
+    padding: clamp(90px, 16vh, 170px) 6vw clamp(20px, 4vh, 50px);
+    max-width: 1180px; margin: 0 auto;
+  }
+  .tw-chapter-head {
+    display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--tw-line);
+    padding-bottom: 18px;
+  }
+  .tw-chapter-num {
+    font-family: var(--font-display);
+    font-size: 15px; color: var(--tw-gold); letter-spacing: .3em;
+  }
+  .tw-chapter-head h2 {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(30px, 5vw, 58px);
+    color: var(--tw-cream); line-height: 1.05;
+  }
+
+  .tw-slide {
+    position: relative;
+    max-width: 1180px; margin: 0 auto;
+    padding: clamp(48px, 9vh, 110px) 6vw;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: clamp(28px, 5vw, 70px);
+    align-items: center;
+  }
+  .tw-slide.flip .tw-media { order: 2; }
+  .tw-slide.flip .tw-copy  { order: 1; }
+  @media (max-width: 880px) {
+    .tw-slide { grid-template-columns: 1fr; gap: 26px; }
+    .tw-slide.flip .tw-media { order: 0; }
+  }
+
+  .tw-copy p {
+    font-size: clamp(15.5px, 1.35vw, 18px);
+    line-height: 1.85; color: var(--tw-text);
+  }
+  .tw-copy p + p { margin-top: 1em; }
+  .tw-copy .tw-aside {
+    margin-top: 16px; font-size: 13px; color: var(--tw-muted);
+    border-left: 2px solid var(--tw-line); padding-left: 12px;
+  }
+
+  /* ---------- media frames ---------- */
+  .tw-media { display: grid; gap: 16px; }
+  .tw-media.n2 { grid-template-columns: 1fr 1fr; }
+  .tw-media.n3 { grid-template-columns: 1fr 1fr; }
+  .tw-media.n3 figure:first-child { grid-column: 1 / -1; }
+  .tw-media.n4 { grid-template-columns: 1fr 1fr; }
+  .tw-media figure {
+    position: relative; overflow: hidden;
+    border-radius: 14px;
+    background: var(--tw-bg-1);
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,.8);
+    aspect-ratio: 4 / 3;
+  }
+  .tw-media.n2 figure:nth-child(2) { transform: translateY(26px); }
+  @media (max-width: 880px) { .tw-media.n2 figure:nth-child(2) { transform: none; } }
+  .tw-media img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transform: scale(1.12);            /* headroom for scroll parallax */
+    filter: saturate(.92) contrast(1.04);
+  }
+  .tw-media video, .tw-portal video {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    background: #000;
+  }
+  .tw-portal video { position: absolute; inset: 0; }
+  .tw-media figcaption {
+    position: absolute; left: 10px; bottom: 10px;
+    font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: rgba(245,241,230,.75);
+    background: rgba(2,10,8,.62); backdrop-filter: blur(6px);
+    padding: 4px 9px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.1);
+  }
+
+  /* video placeholder frame */
+  .tw-video { position: relative; cursor: pointer; }
+  .tw-video::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(2,10,8,.66));
+  }
+  .tw-video .tw-play {
+    position: absolute; inset: 0; margin: auto; z-index: 2;
+    width: 74px; height: 74px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(2,10,8,.55); backdrop-filter: blur(8px);
+    border: 1px solid rgba(232,196,118,.55);
+    transition: transform .3s ease, background .3s ease;
+  }
+  .tw-video:hover .tw-play { transform: scale(1.1); background: rgba(228,87,63,.35); }
+  .tw-play svg { width: 24px; height: 24px; fill: var(--tw-cream); margin-left: 4px; }
+  .tw-video .tw-video-tag {
+    position: absolute; z-index: 2; left: 12px; top: 12px;
+    font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--tw-gold); background: rgba(2,10,8,.7);
+    border: 1px solid rgba(232,196,118,.4);
+    padding: 5px 10px; border-radius: 20px;
+  }
+
+  /* ---------- pure text slides ---------- */
+  .tw-slide.textonly { grid-template-columns: 1fr; text-align: center; }
+  .tw-slide.textonly .tw-copy { max-width: 760px; margin: 0 auto; }
+  .tw-slide.textonly .tw-copy p {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.6vw, 30px);
+    line-height: 1.62; font-weight: 400;
+    color: var(--tw-cream);
+  }
+  .tw-slide.textonly .tw-copy p + p { margin-top: 1.2em; }
+  .tw-slide.textonly .tw-ornament {
+    font-family: var(--font-tc); color: var(--tw-red);
+    font-size: 22px; margin-bottom: 26px; letter-spacing: .5em;
+  }
+
+  /* ---------- side-trip portals (Vietnam / China) ---------- */
+  .tw-portal-wrap { max-width: 900px; margin: 0 auto; padding: clamp(48px, 9vh, 110px) 6vw; }
+  .tw-portal {
+    position: relative; display: block; overflow: hidden;
+    border-radius: 20px; text-decoration: none;
+    border: 1px solid rgba(232,196,118,.35);
+    aspect-ratio: 21 / 9; min-height: 260px;
+    transform-style: preserve-3d;
+  }
+  .tw-portal img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transform: scale(1.08);
+    transition: transform 1.2s cubic-bezier(.2,.6,.2,1);
+    filter: saturate(.9);
+  }
+  .tw-portal:hover img { transform: scale(1.16); }
+  .tw-portal .tw-portal-scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(100deg, rgba(2,10,8,.88) 25%, rgba(2,10,8,.25) 70%, transparent);
+  }
+  .tw-portal .tw-portal-copy {
+    position: absolute; inset: 0; padding: clamp(22px, 4vw, 44px);
+    display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  }
+  .tw-portal .tw-portal-tag {
+    font-size: 10px; letter-spacing: .38em; text-transform: uppercase;
+    color: var(--tw-gold);
+  }
+  .tw-portal h3 {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(28px, 4.6vw, 52px); color: var(--tw-cream); line-height: 1;
+  }
+  .tw-portal .tw-portal-cta {
+    margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--tw-jade);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tw-portal .tw-portal-cta .arr { transition: transform .3s ease; }
+  .tw-portal:hover .tw-portal-cta .arr { transform: translateX(6px); }
+  .tw-portal .tw-portal-note {
+    font-size: 11.5px; color: var(--tw-muted);
+  }
+
+  /* ============================================================
+     INLINE LINKS ({curly} points) + hover preview card
+     ============================================================ */
+  .tlink {
+    color: var(--tw-gold); text-decoration: none;
+    background-image: linear-gradient(90deg, rgba(232,196,118,.65), rgba(53,201,155,.65));
+    background-size: 100% 1px; background-repeat: no-repeat; background-position: 0 100%;
+    padding-bottom: 1px;
+    transition: color .25s ease;
+  }
+  .tlink:hover { color: var(--tw-cream); }
+
+  #tw-preview {
+    position: fixed; z-index: 60; width: 250px;
+    background: rgba(4,18,15,.92); backdrop-filter: blur(14px);
+    border: 1px solid var(--tw-line); border-radius: 14px;
+    overflow: hidden; pointer-events: none;
+    opacity: 0; transform: translateY(8px) scale(.97);
+    transition: opacity .22s ease, transform .22s ease;
+    box-shadow: 0 24px 60px -12px rgba(0,0,0,.85);
+  }
+  #tw-preview.show { opacity: 1; transform: translateY(0) scale(1); }
+  #tw-preview img { width: 100%; height: 130px; object-fit: cover; display: block; }
+  #tw-preview .pv-body { padding: 11px 13px 13px; }
+  #tw-preview .pv-title { font-size: 12.5px; font-weight: 700; color: var(--tw-cream); }
+  #tw-preview .pv-text { font-size: 11.5px; line-height: 1.55; color: var(--tw-muted); margin-top: 3px; }
+  @media (hover: none) { #tw-preview { display: none; } }
+
+
+  /* ---------- back to homepage pill (top left) ---------- */
+  .tw-home {
+    position: fixed; left: 18px; top: 18px; z-index: 55;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    color: var(--tw-cream); text-decoration: none;
+    background: rgba(4,18,15,.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--tw-line);
+    padding: 9px 14px; border-radius: 30px;
+    transition: border-color .3s, transform .3s, background .3s;
+  }
+  .tw-home:hover { border-color: var(--tw-gold); transform: translateY(-2px); background: rgba(7,33,27,.9); }
+  .tw-home .dock-ico { color: var(--tw-gold); font-size: 12px; }
+  @media (max-width: 880px) {
+    .tw-home { left: 10px; top: 12px; padding: 8px 11px; font-size: 10px; }
+  }
+
+  /* ============================================================
+     PERSISTENT META DOCK — "how I made this" + markdown version
+     ============================================================ */
+  .tw-dock {
+    position: fixed; right: 18px; bottom: 18px; z-index: 50;
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  }
+  .tw-dock a {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    color: var(--tw-cream); text-decoration: none;
+    background: rgba(4,18,15,.78); backdrop-filter: blur(12px);
+    border: 1px solid var(--tw-line);
+    padding: 9px 14px; border-radius: 30px;
+    transition: border-color .3s, transform .3s, background .3s;
+  }
+  .tw-dock a:hover { border-color: var(--tw-gold); transform: translateY(-2px); background: rgba(7,33,27,.9); }
+  .tw-dock .dock-ico { color: var(--tw-gold); font-size: 12px; }
+  @media (max-width: 880px) {
+    .tw-dock { right: 10px; bottom: 10px; }
+    .tw-dock a { padding: 8px 11px; font-size: 10px; }
+  }
+
+  /* ============================================================
+     FOOTER / END CARD
+     ============================================================ */
+  .tw-end {
+    position: relative; z-index: 2; text-align: center;
+    padding: 24vh 6vw 18vh;
+  }
+  .tw-end .tw-end-cjk {
+    font-family: var(--font-tc); font-size: clamp(40px, 8vw, 92px);
+    color: var(--tw-cream); letter-spacing: .2em;
+  }
+  .tw-end p { color: var(--tw-muted); margin-top: 18px; font-size: 14px; }
+  .tw-end .tw-end-links { margin-top: 34px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .tw-end .tw-end-links a {
+    color: var(--tw-gold); text-decoration: none; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--tw-line); padding: 10px 18px; border-radius: 30px;
+    transition: border-color .3s, color .3s;
+  }
+  .tw-end .tw-end-links a:hover { border-color: var(--tw-gold); color: var(--tw-cream); }
+  .tw-credit { margin-top: 46px; font-size: 10.5px; color: rgba(147,172,163,.55); letter-spacing: .04em; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+
+  /* reveal states (JS adds .in) — also acts as no-JS-anim fallback */
+  .tw-reveal { opacity: 0; transform: translateY(46px); }
+  .tw-reveal.in { opacity: 1; transform: none; transition: opacity .9s ease, transform .9s cubic-bezier(.16,.84,.3,1); }
+  @media (prefers-reduced-motion: reduce) {
+    .tw-reveal { opacity: 1; transform: none; }
+    .tw-grain, .tw-scrollcue .tw-cue-line::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="tw-gl" aria-hidden="true"></canvas>
+<div class="tw-veil" id="tw-veil" aria-hidden="true"></div>
+<div class="tw-grain" aria-hidden="true"></div>
+
+<a class="tw-home" href="https://dulran.com/"><span class="dock-ico">←</span> Back to homepage</a>
+
+<!-- travelling-dot progress rail (built by JS) -->
+<nav class="tw-rail" id="tw-rail" aria-label="Trip progress">
+  <div class="tw-rail-fill" id="tw-rail-fill"></div>
+  <div class="tw-rail-dot" id="tw-rail-dot"></div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="tw-hero">
+  <div class="tw-hero-cjk" aria-hidden="true">台灣</div>
+  <div class="tw-kicker">A travel journal</div>
+  <h1>TAIWAN</h1>
+  <p class="tw-gilman-line">and how the <em>Gilman program</em> enabled it all</p>
+  <p class="tw-sub">One month on the island: universities and nuclear reactors, temples and
+    night markets, <em>TSMC</em> and winter melon tea. Scroll to travel the line.</p>
+  <a class="tw-gilman-btn" href="#gilman" id="tw-gilman-jump">Scroll down to the part where I talk about
+    how the Gilman program enabled it all <span class="arr">↓</span></a>
+  <div class="tw-scrollcue"><span>Scroll</span><span class="tw-cue-line"></span></div>
+</header>
+
+<!-- ================= JOURNEY (rendered by JS from TRIP data) ================= -->
+<main class="tw-journey" id="tw-journey"></main>
+
+<!-- ================= END CARD ================= -->
+<footer class="tw-end">
+  <div class="tw-end-cjk">謝謝台灣</div>
+  <p>· the end of the line, for now ·</p>
+  <div class="tw-end-links">
+    <!-- TODO(dulran): point this at the making-of page once it exists -->
+    <a href="taiwan-making-of.html">How I made this site →</a>
+    <!-- TODO(dulran): point this at the hosted markdown file once uploaded -->
+    <a href="taiwan-trip.md">Read the markdown version →</a>
+    <a href="https://www.gilmanscholarship.org/" target="_blank" rel="noopener">Learn about the Gilman Scholarship →</a>
+    <a href="taiwan.html">The original Taiwan page →</a>
+    <a href="https://dulran.com/">Back to homepage →</a>
+  </div>
+  <p class="tw-credit">All photos on this page are temporary placeholders (via Wikimedia Commons)
+    while I swap in my own shots and clips. Links marked with a glow open external sites.</p>
+</footer>
+
+<!-- persistent meta dock -->
+<div class="tw-dock">
+  <!-- TODO(dulran): update these two hrefs when the pages/files exist -->
+  <a href="taiwan-making-of.html"><span class="dock-ico">✦</span> How I made this site</a>
+  <a href="taiwan-trip.md"><span class="dock-ico">↓</span> Markdown version</a>
+</div>
+
+<!-- hover preview card for inline links -->
+<div id="tw-preview" role="tooltip" aria-hidden="true">
+  <img alt="" id="tw-pv-img" />
+  <div class="pv-body">
+    <div class="pv-title" id="tw-pv-title"></div>
+    <div class="pv-text" id="tw-pv-text"></div>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   ██  YOUR MEDIA — PASTE LINKS HERE  ██
+   ----------------------------------------------------------------------
+   The only section you need to touch to swap in your own photos and
+   clips. One entry per photo/video on the page, in page order.
+
+   · Paste an IMAGE link (.jpg .png .webp ...) or a VIDEO link
+     (.mp4 .webm .mov ...) between the quotes; the page detects which
+     it is from the link itself.
+   · Videos autoplay muted on a loop (browsers require muted for
+     autoplay) and pause automatically while offscreen.
+   · If a video link has no file extension, force it with a prefix:
+     "video:https://example.com/myclip"
+   · The four *_video_slot entries are the video moments; they hold
+     placeholder IMAGES for now. Paste your clip link and the play
+     button placeholder becomes a real autoplaying video.
+   · The "placeholder ·" caption prefix disappears automatically once
+     a link no longer points at a stock-placeholder host.
+   ====================================================================== */
+const MEDIA = {
+
+  // ─── 01 · Touchdown ──────────────────────────────────────
+  landing_video_slot:     "https://www.dulran.com/taiwanpics/web/1.mp4", // local file in this repo (name is case-sensitive once deployed)
+
+  // ─── 02 · First Days ───────────────────────────────────── 
+  humid_taipei_streets:   "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20street%20scene.jpg?width=1100",
+  ntu_main_gate:          "https://commons.wikimedia.org/wiki/Special:FilePath/National%20Taiwan%20University%20main%20gate%2020041128.jpg?width=1100",
+  traditional_temple:     "https://commons.wikimedia.org/wiki/Special:FilePath/Dalongdong%20Baoan%20Temple.jpg?width=1100",
+  bouldering_gym:         "https://commons.wikimedia.org/wiki/Special:FilePath/Man%20climbing%20in%20bouldering%20gym.jpg?width=1100",
+  driving_range:          "https://picsum.photos/seed/tw-driving-range/1000/750",
+
+  // ─── 03 · Taipei 101 & the Google Office ─────────────────
+  taipei_101_tower:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei101.portrait.altonthompson.jpg?width=1100",
+  view_from_the_top:      "https://commons.wikimedia.org/wiki/Special:FilePath/View%20of%20skyscrapers%20from%20Taipei%20101%20Observatory%2020250518.jpg?width=1100",
+
+  // ─── 04 · Elephant Mountain & Lungshan ───────────────────
+  drone_video_slot:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20skyline%20from%20Elephant%20Mountain.jpg?width=1100",
+  elephant_mtn_photo:     "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20skyline%20from%20Elephant%20Mountain.jpg?width=1100",
+  academia_sinica:        "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20street%20scene.jpg?width=1100",
+  academia_sinica_group:  "https://picsum.photos/seed/tw-sinica-group/1000/750",
+  lungshan_temple:        "https://commons.wikimedia.org/wiki/Special:FilePath/Longshan%20Temple%2C%20Taipei%2001.jpg?width=1100",
+  moon_blocks:            "https://picsum.photos/seed/tw-moon-blocks/1000/750",
+  red_string:             "https://picsum.photos/seed/tw-red-string/1000/750",
+
+  // ─── 05 · Academia Sinica & Yangmingshan ─────────────────
+  yangmingshan_fumaroles: "https://commons.wikimedia.org/wiki/Special:FilePath/9025%20Yangmingshan%20National%20Park%20Xiaoyoukeng%20Jim%20X%202953.jpg?width=1100",
+  yangmingshan_fog:       "https://commons.wikimedia.org/wiki/Special:FilePath/Xiaoyoukeng%20in%20Yangmingshan%20%285384181388%29.jpg?width=1100",
+  the_bench:              "https://picsum.photos/seed/tw-the-bench/1000/750",
+  yehliu_queens_head:     "https://commons.wikimedia.org/wiki/Special:FilePath/Queen%27s%20Head%2C%20Yehliu%2020060405.jpg?width=1100",
+  yehliu_coast:           "https://commons.wikimedia.org/wiki/Special:FilePath/Queens%20Head%20Rock%20Yeliu%20North%20Coast%20Taiwan.jpg?width=1100",
+  yehliu_rocks:           "https://commons.wikimedia.org/wiki/Special:FilePath/Queen%27s%20head%2C%20Yehliu%20Geopark%2C%20Taiwan%20-%20%E9%87%8E%E6%9F%B3%E5%9C%B0%E8%B3%AA%E5%85%AC%E5%9C%92%2C%20%E5%8F%B0%E6%B9%BE%20%2811353535854%29.jpg?width=1100",
+
+  // ─── 06 · Infrastructure ─────────────────────────────────
+  metro_video_slot:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taoyuan%20Metro%20Commuter%20Train%20at%20Platform%204%2C%20Taipei%20Main%20Station%2020170318.jpg?width=1100",
+  youbike_racks:          "https://commons.wikimedia.org/wiki/Special:FilePath/YouBike%20bicycle%20parking%20in%20Taipei%2020120916.jpg?width=1100",
+
+  // ─── 07 · NTHU & the Nuclear Reactor ─────────────────────
+  nthu_gate:              "https://commons.wikimedia.org/wiki/Special:FilePath/National%20Tsing%20Hua%20University%20West%20Gate%202020-11-30.jpg?width=1100",
+  reactor_pool:           "https://commons.wikimedia.org/wiki/Special:FilePath/Advanced%20Test%20Reactor.jpg?width=1100",
+  bnct_facility:          "https://picsum.photos/seed/tw-bnct-lab/1000/750",
+
+  // ─── 08 · Evergreen & the CKS Memorial ───────────────────
+  evergreen_ship:         "https://commons.wikimedia.org/wiki/Special:FilePath/Ever%20Ace%20C%20Hamburg%2008-09-2021%20%2814%29.jpg?width=1100",
+  cks_memorial:           "https://commons.wikimedia.org/wiki/Special:FilePath/Chiang%20Kai-shek%20memorial%20amk.jpg?width=1100",
+  cks_hall:               "https://commons.wikimedia.org/wiki/Special:FilePath/CKS%20Memorial%20Hall.jpg?width=1100",
+  cks_exhibits:           "https://picsum.photos/seed/tw-cks-exhibit/1000/750",
+
+  // ─── 09 · Central Taiwan ─────────────────────────────────
+  sun_moon_lake:          "https://commons.wikimedia.org/wiki/Special:FilePath/Sun%20Moon%20Lake.jpg?width=1100",
+  wenwu_temple:           "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%97%A5%E6%9C%88%E6%BD%AD%E6%96%87%E6%AD%A6%E5%BB%9F%20Sun%20Moon%20Lake%20Wen-Wu%20Temple%20-%20panoramio.jpg?width=1100",
+  old_rail_lines:         "https://commons.wikimedia.org/wiki/Special:FilePath/Taiwan%202009%20HuaTung%20Valley%20Decommissioned%20Railway%20Tracks%20by%20Rice%20Paddy%20FRD%208154.jpg?width=1100",
+  handmade_paper:         "https://picsum.photos/seed/tw-handmade-paper/1000/750",
+
+  // ─── 10 · TSMC ───────────────────────────────────────────
+  tsmc_building:          "https://commons.wikimedia.org/wiki/Special:FilePath/TSMC%20AP2%20building%20May%202025.jpg?width=1100",
+  tsmc_logo:              "https://commons.wikimedia.org/wiki/Special:FilePath/TSMC%20logo%20on%20Taichung%20factory%20building.jpg?width=1100",
+
+  // ─── 11 · Vietnam portal ─────────────────────────────────
+  vietnam_preview:        "https://commons.wikimedia.org/wiki/Special:FilePath/My%20Khe%20Beach%2C%20Da%20Nang%2C%20Vietnam.jpg?width=1100",
+
+  // ─── 12 · Tea Culture ────────────────────────────────────
+  winter_melon_tea:       "https://commons.wikimedia.org/wiki/Special:FilePath/Winter%20Melon%20Tea%20%28Taiwan%29.jpg?width=1100",
+  pearl_milk_tea:         "https://commons.wikimedia.org/wiki/Special:FilePath/Pearl%20Milk%20Tea%20in%20Chun%20Shui%20Tang.jpg?width=1100",
+  stinky_tofu:            "https://commons.wikimedia.org/wiki/Special:FilePath/Mala%20Stinky%20Tofu%20bought%20from%20Nan%20Ji%20Chang%20Night%20Market%2020040818.jpg?width=1100",
+
+  // ─── 13 · NTU Semiconductor Lab ──────────────────────────
+  silicon_wafers:         "https://commons.wikimedia.org/wiki/Special:FilePath/Wafer%202%20Zoll%20bis%208%20Zoll%202.jpg?width=1100",
+  fab_cleanroom:          "https://picsum.photos/seed/tw-cleanroom/1000/750",
+
+  // ─── 14 · China portal ───────────────────────────────────
+  china_preview:          "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/1280px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
+
+  // ─── 15 · Free Time · Ximending ──────────────────────────
+  ximending_night:        "https://commons.wikimedia.org/wiki/Special:FilePath/Ximending%20at%20night.jpg?width=1100",
+  ximending_market:       "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20Taiwan%20Ximending-Night-Market-03.jpg?width=1100",
+  ktv_room:               "https://commons.wikimedia.org/wiki/Special:FilePath/Karaoke-Box.jpg?width=1100",
+  protein_fuel:           "https://commons.wikimedia.org/wiki/Special:FilePath/Skewered%20food%20at%20Shida%20Night%20Market%20in%20Taipei.jpg?width=1100",
+
+  // ─── 16 · The Transportation System ──────────────────────
+  jingle_video_slot:      "https://commons.wikimedia.org/wiki/Special:FilePath/Platform%202%2C%20Taoyuan%20Metro%20Taipei%20Main%20Station%2020170225.jpg?width=1100",
+  easycard_machines:      "https://commons.wikimedia.org/wiki/Special:FilePath/EasyCard%20add-value%20machines%20in%20MRT%20Taipei%20Main%20Station%2020130424.jpg?width=1100",
+};
+
+/* ======================================================================
+   ██  YOUR PHOTOS & VIDEOS  ██
+   ----------------------------------------------------------------------
+   The real trip media ships with this repo in taiwanpics/web/ (web-sized
+   copies of taiwanpics/: HEIC converted to JPEG, phone photos shrunk,
+   videos re-encoded). Because it lives in the repo, these are plain
+   relative paths — they work locally AND on dulran.com. No bucket, no
+   API keys, no CDN account.
+
+   To swap or add: drop the file in taiwanpics/web/ and put its filename
+   here. Anything left "" keeps its placeholder from MEDIA above, and any
+   file that fails to load falls back automatically.
+   ====================================================================== */
+const MEDIA_BASE = "taiwanpics/web/";
+
+const MEDIA_FILES = {
+  // ─── 01 · Touchdown ─────────────────────────────
+  landing_video_slot:     "1.mp4",    // landing over the fields, out the window
+  // ─── 02 · First Days ────────────────────────────
+  humid_taipei_streets:   "2_5.webp",
+  ntu_main_gate:          "10.jpg",   // the cohort with our professor
+  traditional_temple:     "2.jpg",    // the temple lit up at night
+  bouldering_gym:         "4.jpg",
+  driving_range:          "3.jpg",
+  // ─── 03 · Taipei 101 & the Google Office ────────
+  taipei_101_tower:       "5.jpg",    // inside the Google office
+  view_from_the_top:      "7.jpg",    // Taipei 101 from the hillside
+  // ─── 04 · Elephant Mountain & Lungshan ──────────
+  drone_video_slot:       "8_1.mp4",    // Taipei 101 from Elephant Mountain
+  elephant_mtn_photo:     "6.jpg",
+  lungshan_temple:        "13.jpg",
+  moon_blocks:            "11.jpg",
+  red_string:             "12.jpg",
+  // ─── 05 · Academia Sinica & Yangmingshan ────────
+  academia_sinica:        "14.jpg",   // Research Center for Applied Sciences
+  academia_sinica_group:  "21.jpg",
+  yangmingshan_fumaroles: "16.jpg",   // water buffalo on the grassland
+  yangmingshan_fog:       "17.jpg",
+  the_bench:              "15.jpg",   // the news crew filming in the fog
+  yehliu_queens_head:     "19.jpg",
+  yehliu_coast:           "20.jpg",
+  yehliu_rocks:           "18.jpg",
+  // ─── 06 onward ──────────────────────────────────
+  metro_video_slot:       "35.jpg",
+  youbike_racks:          "45.JPG",
+  // ─── 07 · NTHU & the Nuclear Reactor ─────────────────────
+  nthu_gate:              "39.JPG",
+  reactor_pool:           "37.JPG",
+  bnct_facility:          "38.JPG",
+
+  // ─── 08 · Evergreen & the CKS Memorial ───────────────────
+  evergreen_ship:         "40.JPG",
+  cks_memorial:           "42.JPG",
+  cks_hall:               "43.JPG",
+  cks_exhibits:           "44.JPG",
+
+  // ─── 09 · Central Taiwan ─────────────────────────────────
+  sun_moon_lake:          "50.jpg",
+  wenwu_temple:           "51.jpg",
+  old_rail_lines:        "46.JPG",
+  handmade_paper:        "52.jpg",
+
+  // ─── 10 · TSMC ───────────────────────────────────────────
+  tsmc_building:          "23.JPG",
+  tsmc_logo:              "24.JPG",
+
+  // ─── 11 · Vietnam portal ─────────────────────────────────
+  vietnam_preview:       "",
+  // ─── 12 · Tea Culture ────────────────────────────────────
+  winter_melon_tea:       "29.JPG",
+  pearl_milk_tea:         "31.JPG",
+  stinky_tofu:            "49.JPG",
+
+  // ─── 13 · NTU Semiconductor Lab ──────────────────────────
+  silicon_wafers:         "25.JPG",
+  fab_cleanroom:          "26.JPG",
+
+  // ─── 14 · China portal ───────────────────────────────────
+  china_preview:          "",
+
+  // ─── 15 · Free Time · Ximending ──────────────────────────
+  ximending_night:        "32.jpg",
+  ximending_market:       "34.jpg",
+  ktv_room:               "22.JPEG",
+  protein_fuel:           "33.jpg",
+  // ─── 16 · The Transportation System ──────────────────────
+  jingle_video_slot:      "36.JPG",
+  easycard_machines:      "45.JPG",
+  // No photos past Yehliu yet, so those chapters keep their
+  // placeholders. Add files to taiwanpics/web/ and list them here.
+};
+
+/* machinery: point each slot at its file when one is listed, and remember
+   the placeholder so a failed load can fall back to it */
+const TW_FALLBACK = new Map();
+(() => {
+  const raw = (MEDIA_BASE || "").trim();
+  // NB: "".replace(/\/*$/,"/") yields "/", so only build a base when non-empty
+  const base = raw ? raw.replace(/\/*$/, "/") : "";
+  for (const k in MEDIA) {
+    const placeholder = MEDIA[k];
+    if (base && MEDIA_FILES[k]) MEDIA[k] = base + MEDIA_FILES[k];
+    TW_FALLBACK.set(MEDIA[k].replace(/^(video|image|img):/i, ""), placeholder);
+  }
+})();
+
+/* ======================================================================
+   TRIP DATA — one entry per bracketed block in taiwan_trip_cleaned2.md
+   (text + captions live below; media links live in MEDIA above)
+   ====================================================================== */
+
+// NOTE: all helpers are tw-prefixed — a CDN lib already declares a global `L`,
+// and a top-level const collision silently kills the whole script.
+// Wikimedia Commons placeholder helper (verified filenames)
+const twWm = (name, w = 1100) =>
+  "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(name) + "?width=" + w;
+// guaranteed-to-load fallback for subjects with no good stock image yet
+const twPh = (seed) => "https://picsum.photos/seed/tw-" + seed + "/1000/750";
+
+// paste-a-link media: videos are detected by extension, or force with "video:"
+const twIsVideo = (u) => /^video:/i.test(u) ||
+  /\.(mp4|webm|mov|m4v|ogv)$/i.test((u || "").split(/[?#]/)[0]);
+const twSrc = (u) => (u || "").replace(/^(video|image|img):/i, "");
+const twIsPlaceholder = (u) =>
+  /commons\.wikimedia\.org|upload\.wikimedia\.org|picsum\.photos/.test(u || "");
+
+// inline curly-brace link builder → gold underlined anchor + hover preview
+const twL = (text, href, pvTitle, pvText, pvImg) =>
+  `<a class="tlink" href="${href}" target="_blank" rel="noopener"` +
+  ` data-pv-title="${pvTitle || text}" data-pv-text="${pvText || ""}"` +
+  (pvImg ? ` data-pv-img="${pvImg}"` : "") + `>${text}</a>`;
+
+const TW_TRIP = [
+
+{ chapter: "Touchdown", slides: [
+  { kind: "video", poster: MEDIA.landing_video_slot,
+    videoLabel: "Landing footage (placeholder)",
+    text: `<p>As we were landing, I noticed (though I only understood this later) that the
+    airport was a bit far from the main city, Taipei, and closer to a rural area. So I expected
+    the whole country to look like paddy fields and rice fields, and I landed with that
+    expectation.</p>` },
+
+  { kind: "text", ornament: "初到",
+    text: `<p>Once we landed, I met up with all my mates from my cohort, and we went through
+    customs and security. The professor was waiting right outside, and we went with him to a
+    restaurant in the airport, then caught a bus into the city.</p>
+    <p>As we got closer, buildings started to appear, and the transition happened gradually
+    over about 40 minutes. Within that time everything changed. Having landed among the
+    fields, I'd been half expecting that rural feel to carry on the whole way in; instead the
+    scenery grew more and more urban as we went. The city wasn't what I'd first pictured, but
+    I'd have been happy either way. It was just a matter of managing expectations.</p>` },
+]},
+
+{ chapter: "First Days", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.humid_taipei_streets, cap: "Taipei streets" }],
+    text: `<p>The first thing we noticed right out of the gate was the <strong>humidity</strong>.
+    Honestly, looking back, the first few days weren't much fun. The temperature itself was
+    about average, but the humidity made it miserable; I'd sweat profusely from a bit of light
+    cardio or even just walking.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.ntu_main_gate, cap: "the cohort, with our professor" }],
+    text: `<p>On the first day we went to check out the university: our professor's alma mater,
+    ${twL("National Taiwan University", "https://www.ntu.edu.tw/english/", "National Taiwan University",
+        "Taiwan's top-ranked university, founded 1928. Known for electrical engineering.",
+        twWm("National Taiwan University main gate 20041128.jpg", 500))}. He was genuinely upbeat
+    about it, since it had been about 35 years since he'd last been back.</p>
+    <p>It was probably more exciting for him than for us, but we enjoyed it too. It's one of the
+    top-ranked universities in the country, and one of its specialties is electrical
+    engineering, so we visited those buildings.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.traditional_temple, cap: "the temple, lit up at night" }],
+    text: `<p>The next day we visited one of the old traditional temples. Interestingly, temples
+    in Taiwan tend to blend <strong>three religious traditions</strong>: some Buddhist elements,
+    some Taoist elements, and a third one I can't quite recall.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.bouldering_gym, cap: "bouldering" },
+      { src: MEDIA.driving_range, cap: "driving range" }],
+    text: `<p>Whenever I had free time, I went to a bouldering place to do some rock climbing,
+    and there was also a nice driving range we visited. Most of the time, though, we stayed
+    together as a group; we went almost everywhere together, which was actually a nice
+    thing.</p>` },
+]},
+
+{ chapter: "Taipei 101 & the Google Office", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.taipei_101_tower, cap: "inside the Google office" },
+      { src: MEDIA.view_from_the_top, cap: "Taipei 101 from the hillside" }],
+    text: `<p>A few days in, we hit one of the highlights of the trip: a visit to
+    ${twL("Taipei 101", "https://www.taipei-101.com.tw/en/", "Taipei 101",
+        "509 m supertall skyscraper, the world's tallest building from 2004 to 2010.",
+        twWm("Taipei101.portrait.altonthompson.jpg", 500))}, including exclusive access to the
+    Google office located very high up in the building. From there I could see Taipei's
+    airport.</p>
+    <p>An interesting fact about that office: the American rock climber
+    ${twL("Alex Honnold", "https://en.wikipedia.org/wiki/Alex_Honnold", "Alex Honnold",
+        "The free-solo climber from the Oscar-winning film Free Solo, and the first to free-solo Taipei 101.",
+        twWm("Alex Honnold 01.jpg", 500))} made history as the first person to free-solo
+    Taipei 101, with no ropes and no safety equipment. He climbed past the Google office during the
+    ascent, and the office posted footage from their own perspective online, which made it
+    semi-famous within the building. We sat in on seminars about AI and its relevance to
+    nanotechnology, as well as ${twL("TPUs", "https://cloud.google.com/tpu", "Tensor Processing Units",
+        "Google's custom AI accelerator chips, their bet against Nvidia's GPUs.")}
+    (Tensor Processing Units), the direction Google is betting on instead of Nvidia's GPUs.</p>` },
+]},
+
+{ chapter: "Elephant Mountain & Lungshan Temple", slides: [
+  { kind: "mixed", poster: MEDIA.drone_video_slot,
+    videoLabel: "Drone footage (maybe someday)",
+    imgs: [{ src: MEDIA.elephant_mtn_photo, cap: "up on Elephant Mountain" }],
+    text: `<p>After that we went to ${twL("Elephant Mountain", "https://en.wikipedia.org/wiki/Xiangshan_(Taipei)",
+        "Elephant Mountain (象山)", "Short, steep hike with the classic postcard view over Taipei 101.",
+        twWm("Taipei skyline from Elephant Mountain.jpg", 500))}, which has a great viewpoint over
+    Taipei 101.</p>
+    <p>Some things happened while I was flying my drone there, and without going into detail,
+    I ended up <strong>losing it</strong>.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.lungshan_temple, cap: "Lungshan Temple" },
+      { src: MEDIA.moon_blocks, cap: "the crowd at the temple" },
+      { src: MEDIA.red_string, cap: "temple grounds" }],
+    text: `<p>We also visited ${twL("Lungshan Temple (龍山寺)", "https://en.wikipedia.org/wiki/Bangka_Lungshan_Temple",
+        "Bangka Lungshan Temple", "Founded 1738. Taipei's most famous temple, historically a refuge for the vulnerable.",
+        twWm("Longshan Temple, Taipei 01.jpg", 500))}, located in an area historically associated
+    with underrepresented and vulnerable people, who would go there for refuge.</p>
+    <p>At the temple there's a tradition involving two half-moon-shaped wooden blocks you drop
+    on the ground. The result works almost like a <strong>binary read</strong>: two "smiley"
+    (convex) faces or two "sad" (flat) faces are not what you want, but one of each means you're
+    in luck. I dropped mine and got the lucky result. Not scientific, obviously, just a bit of
+    fun local tradition.</p>
+    <p>One guy in our group was unlucky the entire trip. He kept trying for the lucky combination
+    so he could receive a red string, but every single time got double smiley faces instead.
+    It became a running joke.</p>` },
+]},
+
+{ chapter: "Academia Sinica & Yangmingshan", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.academia_sinica, cap: "Research Center for Applied Sciences" },
+      { src: MEDIA.academia_sinica_group, cap: "the group that day" }],
+    text: `<p>We then went to Academia Sinica, a large campus with an ecosystem built around
+    biomedical research and startups, something like a YC-style incubator, except
+    government-run. Still a solid VC-style setup overall.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.yangmingshan_fumaroles, cap: "water buffalo on the grassland" },
+      { src: MEDIA.yangmingshan_fog, cap: "hiking into the mist" },
+      { src: MEDIA.the_bench, cap: "the news crew, filming in the fog" }],
+    text: `<p>The rural areas we passed through were dense, foggy, and pleasant. We went hiking
+    in the Yangmingshan area.</p>
+    <p>There was a funny incident there: we noticed news reporters filming near a bench and
+    wondered what was going on. It turned out to be something a bit salacious, and we may have
+    ended up in the background of that coverage. If you're curious, search for the
+    <em>"Yangmingshan bench incident."</em></p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.yehliu_queens_head, cap: "Yehliu hoodoos" },
+      { src: MEDIA.yehliu_coast, cap: "the cape at Yehliu" },
+      { src: MEDIA.yehliu_rocks, cap: "mushroom rocks" }],
+    text: `<p>After that we visited the <strong>Yehliu Geopark</strong>, which was genuinely
+    beautiful; I really liked the natural scenery there.</p>` },
+]},
+
+{ chapter: "Infrastructure", slides: [
+  { kind: "mixed", poster: MEDIA.metro_video_slot,
+    videoLabel: "Metro clip or photo (TBD)",
+    imgs: [{ src: MEDIA.youbike_racks, cap: "YouBikes outside a station" }],
+    text: `<p>I loved the infrastructure: well thought out, robust, and genuinely deep. It wasn't
+    just the metro system; there was supporting infrastructure around it, like rentable bikes
+    right outside metro stations.</p>
+    <p>Good, easy mobility like that tends to make an economy move faster and more efficiently,
+    so it's a great sign for a country. The metro frequency was also excellent, about every
+    <strong>four minutes</strong>, so even if you missed one, the wait wasn't bad.</p>` },
+]},
+
+{ chapter: "NTHU & the Nuclear Reactor", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.nthu_gate, cap: "The reactor poole" },
+      { src: MEDIA.reactor_pool, cap:"" },
+      { src: MEDIA.bnct_facility, cap: "BNCT facility" }],
+    text: `<p>We visited National Tsing Hua University in Taiwan.</p>
+    <p>At this campus we visited a <strong>nuclear reactor facility</strong>, one of the leading
+    centers for boron neutron capture therapy (BNCT), used to treat certain medical conditions.
+    We got to go inside the reactor building and see the pool that housed the nuclear rods.</p>` },
+]},
+
+{ chapter: "Evergreen & the Chiang Kai-shek Memorial", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.evergreen_ship, cap: "an Evergreen ship" }],
+    text: `<p>Something you may not know: those green shipping containers you see everywhere,
+    <strong>Evergreen</strong>, are from a Taiwanese company. It was founded by someone who, I
+    believe, once lived in Hong Kong, and I later found out he was also the founder of EVA Air.
+    We visited a ship museum related to this.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.cks_memorial, cap: "CKS Memorial Hall" },
+      { src: MEDIA.cks_hall, cap: "the hall" },
+      { src: MEDIA.cks_exhibits, cap: "exhibits inside" }],
+    text: `<p>After that, we went to the Chiang Kai-shek Memorial Hall. Chiang Kai-shek is the
+    infamous figure who fled to Taiwan and established what became the Republic of China (ROC)
+    government there. The current ruling party tends to be less favorable toward him, so the
+    memorial displays some of the more dictatorial aspects of his rule that the opposing party,
+    when in power, chose not to highlight.</p>
+    <p>We learned more about aspects of Chiang Kai-shek's time in office. We also learned that Taiwan 
+    became effectively multi-party after 2000, when the KMT lost power to DPP, having been the only 
+    ruling party before then, during a period that included martial law.</p>
+    <p>I've heard criticizing Chiang Kai-shek is treated as something close to sacrilege by the
+    older generation, but younger people are generally more willing to be critical of him, and
+    since we belong to that younger group, it's fair for us to be critical too.</p>` },
+]},
+
+{ chapter: "Central Taiwan", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.sun_moon_lake, cap: "Sun Moon Lake" },
+      { src: MEDIA.wenwu_temple, cap: "Wenwu Temple" },
+      { src: MEDIA.old_rail_lines, cap: "old rail lines" },
+      { src: MEDIA.handmade_paper, cap: "making paper by hand" }],
+    text: `<p>We then traveled to central Taiwan, which had a lot to see. It used to be a
+    resource-extraction hub, so there's old rail infrastructure still around. We visited
+    <strong>Sun Moon Lake</strong>, which was beautiful, and took a boat ride on it. We also
+    visited a well-known Taoist temple nearby.</p>
+    <p>The food throughout was consistently great. We also visited a paper factory and made our
+    own paper by hand.</p>` },
+
+  { kind: "text", ornament: "苦讀",
+    text: `<p>The academics leading up to this point had been intense. We were cramming roughly
+    four months' worth of material into a single month, which was never going to be fun, but it
+    was the trade-off for being on the study abroad, and honestly a fair one.</p>
+    <p>If you didn't like that arrangement, there wasn't much room to complain; that was simply
+    the deal.</p>` },
+]},
+
+{ chapter: "TSMC", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.tsmc_building, cap: "TSMC" },
+      { src: MEDIA.tsmc_logo, cap: "the logo everywhere" }],
+    text: `<p>One of the highlights was visiting <strong>TSMC</strong>. We toured the museum and
+    learned about the history of nanotechnology and chip manufacturing, and how Taiwan became
+    the dominant player in the chip industry.</p>
+    <p>Part of the strategy was staying a <em>neutral manufacturing party</em> rather than
+    producing devices that competed with its own customers, unlike Samsung, which both
+    manufactured chips and was accused of copying designs from companies like Apple, creating a
+    trust issue. TSMC's founder reportedly hit a "glass ceiling" in the US industry and returned
+    to Taiwan to start the company instead. A great visit overall.</p>` },
+]},
+
+{ chapter: "Tea Village & Taiwan's Tea Culture", slides: [
+  { kind: "text", ornament: "茶",
+    text: `<p>As the academic side wound down, we had more free time. We took a roughly
+    20-minute cable car ride to a remote tea village, where we drank tea, talked, and took in
+    the view from a distance. The tea was excellent.</p>
+    <p>In my opinion, the best tea in the world is
+    ${twL("Ceylon tea", "https://en.wikipedia.org/wiki/Tea_production_in_Sri_Lanka", "Ceylon tea",
+        "Sri Lankan high-grown black tea, among the most prized in the world.",
+        twWm("Tea plantation Haputale.jpg", 500))}, Sri Lankan tea, and Taiwanese tea comes right
+    after it (I may be a little biased here 😁).</p>
+    <p>As a shameless plug: if you're looking for Ceylon tea,
+    ${twL("Dilmah", "https://www.dilmahtea.com/", "Dilmah",
+        "Family-owned Sri Lankan tea company founded by Merrill J. Fernando; single-origin Ceylon tea.")}
+    is a well-known Sri Lankan brand, reportedly a favorite of
+    ${twL("Margot Robbie's", "https://en.wikipedia.org/wiki/Margot_Robbie", "Margot Robbie",
+        "Australian actress and, reportedly, a Dilmah tea enthusiast.")}, for what that's
+    worth.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.winter_melon_tea, cap: "winter melon tea" },
+      { src: MEDIA.pearl_milk_tea, cap: "pearl milk tea" }],
+    text: `<p>More broadly, the food and drink profile of the country is very tea-heavy. The
+    most prevalent variety by far is <strong>winter melon tea</strong>: a bit sweet, takes some
+    getting used to, but grows on you.</p>
+    <p>What struck me is just how much variety there is around it. In a lot of countries, say
+    Turkey, there's essentially one default tea and that's what you get. In Taiwan it's the
+    opposite: many different types and flavors of tea in circulation. Winter melon tea has the
+    highest prevalence, but it's not overwhelmingly dominant.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.stinky_tofu, cap: "stinky tofu" }],
+    text: `<p>On the protein side: tofu, pork, beef, and chicken are all common, though chicken
+    specifically was hardest to find; Protein Box (more on that below) was really the only
+    reliable source I found for it.</p>
+    <p>There's also <strong>stinky tofu</strong>, which lives up to its name; the smell is
+    strong if you're near it. It's a bit like durian: an acquired taste I personally didn't
+    enjoy, but plenty of people love it.</p>` },
+]},
+
+{ chapter: "NTU Semiconductor Lab", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.silicon_wafers, cap: "silicon wafers" },
+      { src: MEDIA.fab_cleanroom, cap: "the fab lab" }],
+    text: `<p>One more place worth mentioning: before the tea village, we visited a
+    semiconductor fabrication lab at National Taiwan University, a research center tied to a
+    consortium focused on key technologies, working on electromechanical systems (NEMS-related
+    research).</p>
+    <p>There, we <strong>etched our own wafers</strong> using a custom design we made ourselves.
+    A simplified process, obviously nothing close to TSMC's precision, but genuinely interesting
+    to go through.</p>` },
+]},
+
+{ chapter: "Free Time · Ximending", slides: [
+  { kind: "photos", imgs: [
+      { src: MEDIA.ximending_night, cap: "Ximending at night" },
+      { src: MEDIA.ximending_market, cap: "night market" }],
+    text: `<p>In my free time, both early on and later during the central Taiwan stretch, I'd
+    often go to ${twL("Ximending (西門町)", "https://en.wikipedia.org/wiki/Ximending", "Ximending",
+        "Taipei's youth-culture and shopping district, 'the Harajuku of Taipei.'",
+        twWm("Ximending at night.jpg", 500))}. "Xi Men" means "West Gate" and "Ding" refers to the
+    surrounding area, so essentially <em>the area around the West Gate</em>. It's a nice place
+    with a decent night market where you can browse clothing and other shops.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.ktv_room, cap: "KTV" }],
+    text: `<p><strong>KTV is a must-do</strong> too; I'd recommend the one near Jingmei
+    Station; it's a solid spot. The other place I'd default to was the area right around
+    Taipei 101, since there's a mall there I could just wander around.</p>` },
+
+  { kind: "photos", imgs: [
+      { src: MEDIA.protein_fuel, cap: "fuel" }],
+    text: `<p>On the food side, the first few days were tough for finding good protein sources
+    and generally nutritious food. Eventually I found a place on the NTU campus called
+    <strong>Protein Box</strong>, which I'd recommend: about 99 NTD for a bowl with rice,
+    decent quality, and reliable enough that if you're a creature of habit you can just buy a
+    few at once and take them home. That made meal planning a lot easier.</p>` },
+]},
+
+{ chapter: "The Transportation System", slides: [
+  { kind: "text", ornament: "捷運",
+    text: `<p>Worth going into more detail here. The metro is the backbone of the whole city, a
+    wide network that doesn't go extremely deep in any one area, but reaches broadly enough to
+    touch all the main points of the city. Buses form a second layer, running from each station
+    out to wherever you need to go. The U-Bike rental system is arguably a third.</p>
+    <p>Between these layers, getting from A to B anywhere in the city is easy. All you need is
+    an ${twL("EasyCard", "https://www.easycard.com.tw/en/", "EasyCard 悠遊卡",
+        "Taipei's tap-everything transit card: metro, buses, bikes, convenience stores.",
+        twWm("EasyCard add-value machines in MRT Taipei Main Station 20130424.jpg", 500))}. It's loosely
+    tied to your identity via phone number, but not a hard ID; you can hold several. Top up at
+    convenience stores (FamilyMart, 7-Eleven) or metro stations, and pay for both bikes and the
+    metro. We had unlimited passes, but for a regular user that's how it works.</p>
+    <p>${twL("U-Bikes", "https://en.youbike.com.tw/region/main/", "YouBike",
+        "Taipei's shared bike system, with docks outside nearly every metro station.",
+        twWm("YouBike kiosk at Taipei Bus Station 20170728.jpg", 500))} are free for the first
+    30 minutes, and given how the network is laid out, most rides end up being 10–15 minutes at
+    most. On top of these three layers, high-speed rail connects the cities. There's no need for it
+    within one city, since Taiwan's cities are compact enough that it wouldn't make financial or
+    practical sense.</p>` },
+
+  { kind: "mixed", poster: MEDIA.jingle_video_slot,
+    videoLabel: "The jingle (clip TBD)",
+    imgs: [{ src: MEDIA.easycard_machines, cap: "EasyCard machines" }],
+    text: `<p>The metro system itself is top-notch. There's also a well-known <strong>jingle</strong>
+    that plays when a train arrives, at least on the green line.</p>
+    <p class="tw-aside">I'll add the name of the jingle later.</p>` },
+]},
+
+/* TODO(dulran): first-draft Gilman copy, rewrite in your own words */
+{ chapter: "How the Gilman Program Enabled It All", id: "gilman", slides: [
+  { kind: "text", ornament: "感謝",
+    text: `<p>Everything above, the reactor pool, the wafers, the temples, the tea village, the
+    four-minute metro, happened because of one program: the
+    ${twL("Benjamin A. Gilman International Scholarship", "https://www.gilmanscholarship.org/",
+        "Gilman Scholarship", "A U.S. Department of State scholarship that helps Pell Grant recipients study or intern abroad.")}.</p>
+    <p>Without it, a month in Taiwan would have stayed on the "maybe someday" list. Gilman is
+    what turned it into a real itinerary.</p>` },
+
+  { kind: "text", ornament: "機會",
+    text: `<p>Gilman is a U.S. Department of State program for undergraduates who receive the
+    Federal Pell Grant. It awards up to <strong>$5,000</strong> toward study or internships
+    abroad, and it exists for exactly the students who tend to assume studying abroad is not
+    meant for them.</p>
+    <p>It also encourages destinations off the usual path. Taiwan was not the obvious choice,
+    and that is part of why it was worth it.</p>` },
+
+  { kind: "text", ornament: "出發",
+    text: `<p>So if you qualify, <strong>apply</strong>. Talk to your study abroad office, give
+    the essays real attention, and do not rule yourself out before you have tried. The
+    application is a few weeks of effort; what it opens up is far larger.</p>
+    <p>I wrote this page partly so the next person can see what is on the other side of that
+    application. Go take advantage of it:
+    <a class="tlink" href="https://www.gilmanscholarship.org/" target="_blank" rel="noopener">gilmanscholarship.org</a>.</p>` },
+]},
+
+];
+
+/* ======================================================================
+   RENDER — build chapters & slides into #tw-journey
+   ====================================================================== */
+(function render() {
+  const root = document.getElementById("tw-journey");
+  let chNum = 0, flip = false;
+
+  const figure = (img) => {
+    const src = twSrc(img.src);
+    const fb = TW_FALLBACK.get(src) || twPh("fallback-" + Math.random().toString(36).slice(2, 7));
+    const cap = (twIsPlaceholder(src) ? "placeholder · " : "") + (img.cap || "");
+    if (twIsVideo(img.src))
+      return `<figure><video src="${src}" data-fallback="${fb}"
+        autoplay muted loop playsinline preload="metadata"></video>
+        <figcaption>${cap}</figcaption></figure>`;
+    return `<figure><img loading="lazy" src="${src}" alt="${img.cap || "trip photo"}"
+       onerror="this.onerror=null;this.src='${fb}';" />
+      <figcaption>${cap}</figcaption></figure>`;
+  };
+
+  const videoFrame = (poster, label) => {
+    const fb = TW_FALLBACK.get(twSrc(poster)) || poster;
+    if (twIsVideo(poster))
+      return `<figure><video src="${twSrc(poster)}" data-fallback="${fb}"
+        autoplay muted loop playsinline preload="metadata"></video></figure>`;
+    return `<figure class="tw-video" title="Video placeholder, real clip coming soon">
+       <img loading="lazy" src="${twSrc(poster)}" alt="video placeholder"
+            onerror="this.onerror=null;this.src='${fb}';" />
+       <span class="tw-video-tag">${label || "Video · placeholder"}</span>
+       <span class="tw-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+     </figure>`;
+  };
+
+  for (const ch of TW_TRIP) {
+    chNum++;
+    const chEl = document.createElement("section");
+    chEl.className = "tw-chapter tw-reveal";
+    chEl.id = ch.id || "ch-" + chNum;
+    chEl.dataset.title = ch.chapter;
+    chEl.innerHTML = `<div class="tw-chapter-head">
+        <span class="tw-chapter-num">${String(chNum).padStart(2, "0")}</span>
+        <h2>${ch.chapter}</h2></div>`;
+    root.appendChild(chEl);
+
+    for (const s of ch.slides) {
+      if (s.kind === "portal") {
+        const wrap = document.createElement("div");
+        wrap.className = "tw-portal-wrap tw-reveal";
+        const pMedia = twIsVideo(s.img)
+          ? `<video src="${twSrc(s.img)}" autoplay muted loop playsinline preload="metadata"></video>`
+          : `<img loading="lazy" src="${twSrc(s.img)}" alt="${s.title} preview"
+                 onerror="this.onerror=null;this.src='${TW_FALLBACK.get(twSrc(s.img)) || twPh(s.title.toLowerCase())}';" />`;
+        wrap.innerHTML = `<a class="tw-portal" href="${s.href}">
+            ${pMedia}
+            <span class="tw-portal-scrim"></span>
+            <span class="tw-portal-copy">
+              <span class="tw-portal-tag">${s.tag}</span>
+              <h3>${s.title}</h3>
+              <span class="tw-portal-cta">${s.cta} <span class="arr">→</span></span>
+              <span class="tw-portal-note">${s.note}</span>
+            </span></a>`;
+        root.appendChild(wrap);
+        continue;
+      }
+
+      const el = document.createElement("section");
+
+      if (s.kind === "text") {
+        el.className = "tw-slide textonly tw-reveal";
+        el.innerHTML = `<div class="tw-copy">
+            ${s.ornament ? `<div class="tw-ornament">${s.ornament}</div>` : ""}${s.text}</div>`;
+      } else {
+        flip = !flip;
+        el.className = "tw-slide tw-reveal" + (flip ? " flip" : "");
+        let media = "";
+        if (s.kind === "video") {
+          media = `<div class="tw-media n1">${videoFrame(s.poster, s.videoLabel)}</div>`;
+        } else if (s.kind === "mixed") {
+          media = `<div class="tw-media n2">${videoFrame(s.poster, s.videoLabel)}${s.imgs.map(figure).join("")}</div>`;
+        } else {
+          const n = s.imgs.length;
+          media = `<div class="tw-media n${n}">${s.imgs.map(figure).join("")}</div>`;
+        }
+        el.innerHTML = `${media}<div class="tw-copy">${s.text}</div>`;
+      }
+      root.appendChild(el);
+    }
+  }
+
+  // autoplaying videos: pause while offscreen, resume when visible
+  const vio = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) e.target.play().catch(() => {});
+    else e.target.pause();
+  }), { rootMargin: "240px" });
+  document.querySelectorAll("#tw-journey video").forEach((v) => {
+    vio.observe(v);
+    // a clip that will not load falls back: to the placeholder video if
+    // there is one, otherwise to the placeholder image
+    v.addEventListener("error", () => {
+      const fb = v.dataset.fallback || "";
+      if (!v.dataset.fbTried && twIsVideo(fb)) {
+        v.dataset.fbTried = "1";
+        v.src = twSrc(fb); v.load(); v.play().catch(() => {});
+        return;
+      }
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.src = (fb && !twIsVideo(fb)) ? fb : twPh("video-fallback");
+      img.alt = "placeholder";
+      v.replaceWith(img);
+    });
+  });
+})();
+
+/* ======================================================================
+   MOTION — Lenis smooth scroll + GSAP ScrollTrigger + progress rail
+   ====================================================================== */
+window.__tw = { p: 0, dim: 0 };  // scroll progress [0..1] + veil state, read by the WebGL scene
+
+(function motion() {
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ---- smooth scrolling (skipped for reduced-motion users)
+  let lenis = null;
+  if (!RM && window.Lenis) {
+    lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1.0 });
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add((t) => lenis.raf(t * 1000));
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  // ---- per-chapter accent colors (rail glow, links) — matches WebGL palette
+  const ACCENTS = ["#35c99b","#8fd7c0","#e8c476","#e4573f","#7fb6a2","#43d1c0",
+                   "#6fb7ff","#c6a15b","#4fd08a","#b78bff","#ffb37f","#a4d977",
+                   "#c0b3ff","#ff8fa5","#ffd166","#35c99b"];
+
+  // ---- slide reveals
+  const reveal = (el) => {
+    if (RM) { el.classList.add("in"); return; }
+    ScrollTrigger.create({
+      trigger: el, start: "top 82%", once: true,
+      onEnter: () => el.classList.add("in"),
+    });
+  };
+  document.querySelectorAll(".tw-reveal").forEach(reveal);
+
+  // ---- image parallax inside frames
+  if (!RM) {
+    document.querySelectorAll(".tw-media img").forEach((img) => {
+      gsap.fromTo(img, { yPercent: -6 }, {
+        yPercent: 6, ease: "none",
+        scrollTrigger: { trigger: img.closest("figure"), start: "top bottom", end: "bottom top", scrub: true },
+      });
+    });
+    // gentle drift on chapter headings
+    document.querySelectorAll(".tw-chapter-head h2").forEach((h) => {
+      gsap.fromTo(h, { x: 40, opacity: 0.4 }, {
+        x: 0, opacity: 1, ease: "none",
+        scrollTrigger: { trigger: h, start: "top 95%", end: "top 55%", scrub: true },
+      });
+    });
+  }
+
+  // ---- progress rail: travelling dot + chapter ticks
+  const rail = document.getElementById("tw-rail");
+  const fill = document.getElementById("tw-rail-fill");
+  const dot = document.getElementById("tw-rail-dot");
+  const veil = document.getElementById("tw-veil");
+  const chapters = [...document.querySelectorAll(".tw-chapter")];
+  const mobile = () => innerWidth <= 880;
+  let ticks = [];
+
+  function layoutTicks() {
+    ticks.forEach((t) => t.remove()); ticks = [];
+    if (mobile()) return;
+    const docH = document.documentElement.scrollHeight - innerHeight;
+    chapters.forEach((ch, i) => {
+      const f = Math.min(1, Math.max(0, (ch.offsetTop - innerHeight * 0.4) / docH));
+      const b = document.createElement("button");
+      b.className = "tw-rail-tick"; b.style.top = (f * 100) + "%";
+      b.dataset.f = f;
+      b.innerHTML = `<span class="tw-tick-label">${String(i + 1).padStart(2, "0")} · ${ch.dataset.title}</span>`;
+      b.addEventListener("click", () => {
+        if (lenis) lenis.scrollTo(ch, { offset: -20 });
+        else ch.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+      });
+      rail.appendChild(b); ticks.push(b);
+    });
+  }
+  layoutTicks();
+  addEventListener("resize", layoutTicks);
+
+  // ---- hero button: jump to the Gilman chapter
+  document.getElementById("tw-gilman-jump").addEventListener("click", (e) => {
+    const target = document.getElementById("gilman");
+    if (!target) return;
+    e.preventDefault();
+    if (lenis) lenis.scrollTo(target, { offset: -20 });
+    else target.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+  });
+  ScrollTrigger.addEventListener("refreshInit", layoutTicks);
+
+  // ---- master progress tracker
+  let lastAccent = -1;
+  ScrollTrigger.create({
+    trigger: document.body, start: 0, end: "max",
+    onUpdate: (st) => {
+      const p = st.progress;
+      window.__tw.p = p;
+      // dim the scene once the journey starts (past ~half the hero)
+      const dimOn = window.scrollY > innerHeight * 0.55;
+      veil.classList.toggle("on", dimOn);
+      window.__tw.dim = dimOn ? 1 : 0;
+      if (mobile()) { fill.style.width = (p * 100) + "%"; }
+      else {
+        fill.style.height = (p * 100) + "%";
+        dot.style.top = (p * 100) + "%";
+        ticks.forEach((t) => t.classList.toggle("done", p >= +t.dataset.f));
+      }
+      const ai = Math.min(ACCENTS.length - 1, Math.floor(p * ACCENTS.length));
+      if (ai !== lastAccent) {
+        lastAccent = ai;
+        document.documentElement.style.setProperty("--tw-accent", ACCENTS[ai]);
+      }
+    },
+  });
+
+  // ---- hover preview card for inline {curly} links
+  const pv = document.getElementById("tw-preview");
+  const pvImg = document.getElementById("tw-pv-img");
+  const pvTitle = document.getElementById("tw-pv-title");
+  const pvText = document.getElementById("tw-pv-text");
+
+  document.addEventListener("mouseover", (e) => {
+    const a = e.target.closest(".tlink");
+    if (!a) return;
+    pvTitle.textContent = a.dataset.pvTitle || a.textContent;
+    pvText.textContent = a.dataset.pvText || "";
+    if (a.dataset.pvImg) { pvImg.src = a.dataset.pvImg; pvImg.style.display = "block"; }
+    else { pvImg.style.display = "none"; }
+    const r = a.getBoundingClientRect();
+    const x = Math.min(innerWidth - 266, Math.max(10, r.left));
+    const above = r.top > innerHeight * 0.55;
+    pv.style.left = x + "px";
+    pv.style.top = above ? "" : (r.bottom + 12) + "px";
+    pv.style.bottom = above ? (innerHeight - r.top + 12) + "px" : "";
+    pv.classList.add("show");
+  });
+  document.addEventListener("mouseout", (e) => {
+    if (e.target.closest && e.target.closest(".tlink")) pv.classList.remove("show");
+  });
+  // hide on real user scrolling (not Lenis's trailing momentum ticks)
+  addEventListener("wheel", () => pv.classList.remove("show"), { passive: true });
+  addEventListener("touchmove", () => pv.classList.remove("show"), { passive: true });
+})();
+</script>
+
+<!-- ======================================================================
+     WEBGL SCENE (Three.js) — the journey line in 3D · JET EDITION
+     A glowing path winds down through fog & fireflies; a Gulfstream G650
+     (gulfstreamg650.glb, loaded async) rides it, driven by scroll progress.
+     If the model fails to load, the classic glowing dot takes over.
+     ====================================================================== -->
+<script type="module">
+try {
+  const THREE = await import("three");
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canvas = document.getElementById("tw-gl");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  if (!renderer.getContext()) throw new Error("no webgl");
+  window.__twGL = true;
+
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(DPR);
+  renderer.setSize(innerWidth, innerHeight);
+
+  const scene = new THREE.Scene();
+
+  // ---- chapter palettes: [background/fog, path accent] — mirrors ACCENTS above
+  const PAL = [
+    ["#04120f", "#35c99b"], ["#071e18", "#8fd7c0"], ["#0a1a10", "#e8c476"],
+    ["#140c0e", "#e4573f"], ["#0a1a1c", "#7fb6a2"], ["#06181f", "#43d1c0"],
+    ["#0a1220", "#6fb7ff"], ["#120f0a", "#c6a15b"], ["#07200f", "#4fd08a"],
+    ["#0e0a1c", "#b78bff"], ["#1c0f08", "#ffb37f"], ["#0d1a06", "#a4d977"],
+    ["#0b0a1e", "#c0b3ff"], ["#1c0a12", "#ff8fa5"], ["#1c1506", "#ffd166"],
+    ["#04120f", "#35c99b"],
+  ].map(([a, b]) => [new THREE.Color(a), new THREE.Color(b)]);
+
+  scene.background = PAL[0][0].clone();
+  scene.fog = new THREE.FogExp2(PAL[0][0].clone(), 0.028);
+
+  const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 400);
+
+  // ---- the journey path: a meandering downhill curve
+  const pts = [];
+  const SEGS = 22;
+  for (let i = 0; i <= SEGS; i++) {
+    pts.push(new THREE.Vector3(
+      Math.sin(i * 0.9) * 13 + Math.sin(i * 2.3) * 3,
+      -i * 9,
+      Math.cos(i * 0.7) * 11 + Math.cos(i * 1.7) * 4
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.6);
+
+  // tube with vertex colors graded across the chapter palette
+  const TUBULAR = 700, RADIAL = 10;
+  const tubeGeo = new THREE.TubeGeometry(curve, TUBULAR, 0.16, RADIAL, false);
+  const colors = new Float32Array(tubeGeo.attributes.position.count * 3);
+  const tmpC = new THREE.Color();
+  for (let i = 0; i < tubeGeo.attributes.position.count; i++) {
+    const seg = Math.floor(i / (RADIAL + 1));          // ring index along the tube
+    const t = Math.min(1, seg / TUBULAR);
+    const fi = Math.min(PAL.length - 2, Math.floor(t * (PAL.length - 1)));
+    tmpC.copy(PAL[fi][1]).lerp(PAL[fi + 1][1], t * (PAL.length - 1) - fi);
+    colors[i * 3] = tmpC.r; colors[i * 3 + 1] = tmpC.g; colors[i * 3 + 2] = tmpC.b;
+  }
+  tubeGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  const tube = new THREE.Mesh(tubeGeo, new THREE.MeshBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  scene.add(tube);
+  // soft outer halo around the line
+  const halo = new THREE.Mesh(new THREE.TubeGeometry(curve, 300, 0.55, 8, false),
+    new THREE.MeshBasicMaterial({ color: 0x35c99b, transparent: true, opacity: 0.05,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  scene.add(halo);
+
+  // ---- glow sprite texture (shared)
+  const glowTex = (() => {
+    const c = document.createElement("canvas"); c.width = c.height = 128;
+    const g = c.getContext("2d");
+    const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, "rgba(255,255,255,1)");
+    grd.addColorStop(0.25, "rgba(255,255,255,.6)");
+    grd.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  })();
+
+  // ---- the travelling marker: a Gulfstream G650 riding the line.
+  // The old glowing orb stays on as a soft aura around the jet.
+  const orb = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color: 0xf5f1e6, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  orb.scale.setScalar(3.6);
+  scene.add(orb);
+  // stand-in dot shown until the GLB finishes loading (then removed)
+  let orbCore = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  scene.add(orbCore);
+
+  // lights: everything else in the scene is unlit, but the jet's PBR
+  // materials need these to read against the dark background
+  scene.add(new THREE.HemisphereLight(0xf5f1e6, 0x0a2a20, 1.7));
+  const jetKeyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+  jetKeyLight.position.set(6, 10, 8);
+  scene.add(jetKeyLight);
+
+  /* ---- EDIT ME: jet tuning ---------------------------------------
+     JET_LENGTH   size of the jet in world units (the orb was ~3.6)
+     JET_FIX_DEG  extra rotation in degrees if the nose points the
+                  wrong way; try y:180 first if it flies backwards
+     JET_TINT     null keeps the model's own paint; a hex like
+                  0xe8c476 recolors the light fuselage panels only
+     JET_ACCENT_EMISSIVE  0..1, how much the jet glows in the
+                  current chapter's accent color (0 = off)
+  ----------------------------------------------------------------- */
+  const JET_LENGTH = 3.4;
+  // the GLB's root node already bakes a Z-up -> Y-up matrix, so in world
+  // space the model is Y-up with the nose on +Z: no extra fix needed
+  const JET_FIX_DEG = { x: 0, y: 0, z: 0 };
+  const JET_TINT = null;
+  const JET_ACCENT_EMISSIVE = 0.22;
+  const NOSE_TRAIL = 0.012;  // how far behind the nose (in path t) the
+                             // fuselage direction is sampled; ~1 body length
+
+  const jet = new THREE.Group();       // aimed along the path each frame
+  const jetInner = new THREE.Group();  // holds the centered, axis-fixed model
+  const jetDir = new THREE.Vector3();  // scratch: current fuselage direction
+  jet.add(jetInner);
+  jet.visible = false;
+  scene.add(jet);
+  const jetMats = [];
+
+  (async () => {
+    try {
+      const [{ GLTFLoader }, { RoomEnvironment }] = await Promise.all([
+        import("three/addons/loaders/GLTFLoader.js"),
+        import("three/addons/environments/RoomEnvironment.js"),
+      ]);
+      // metallic PBR paint renders near-black without an environment to
+      // reflect — this neutral studio env is what makes the jet visible
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      pmrem.dispose();
+      const gltf = await new GLTFLoader().loadAsync("gulfstreamg650.glb");
+      const model = gltf.scene;
+
+      // normalize: center the model, scale longest dimension to JET_LENGTH
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
+      jetInner.scale.setScalar(JET_LENGTH / Math.max(size.x, size.y, size.z));
+      jetInner.rotation.set(
+        THREE.MathUtils.degToRad(JET_FIX_DEG.x),
+        THREE.MathUtils.degToRad(JET_FIX_DEG.y),
+        THREE.MathUtils.degToRad(JET_FIX_DEG.z));
+      jetInner.add(model);
+
+      const hsl = { h: 0, s: 0, l: 0 };
+      model.traverse((o) => {
+        if (o.isMesh && o.material) {
+          for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+            // recolor only the light "paint" panels, leave glass/details dark
+            if (JET_TINT !== null && m.color && m.color.getHSL(hsl).l > 0.45)
+              m.color.set(JET_TINT);
+            m.envMapIntensity = 1.4;
+            jetMats.push(m);
+          }
+        }
+      });
+
+      scene.remove(orbCore); orbCore = null;
+      jet.visible = true;
+      window.__twJetLoaded = true;
+    } catch (e) {
+      window.__twJetError = String(e);
+      console.warn("Jet model failed to load, keeping the classic dot:", e);
+    }
+  })();
+
+  // ---- chapter marker rings along the path
+  const chapterCount = document.querySelectorAll(".tw-chapter").length || 16;
+  const rings = [];
+  for (let i = 0; i < chapterCount; i++) {
+    const t = chapterCount === 1 ? 0 : i / (chapterCount - 1);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.045, 8, 40),
+      new THREE.MeshBasicMaterial({ color: PAL[Math.min(i, PAL.length - 1)][1],
+        transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending, depthWrite: false }));
+    ring.position.copy(curve.getPointAt(t));
+    ring.userData.t = t;
+    scene.add(ring); rings.push(ring);
+  }
+
+  // ---- firefly particles filling the corridor around the path
+  const P_COUNT = innerWidth < 880 ? 700 : 1500;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(P_COUNT * 3);
+  for (let i = 0; i < P_COUNT; i++) {
+    const t = Math.random();
+    const base = curve.getPointAt(t);
+    pPos[i * 3]     = base.x + (Math.random() - 0.5) * 46;
+    pPos[i * 3 + 1] = base.y + (Math.random() - 0.5) * 30;
+    pPos[i * 3 + 2] = base.z + (Math.random() - 0.5) * 46;
+  }
+  pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+  const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    map: glowTex, color: 0xbfe8d8, size: 0.65, sizeAttenuation: true,
+    transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  scene.add(particles);
+
+  // ---- mouse parallax
+  let mx = 0, my = 0;
+  addEventListener("pointermove", (e) => {
+    mx = (e.clientX / innerWidth - 0.5) * 2;
+    my = (e.clientY / innerHeight - 0.5) * 2;
+  }, { passive: true });
+
+  addEventListener("resize", () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  // ---- render loop
+  const bgA = new THREE.Color(), accA = new THREE.Color();
+  let smoothP = 0, orbGlow = 1, jetBank = 0, raf = null;
+
+  function frame(time) {
+    raf = requestAnimationFrame(frame);
+    const target = window.__tw ? window.__tw.p : 0;
+    smoothP += (target - smoothP) * (RM ? 1 : 0.06);
+    const t = Math.min(0.999, Math.max(0.0005, smoothP));
+
+    // the jet (or the stand-in dot while it loads) rides the curve
+    const p = curve.getPointAt(t);
+    orb.position.copy(p);
+    if (orbCore) orbCore.position.copy(p);
+    const pulse = 1 + Math.sin(time * 0.004) * 0.12;
+    // damp the aura's glare while the veil is up (text content on screen)
+    orbGlow += (((window.__tw && window.__tw.dim) ? 0.45 : 1) - orbGlow) * 0.06;
+    orb.material.opacity = orbGlow * (jet.visible ? 0.55 : 1);
+    orb.scale.setScalar(((jet.visible ? 1.6 : 2.1) + 1.5 * orbGlow) * pulse);
+
+    if (jet.visible) {
+      // the travelling point is the NOSE; the fuselage trails behind it,
+      // laid along the chord of the path just behind the nose so the body
+      // follows the path's shape through bends
+      const pBack = curve.getPointAt(Math.max(0, t - NOSE_TRAIL));
+      jetDir.copy(p).sub(pBack).normalize();
+      // group origin is the model's center: pull back half a length so
+      // the nose tip sits on the point
+      jet.position.copy(p).addScaledVector(jetDir, -JET_LENGTH / 2);
+      // gentle bob so it feels airborne
+      jet.position.y += Math.sin(time * 0.0016) * 0.1;
+      jet.lookAt(jet.position.x + jetDir.x,
+                 jet.position.y + jetDir.y,
+                 jet.position.z + jetDir.z);
+      // bank into turns: fuselage heading vs the path a moment ahead
+      const tan2 = curve.getTangentAt(Math.min(1, t + 0.015));
+      const turn = jetDir.z * tan2.x - jetDir.x * tan2.z;
+      jetBank += (THREE.MathUtils.clamp(turn * 60, -0.65, 0.65) - jetBank) * 0.05;
+      jet.rotateZ(jetBank);
+      orb.position.copy(jet.position);
+    }
+
+    // camera trails behind, looking ahead
+    const back = curve.getPointAt(Math.max(0, t - 0.028));
+    const ahead = curve.getPointAt(Math.min(1, t + 0.04));
+    camera.position.lerp(new THREE.Vector3(
+      back.x + mx * 2.2, back.y + 2.6 - my * 1.4, back.z + 10.5), RM ? 1 : 0.08);
+    camera.lookAt(ahead.x, ahead.y - 0.5, ahead.z);
+
+    // chapter rings: face camera, pulse when the orb is near
+    for (const r of rings) {
+      r.lookAt(camera.position);
+      const d = Math.abs(r.userData.t - t);
+      const near = Math.max(0, 1 - d * 26);
+      r.scale.setScalar(1 + near * 0.55 + Math.sin(time * 0.003 + r.userData.t * 40) * 0.04);
+      r.material.opacity = 0.35 + near * 0.6;
+    }
+
+    // palette crossfade with scroll
+    const fi = Math.min(PAL.length - 2, Math.floor(t * (PAL.length - 1)));
+    const ft = t * (PAL.length - 1) - fi;
+    bgA.copy(PAL[fi][0]).lerp(PAL[fi + 1][0], ft);
+    accA.copy(PAL[fi][1]).lerp(PAL[fi + 1][1], ft);
+    scene.background.lerp(bgA, 0.05);
+    scene.fog.color.lerp(bgA, 0.05);
+    halo.material.color.lerp(accA, 0.05);
+    orb.material.color.lerp(accA.clone().lerp(new THREE.Color(0xffffff), 0.55), 0.08);
+    // jet paint picks up a soft glow in the chapter accent color
+    for (const m of jetMats) if (m.emissive)
+      m.emissive.copy(accA).multiplyScalar(JET_ACCENT_EMISSIVE * (0.5 + 0.5 * orbGlow));
+
+    particles.rotation.y = time * 0.000018;
+    renderer.render(scene, camera);
+  }
+  frame(0);
+  window.__twDbg = { THREE, scene, camera, renderer, curve, jet, orb };
+
+  // pause rendering when tab hidden
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { cancelAnimationFrame(raf); raf = null; }
+    else if (!raf) frame(performance.now());
+  });
+} catch (err) {
+  // WebGL / module / network failure → CSS gradient fallback
+  document.documentElement.classList.add("tw-no-gl");
+  console.warn("Taiwan page: WebGL scene disabled —", err);
+}
+</script>
+
+<!-- module-support fallback: if the scene never boots, show gradient bg -->
+<script>
+setTimeout(() => { if (!window.__twGL) document.documentElement.classList.add("tw-no-gl"); }, 4000);
+</script>
+
+</body>
+</html>
